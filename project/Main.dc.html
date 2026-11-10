@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>好好吃饭 周视图</title>
+<script src="./support.js"></script>
+<script src="./journal.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; padding: 52px 16px 0; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <span style="font-size: 15px; font-weight: 800; color: #5B48B8">好好吃饭</span>
+    <a href="{{weighHref}}" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.8); border: 0.5px solid #E4DFF5; display: flex; align-items: center; gap: 6px; color: #5B48B8; font-size: 14px; font-weight: 700">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><path d="M9 10a3 3 0 0 1 6 0"></path><path d="M12 10l1.2-1.6"></path></svg>
+      称重
+    </a>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px">
+    <h1 style="margin: 0; font-size: 40px; font-weight: 900; line-height: 1.1">{{weekTitle}}</h1>
+    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 9px 14px; border-radius: 18px">
+      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
+      <span style="position: relative">{{weightNote}}</span>
+    </div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 2px; margin-top: -4px">
+    <button aria-label="上一周" onClick="{{previousWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </button>
+    <span style="font-size: 16px; font-weight: 700; color: #6F6A78">{{weekLabel}}</span>
+    <button aria-label="下一周" onClick="{{nextWeek}}" aria-disabled="{{atCurrentWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+    <span style="margin-left: auto; font-size: 13px; font-weight: 700; color: #6F6A78">{{averageLabel}}</span>
+  </div>
+
+  <div style="position: relative; margin-top: 4px">
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+        <button onClick="{{d.pick}}" aria-label="{{d.aria}}" aria-pressed="{{d.on}}" style="{{d.colStyle}}">
+          <div style="height: 92px"></div>
+          <div style="{{d.pileStyle}}">
+            <sc-for list="{{d.tiles}}" as="t" hint-placeholder-count="3">
+              <div style="{{t.style}}" title="{{t.name}}"></div>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 12px">
+            <span style="{{d.wdStyle}}">{{d.wd}}</span>
+            <span style="{{d.dateStyle}}">{{d.date}}</span>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+    <svg width="358" height="92" viewBox="0 0 358 92" aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none">
+      <polyline points="{{linePts}}" fill="none" stroke="#C9BFF5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+    </svg>
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+      <span style="{{d.numStyle}}">{{d.w}}</span>
+      <span style="{{d.dotStyle}}"></span>
+    </sc-for>
+    <div style="{{tip.style}}">
+      <span style="font-size: 15px; font-weight: 900; color: #5B48B8">{{tip.w}} kg</span>
+      <span style="font-size: 11px; font-weight: 800; color: #6F6A78">{{tip.label}}</span>
+    </div>
+  </div>
+
+  <div style="height: 1px; background: #E4DFF5; margin: 4px 0"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <span style="font-size: 20px; font-weight: 900">{{sel.title}}</span>
+      <a href="{{detailHref}}" style="font-size: 14px; font-weight: 700; color: #6F6A78; display: flex; align-items: center; gap: 2px">{{sel.meals}} 餐 · 查看当天
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 6px">
+      <span style="font-size: 38px; font-weight: 900; color: #7A66E0; line-height: 1.05">{{sel.kcal}}</span>
+      <span style="font-size: 15px; font-weight: 800">kcal</span>
+      <span style="{{sel.noteStyle}}">{{sel.note}}</span>
+    </div>
+    <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; margin-top: 2px">
+      <div style="{{sel.b1}}"></div><div style="{{sel.b2}}"></div><div style="{{sel.b3}}"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #6F6A78">
+      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 9px; height: 9px; border-radius: 5px; background: #F6CF5C"></span>碳水 {{sel.p1}}</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 9px; height: 9px; border-radius: 5px; background: #A996F2"></span>蛋白质 {{sel.p2}}</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 9px; height: 9px; border-radius: 5px; background: #8FCFA6"></span>脂肪 {{sel.p3}}</span>
+    </div>
+  </div>
+
+  <sc-if value="{{savedMessage}}">
+    <span role="status" style="font-size: 13px; font-weight: 800; color: #5B48B8">{{savedMessage}}</span>
+  </sc-if>
+
+  <div style="position: absolute; left: 14px; right: 14px; bottom: 26px; display: flex; align-items: center; gap: 10px; z-index: 30">
+    <nav aria-label="主导航" style="flex-grow: 1; height: 62px; box-sizing: border-box; padding: 4px; border-radius: 31px; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 28px rgba(60, 40, 120, 0.14); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+      <a href="{{currentWeekHref}}" aria-current="page" style="border-radius: 27px; background: rgba(122, 102, 224, 0.13); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #7A66E0; font-size: 10px; font-weight: 700">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V11M9.3 19V7M14.6 19v-6M20 19V9"></path></svg>
+        本周
+      </a>
+      <a href="{{albumHref}}" style="border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2A2633; font-size: 10px; font-weight: 600">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="4"></rect><circle cx="15.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 2.5-2.5L20 18"></path></svg>
+        饭相册
+      </a>
+      <a href="{{loveHref}}" style="border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2A2633; font-size: 10px; font-weight: 600">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8 0 0 1-17 0z"></path><path d="M9 4c-1 1.2 1 2 0 3.5M14 4c-1 1.2 1 2 0 3.5"></path></svg>
+        爱吃的
+      </a>
+      <a href="Goal.dc.html" style="border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2A2633; font-size: 10px; font-weight: 600">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="0.8" fill="currentColor"></circle></svg>
+        目标
+      </a>
+    </nav>
+    <a href="{{recordHref}}" aria-label="拍一餐" style="width: 62px; height: 62px; flex-shrink: 0; border-radius: 31px; background: rgba(122, 102, 224, 0.92); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid rgba(255, 255, 255, 0.6); box-shadow: 0 8px 24px rgba(122, 102, 224, 0.35); display: flex; align-items: center; justify-content: center; color: #FFFFFF">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.5-2h5L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"></path><circle cx="12" cy="12.5" r="3.5"></circle></svg>
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const date = Journal.selected();
+    const savedMessage = Journal.params.get("status") === "weighed"
+      ? "已记下" + Journal.shortDate(date) + "的体重"
+      : Journal.params.get("saved") === "1" ? "已记到" + Journal.shortDate(date) : "";
+    this.state = { date, savedMessage };
+    if (savedMessage) history.replaceState(null, "", Journal.link("Main", date));
+  }
+
+  select(date) {
+    history.replaceState(null, "", Journal.link("Main", date));
+    this.setState({ date, savedMessage: "" });
+  }
+
+  moveWeek(direction) {
+    const date = Journal.addDays(this.state.date, direction * 7);
+    if (Journal.weekStart(date) <= Journal.weekStart(Journal.today)) {
+      this.select(date > Journal.today ? Journal.today : date);
+    }
+  }
+  renderVals() {
+    var self = this;
+    var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF', '#EEE9FF'];
+    const selected = this.state.date;
+    const week = Journal.weekStart(selected);
+    const lastDay = Journal.addDays(week, 6);
+    const raw = Array.from({ length: 7 }, (_, i) => {
+      const date = Journal.addDays(week, i);
+      const entry = Journal.day(date);
+      return {
+        date, entry, wd: Journal.dayName(date).slice(1), w: entry.weight,
+        n: entry.meals.length, today: date === Journal.today
+      };
+    });
+    const weights = raw.flatMap(({ w }) => w === null ? [] : [w]);
+    const high = weights.length ? Math.max(...weights) : 0;
+    const span = Math.max(0.7, high - Math.min(high, ...weights));
+    const yOf = (weight) => Math.round(40 + (high - weight) / span * 34);
+    const colW = 358 / 7;
+    var pts = [];
+    var tip = { style: "display: none" };
+    var days = raw.map(function (d, i) {
+      var on = selected === d.date;
+      var cx = (i + 0.5) * colW;
+      var y = yOf(d.w);
+      if (d.w !== null) pts.push(Math.round(cx) + ',' + y);
+      if (on && d.w !== null) {
+        var left = Math.max(0, Math.min(358 - 104, Math.round(cx - 52)));
+        tip = {
+          w: d.w.toFixed(1),
+          label: Journal.savedWeight(d.date) === null ? "示例体重" : "当天体重",
+          style: 'position: absolute; left: ' + left + 'px; top: ' + Math.max(0, y - 56) + 'px; width: 104px; box-sizing: border-box; padding: 6px 0; border-radius: 14px; background: #FFFFFF; box-shadow: 0 6px 16px rgba(90, 70, 160, 0.14); display: flex; flex-direction: column; align-items: center; z-index: 20'
+        };
+      }
+      var tiles = [];
+      const shown = d.entry.meals.slice(-5);
+      for (var j = 0; j < shown.length; j++) {
+        var rot = [-6, 5, -3, 7, -5][(i + j) % 5] * (on ? 1.5 : 1);
+        var dx = [0, 3, -3, 2, -2][(i + j) % 5] * (on ? 2 : 1);
+        tiles.push({ name: shown[j].name, style: 'position: absolute; left: 50%; bottom: ' + (j * (on ? 18 : 14)) + 'px; width: 38px; height: 38px; margin-left: ' + (-19 + dx) + 'px; box-sizing: border-box; border-radius: 12px; border: 2.5px solid #FFFFFF; background: ' + tints[(i * 2 + j) % tints.length] + '; transform: rotate(' + rot + 'deg); box-shadow: 0 3px 8px rgba(90, 70, 160, 0.16); z-index: ' + (j + 1) + (shown[j].photo ? '; background: center / cover url("' + shown[j].photo + '")' : '') });
+      }
+      return {
+        wd: d.wd, date: Number(d.date.slice(8)), w: d.w?.toFixed(1) ?? "", tiles: tiles, on: on,
+        pick: function () { self.select(d.date); },
+        aria: '周' + d.wd + '，' + d.n + ' 餐' + (d.w === null ? '' : '，体重 ' + d.w.toFixed(1) + ' 公斤'),
+        colStyle: 'display: flex; flex-direction: column; align-items: stretch; border: none; padding: 0; font-family: inherit; cursor: pointer; border-radius: 22px; background: ' + (on ? '#ECE8FB' : 'transparent'),
+        pileStyle: 'position: relative; height: 112px',
+        numStyle: 'position: absolute; left: ' + Math.round(cx - 22) + 'px; width: 44px; top: ' + (y + 9) + 'px; text-align: center; font-size: 11px; font-weight: 800; color: #6F6A78; display: ' + (on || d.w === null ? 'none' : 'block'),
+        dotStyle: (d.w === null ? 'display: none; ' : '') + 'position: absolute; left: ' + Math.round(cx - (on ? 7 : 5)) + 'px; top: ' + (y - (on ? 7 : 5)) + 'px; width: ' + (on ? 14 : 10) + 'px; height: ' + (on ? 14 : 10) + 'px; box-sizing: border-box; border-radius: 7px; background: ' + (on ? '#7A66E0' : '#FFFFFF') + '; border: ' + (on ? '3px solid #FFFFFF' : '2.5px solid #C9BFF5') + '; box-shadow: ' + (on ? '0 0 0 2px #7A66E0' : 'none') + '; z-index: 10',
+        wdStyle: 'width: 28px; height: 24px; line-height: 24px; border-radius: 12px; font-size: 13px; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78'),
+        dateStyle: 'font-size: 13px; font-weight: ' + (on || d.today ? 800 : 600) + '; color: ' + (on ? '#5B48B8' : d.today ? '#2A2633' : '#6F6A78')
+      };
+    });
+
+    const current = raw.find((day) => day.date === selected);
+    const entry = current.entry;
+    const [carb, protein, fat] = entry.percentages;
+    const recorded = raw.map((day) => day.entry.kcal).filter((kcal) => kcal > 0);
+    const avg = recorded.length && Math.round(recorded.reduce((a, b) => a + b, 0) / recorded.length);
+    const change = weights.length > 1 ? Math.round((weights.at(-1) - weights[0]) * 10) / 10 : 0;
+    const recordDate = selected > Journal.today ? Journal.today : selected;
+    return {
+      days, tip, linePts: pts.join(" "),
+      savedMessage: this.state.savedMessage,
+      weekTitle: week === Journal.weekStart(Journal.today) ? "本周" : "周记",
+      weekLabel: week.slice(5).replace("-", ".") + " – " + lastDay.slice(5).replace("-", "."),
+      weightNote: change ? "周内 " + (change > 0 ? "↑" : "↓") + Math.abs(change).toFixed(1) + " kg" : "饮食手账",
+      averageLabel: avg ? "日均已记 " + avg + " kcal" : "",
+      atCurrentWeek: week >= Journal.weekStart(Journal.today),
+      previousWeek: () => this.moveWeek(-1),
+      nextWeek: () => this.moveWeek(1),
+      currentWeekHref: Journal.link("Main", Journal.today),
+      detailHref: Journal.link("Day", selected),
+      weighHref: Journal.link("Weigh", recordDate),
+      loveHref: Journal.link("Love", selected),
+      recordHref: Journal.link("Record", recordDate),
+      albumHref: Journal.link("Album", selected),
+      sel: {
+        title: (current.today ? "今天" : Journal.dayName(selected)) + " · " + Journal.shortDate(selected),
+        meals: entry.meals.length,
+        kcal: entry.kcal ? entry.kcal.toLocaleString("en-US") : "—",
+        note: entry.kcal ? "已记录估算" : "暂无营养估算",
+        noteStyle: "font-size: 13px; font-weight: 700; color: #6F6A78",
+        b1: "width: " + carb + "%; background: #F6CF5C",
+        b2: "width: " + protein + "%; background: #A996F2",
+        b3: "width: " + fat + "%; background: #8FCFA6",
+        p1: entry.kcal ? carb + "%" : "—",
+        p2: entry.kcal ? protein + "%" : "—",
+        p3: entry.kcal ? fat + "%" : "—"
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

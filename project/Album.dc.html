@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>好好吃饭 饭相册</title>
+<script src="./support.js"></script>
+<script src="./journal.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 844px; box-sizing: border-box; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; padding: 50px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="{{backHref}}" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; color: #6F6A78; padding-right: 8px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      本周
+    </a>
+    <div style="display: flex; gap: 4px; background: #FFFFFF; border-radius: 999px; padding: 4px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06)">
+      <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+        <button onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px">
+    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">饭相册</h1>
+    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 18px">
+      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
+      <span style="position: relative">{{monthCount}}</span>
+    </div>
+  </div>
+
+  <sc-if value="{{isCal}}" hint-placeholder-val="{{true}}">
+    <div style="background: #FFFFFF; border-radius: 32px; padding: 16px 12px 14px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px">
+        <button aria-label="上个月" onClick="{{previousMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+        </button>
+        <span style="font-size: 18px; font-weight: 900">{{monthLabel}}</span>
+        <button aria-label="下个月" onClick="{{nextMonth}}" aria-disabled="{{atCurrentMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; font-size: 12px; font-weight: 700; color: #6F6A78">
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px">
+        <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+          <sc-if value="{{c.empty}}"><div style="height: 62px"></div></sc-if>
+          <sc-if value="{{c.href}}">
+          <a href="{{c.href}}" aria-label="{{c.aria}}" style="{{c.style}}">
+            <div style="position: relative; width: 34px; height: 34px">
+              <sc-for list="{{c.tiles}}" as="t" hint-placeholder-count="2">
+                <div style="{{t.style}}"></div>
+              </sc-for>
+            </div>
+            <span style="{{c.numStyle}}">{{c.day}}</span>
+            <span style="{{c.dotStyle}}"></span>
+          </a>
+          </sc-if>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 14px; font-size: 12px; font-weight: 700; color: #6F6A78; padding-top: 4px">有 {{loggedDays}} 天留下了饭记</div>
+    </div>
+    <div style="background: #FFF6DC; border-radius: 20px; padding: 12px 16px; font-size: 13px; font-weight: 700; color: #6E5410; line-height: 1.5">点一天，找回那天吃了什么。</div>
+  </sc-if>
+
+  <sc-if value="{{isFood}}" hint-placeholder-val="{{false}}">
+    <span style="font-size: 13px; font-weight: 700; color: #6F6A78; margin-top: -4px">同一种吃的叠在一起，越常吃越厚</span>
+    <sc-if value="{{emptyMonth}}"><p style="font-size: 14px; color: #6F6A78">这个月还没有记录。</p></sc-if>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{foods}}" as="f" hint-placeholder-count="6">
+        <a href="{{f.href}}" style="background: #FFFFFF; border-radius: 28px; padding: 14px 14px 12px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 6px">
+          <div style="position: relative; height: 92px">
+            <sc-for list="{{f.layers}}" as="l" hint-placeholder-count="3">
+              <div style="{{l.style}}">{{l.label}}</div>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between">
+            <span style="font-size: 15px; font-weight: 900">{{f.name}}</span>
+            <span style="font-size: 13px; font-weight: 900; color: #5B48B8">×{{f.count}}</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 600; color: #6F6A78">{{f.meta}}</span>
+        </a>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.date = Journal.selected(Journal.today);
+    this.state = {
+      view: Journal.params.get("view") === "food" ? "food" : "cal",
+      month: Journal.monthStart(this.date)
+    };
+  }
+
+  moveMonth(direction) {
+    const month = Journal.addMonths(this.state.month, direction);
+    if (month <= Journal.monthStart(Journal.today)) this.setState({ month });
+  }
+  renderVals() {
+    var self = this;
+    var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF', '#EEE9FF'];
+    var views = [{ id: 'cal', label: '日历' }, { id: 'food', label: '按食物' }].map(function (v) {
+      var on = self.state.view === v.id;
+      return {
+        label: v.label,
+        pick: function () { self.setState({ view: v.id }); },
+        style: 'height: 36px; border: none; border-radius: 999px; padding: 0 16px; font-size: 14px; font-family: inherit; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78')
+      };
+    });
+
+    const month = this.state.month;
+    const next = Journal.addMonths(month, 1);
+    const days = [];
+    for (let date = month; date < next; date = Journal.addDays(date, 1)) {
+      days.push(Journal.day(date));
+    }
+    const cells = Array.from({ length: (Journal.weekday(month) + 6) % 7 }, () => ({ empty: true }));
+    const groups = new Map();
+    for (const [i, entry] of days.entries()) {
+      const n = entry.meals.length;
+      for (const meal of entry.meals) {
+        const group = groups.get(meal.name) ?? { name: meal.name, count: 0, c: groups.size };
+        group.count++;
+        group.date = entry.date;
+        if (meal.photo) group.photo = meal.photo;
+        groups.set(meal.name, group);
+      }
+      const tiles = entry.meals.slice(-3).map((meal, j) => ({
+        style: 'position: absolute; left: ' + (5 + [0, 3, -2][j]) + 'px; top: ' + (8 - j * 4)
+          + 'px; width: 24px; height: 24px; box-sizing: border-box; border-radius: 8px; border: 2px solid #FFFFFF; background: '
+          + (meal.photo ? 'center / cover url("' + meal.photo + '")' : tints[(i + j * 2) % tints.length])
+          + '; transform: rotate(' + [-6, 5, -2][(i + j) % 3] + 'deg); box-shadow: 0 2px 5px rgba(90, 70, 160, 0.14)'
+      }));
+      cells.push({
+        day: i + 1, tiles,
+        href: Journal.link("Day", entry.date, { from: "album" }),
+        aria: Journal.shortDate(entry.date) + "，" + (n ? n + " 餐" : "没记录"),
+        style: 'height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; border-radius: 14px; background: ' + (entry.date === this.date ? '#ECE8FB' : 'transparent'),
+        numStyle: 'font-size: 11px; font-weight: 800; color: ' + (n ? '#2A2633' : '#807A8D'),
+        dotStyle: 'width: 5px; height: 5px; border-radius: 3px; background: ' + (n ? '#A996F2' : 'transparent')
+      });
+    }
+    const list = [...groups.values()].sort((a, b) => b.count - a.count || b.date.localeCompare(a.date));
+    var foods = list.map(function (f) {
+      var k = Math.min(f.count, 4);
+      var layers = [];
+      for (var j = 0; j < k; j++) {
+        var top = j === k - 1;
+        layers.push({
+          label: top && !f.photo ? f.name : '',
+          style: 'position: absolute; left: ' + (22 + [0, 6, -5, 3][j]) + 'px; top: ' + (14 - j * 4) + 'px; width: 92px; height: 72px; box-sizing: border-box; border-radius: 22px; border: 4px solid #FFFFFF; background: ' + (top && f.photo ? 'center / cover url("' + f.photo + '")' : tints[(f.c + j) % tints.length]) + '; transform: rotate(' + [-8, 6, -3, 2][j] + 'deg); box-shadow: 0 5px 12px rgba(90, 70, 160, 0.13); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #5A4E44'
+        });
+      }
+      return {
+        name: f.name, count: f.count, layers,
+        href: Journal.link("Day", f.date, { from: "album" }),
+        meta: "最近一次 · " + Journal.shortDate(f.date)
+      };
+    });
+
+    const monthNumber = Number(month.slice(5, 7));
+    const count = days.reduce((sum, day) => sum + day.meals.length, 0);
+    return {
+      views, cells, foods,
+      isCal: this.state.view === "cal", isFood: this.state.view === "food",
+      monthLabel: month.slice(0, 4) + " 年 " + monthNumber + " 月",
+      monthCount: monthNumber + " 月记了 " + count + " 餐",
+      loggedDays: days.filter((day) => day.meals.length).length,
+      emptyMonth: count === 0,
+      backHref: Journal.link("Main", this.date),
+      atCurrentMonth: month >= Journal.monthStart(Journal.today),
+      previousMonth: () => this.moveMonth(-1),
+      nextMonth: () => this.moveMonth(1)
+    };
+  }
+}
+</script>
+</body>
+</html>

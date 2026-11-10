@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>好好吃饭 我爱吃的</title>
+<script src="./support.js"></script>
+<script src="./journal.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 844px; box-sizing: border-box; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; padding: 50px 16px 32px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; align-items: center">
+    <a href="{{backHref}}" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; padding-right: 8px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      本周
+    </a>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px">
+    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">我爱吃的</h1>
+    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 18px">
+      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
+      <span style="position: relative">爱吃的照样吃</span>
+    </div>
+  </div>
+  <span style="font-size: 14px; font-weight: 600; color: #6F6A78; margin-top: -4px">{{sourceLabel}}</span>
+
+  <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 18px 16px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 18px; font-weight: 900">下一餐吃什么</span>
+      <span style="font-size: 13px; font-weight: 700; color: #6F6A78">{{suggestionLabel}}</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center">
+      <div style="position: relative; width: 128px; height: 116px; flex-shrink: 0; background: #F3F0FB; border-radius: 24px">
+        <sc-for list="{{next.pile}}" as="p" hint-placeholder-count="3">
+          <div style="{{p.style}}">{{p.label}}</div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <span style="font-size: 16px; font-weight: 900; overflow-wrap: anywhere">{{next.name}}</span>
+        <span style="font-size: 12px; font-weight: 600; color: #6F6A78; line-height: 1.5">{{next.parts}}</span>
+        <span style="align-self: flex-start; font-size: 11px; font-weight: 800; color: #5B48B8; background: #EEE9FF; padding: 3px 8px; border-radius: 8px">{{next.why}}</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <button onClick="{{shuffle}}" style="flex: 1; height: 44px; border: none; border-radius: 999px; background: #F7F5FC; color: #2A2633; font-size: 15px; font-weight: 800; font-family: inherit">换一个</button>
+      <a href="{{recordHref}}" style="flex: 1.4; height: 44px; border-radius: 999px; background: #7A66E0; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; box-shadow: 0 10px 22px rgba(122, 102, 224, 0.3)">就吃这个</a>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 14px 16px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px">
+      <span style="font-size: 18px; font-weight: 900">最常吃</span>
+      <a href="{{albumHref}}" style="font-size: 13px; font-weight: 700">全部</a>
+    </div>
+    <sc-if value="{{empty}}">
+      <p style="margin: 0 4px; font-size: 13px; color: #6F6A78">记下第一餐后，这里会显示常吃的食物。</p>
+    </sc-if>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+      <sc-for list="{{favs}}" as="f" hint-placeholder-count="3">
+        <a href="{{f.href}}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; text-align: center; color: #2A2633">
+          <div style="position: relative; width: 100px; height: 92px">
+            <sc-for list="{{f.layers}}" as="l" hint-placeholder-count="3">
+              <div style="{{l.style}}">{{l.label}}</div>
+            </sc-for>
+            <span style="position: absolute; right: 2px; top: 0; z-index: 9; background: #7A66E0; color: #FFFFFF; font-size: 12px; font-weight: 800; padding: 2px 7px; border-radius: 10px">×{{f.count}}</span>
+          </div>
+          <span style="max-width: 100%; overflow-wrap: anywhere; font-size: 14px; font-weight: 900">{{f.name}}</span>
+          <span style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 8px; background: #ECE8FB; color: #5B48B8">{{f.tag}}</span>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background: #FFF6DC; border-radius: 28px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+    <span style="font-size: 16px; font-weight: 900; color: #6E5410">发现的小规律</span>
+    <sc-for list="{{rules}}" as="r" hint-placeholder-count="3">
+      <div style="display: flex; gap: 10px; align-items: flex-start">
+        <span style="width: 7px; height: 7px; border-radius: 4px; background: #E0A800; margin-top: 7px; flex-shrink: 0"></span>
+        <span style="font-size: 13px; font-weight: 700; color: #6E5410; line-height: 1.5">{{r}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 6px 6px 0">
+    <span style="font-size: 18px; font-weight: 900">用爱吃的搭一天</span>
+    <span style="font-size: 12px; font-weight: 600; color: #6F6A78">来自饭相册</span>
+  </div>
+  <sc-if value="{{noCombos}}"><p style="margin: 0 6px; font-size: 13px; color: #6F6A78">同一天记下两餐后，就可以在这里回看那天的搭配。</p></sc-if>
+  <sc-for list="{{combos}}" as="c" hint-placeholder-count="3">
+    <a href="{{c.href}}" style="background: #FFFFFF; border-radius: 28px; padding: 14px 16px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; gap: 12px; align-items: center; color: #2A2633">
+      <div style="position: relative; width: 78px; height: 78px; flex-shrink: 0">
+        <sc-for list="{{c.pile}}" as="p" hint-placeholder-count="3">
+          <div style="{{p.style}}"></div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex-grow: 1">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+          <span style="font-size: 15px; font-weight: 900">{{c.name}}</span>
+          <span style="font-size: 13px; font-weight: 900; color: #5B48B8; flex-shrink: 0">{{c.count}} 餐</span>
+        </div>
+        <span style="font-size: 12px; font-weight: 600; color: #6F6A78; line-height: 1.5">{{c.parts}}</span>
+      </div>
+    </a>
+  </sc-for>
+  <span style="font-size: 12px; font-weight: 600; color: #6F6A78; text-align: center; padding-top: 4px">随饭相册的记录更新</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1240}}'>
+const tints = [
+  ["#FFEADB", "#9A4B12"], ["#FDE6F0", "#9B2C5C"], ["#FFF4C9", "#7D6206"],
+  ["#E3F6E2", "#2D6B2A"], ["#E1EEFF", "#2B5B9A"], ["#EEE9FF", "#5B48B8"]
+];
+const samples = [
+  { food: "海苔饭团", side: "鸡肉蔬菜沙拉" },
+  { food: "番茄牛腩饭", side: "一份时蔬" },
+  { food: "全麦吐司", side: "原味酸奶" }
+];
+const sides = ["一份时蔬", "豆腐", "海苔饭团", "原味酸奶"];
+const palette = (index) => tints[index % tints.length];
+
+function sticker(label, tint, [x, y, width, height, rotation], index, photo = "") {
+  const background = photo ? 'center / cover url("' + photo + '")' : tint[0];
+  return {
+    label: photo ? "" : label,
+    style: "position:absolute;left:" + x + "px;top:" + y + "px;width:" + width + "px;height:" + height
+      + "px;box-sizing:border-box;border-radius:" + Math.round(height / 3)
+      + "px;border:4px solid #FFF;background:" + background + ";color:" + tint[1]
+      + ";transform:rotate(" + rotation + "deg);z-index:" + (index + 1)
+      + ";box-shadow:0 5px 12px rgba(90,70,160,.14);display:grid;place-items:center;text-align:center;"
+      + "font-size:12px;font-weight:800;line-height:1.2;overflow:hidden;overflow-wrap:anywhere"
+  };
+}
+
+function countFoods(days) {
+  const groups = new Map();
+  for (const day of days) {
+    for (const meal of [...day.meals].reverse()) {
+      const key = meal.name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+      const group = groups.get(key) ?? { name: meal.name, count: 0, date: day.date, photo: "" };
+      group.count++;
+      if (!group.photo && meal.photo) group.photo = meal.photo;
+      groups.set(key, group);
+    }
+  }
+  return [...groups.values()].sort((a, b) => b.count - a.count || b.date.localeCompare(a.date));
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { idx: 0 };
+  }
+
+  renderVals() {
+    const days = Journal.recentMealDays(30);
+    const count = days.reduce((sum, day) => sum + day.meals.length, 0);
+    const favorites = countFoods(days).slice(0, 3);
+    const options = favorites.length
+      ? Array.from({ length: 3 }, (_, i) => {
+        const favorite = favorites[i % favorites.length];
+        const available = sides.filter((side) => !favorite.name.includes(side));
+        return {
+          food: favorite.name, side: available[i % available.length] ?? "一道喜欢的小菜",
+          why: "近 30 天记过 " + favorite.count + " 次", photo: favorite.photo
+        };
+      })
+      : samples;
+    const current = options[this.state.idx];
+    const name = current.food + " + " + current.side;
+    const date = Journal.selected(Journal.today);
+    const favs = favorites.map((favorite, index) => ({
+      ...favorite,
+      tag: "最近 " + Journal.shortDate(favorite.date),
+      href: Journal.link("Day", favorite.date, { from: "album" }),
+      layers: Array.from({ length: Math.min(3, favorite.count) }, (_, i) => {
+        const top = i === Math.min(3, favorite.count) - 1;
+        return sticker(top ? favorite.name : "", palette(index + i),
+          [12 + [0, 8, 2][i], 16 - i * 4, 76, 64, [-9, 7, -2][i]], i, top ? favorite.photo : "");
+      })
+    }));
+    const combos = days.filter((day) => day.meals.length > 1).slice(0, 3).map((day) => ({
+      name: Journal.shortDate(day.date) + "的饭记",
+      count: day.meals.length,
+      parts: day.meals.slice(0, 4).map((meal) => meal.name).join(" · ") + (day.meals.length > 4 ? "…" : ""),
+      href: Journal.link("Day", day.date, { from: "album" }),
+      pile: day.meals.slice(0, 3).map((meal, i) => sticker("", palette(i),
+        [[6, 24, 42, 42, -10], [26, 16, 42, 42, 8], [14, 4, 42, 42, -3]][i], i, meal.photo))
+    }));
+    return {
+      sourceLabel: count ? "最近 30 天记了 " + count + " 餐" : "先记下平常吃的一餐",
+      suggestionLabel: count ? "从饭相册里挑一道熟悉的食物" : "先看看这几个搭配示例",
+      next: {
+        name, parts: "用「" + current.food + "」搭「" + current.side + "」",
+        why: current.why ?? "示例搭配",
+        pile: [
+          sticker(current.side, palette(3), [53, 31, 65, 62, 8], 0),
+          sticker(current.food, palette(0), [10, 17, 74, 70, -7], 1, current.photo)
+        ]
+      },
+      backHref: Journal.link("Main", date),
+      albumHref: Journal.link("Album", days[0]?.date ?? Journal.today, { view: "food" }),
+      recordHref: Journal.link("Record", Journal.today, { name: name.length <= 60 ? name : current.food }),
+      shuffle: () => this.setState({ idx: (this.state.idx + 1) % options.length }),
+      empty: !count, favs, combos, noCombos: !combos.length,
+      rules: count
+        ? ["最近 30 天有 " + days.length + " 天留下饭记。", "「" + favorites[0].name + "」记了 " + favorites[0].count + " 次。"]
+        : ["每记下一餐，这里就会积累你自己的饮食记录。"]
+    };
+  }
+}
+</script>
+</body>
+</html>

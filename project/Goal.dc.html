@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>好好吃饭 我的目标</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; padding: 50px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Main.dc.html" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; padding-right: 8px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      本周
+    </a>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px">
+    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">我的目标</h1>
+    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 18px">
+      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
+      <span style="position: relative">吃好了才瘦得住</span>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 10px">
+    <span style="font-size: 14px; font-weight: 700; color: #6F6A78">{{headline}}</span>
+    <div style="display: flex; align-items: baseline; gap: 6px; margin-top: -4px">
+      <span style="font-size: 40px; font-weight: 900; color: #7A66E0; line-height: 1.05; letter-spacing: -0.5px">{{band}}</span>
+      <span style="font-size: 16px; font-weight: 800">kcal / 天</span>
+    </div>
+    <span style="font-size: 12px; font-weight: 600; color: #6F6A78">{{why}}</span>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div style="background: #FFEADB; border-radius: 16px; padding: 8px 10px; display: flex; flex-direction: column">
+        <span style="font-size: 12px; font-weight: 700; color: #9A4B12">蛋白质 · 先吃够</span>
+        <span style="font-size: 18px; font-weight: 900; color: #2A2633">{{pro}}</span>
+      </div>
+      <div style="background: #EEE9FF; border-radius: 16px; padding: 8px 10px; display: flex; flex-direction: column">
+        <span style="font-size: 12px; font-weight: 700; color: #5B48B8">脂肪</span>
+        <span style="font-size: 18px; font-weight: 900; color: #2A2633">{{fat}}</span>
+      </div>
+      <div style="background: #FFF4C9; border-radius: 16px; padding: 8px 10px; display: flex; flex-direction: column">
+        <span style="font-size: 12px; font-weight: 700; color: #7D6206">碳水</span>
+        <span style="font-size: 18px; font-weight: 900; color: #2A2633">{{carb}}</span>
+      </div>
+    </div>
+    <div style="background: #FFF6DC; border-radius: 18px; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #6E5410; line-height: 1.5">{{after}}</div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 32px; padding: 8px 18px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 48px">
+      <span style="font-size: 14px; font-weight: 800">性别</span>
+      <div style="display: flex; gap: 4px; background: #F7F5FC; border-radius: 999px; padding: 3px">
+        <sc-for list="{{sexes}}" as="o" hint-placeholder-count="2">
+          <button onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <sc-for list="{{steppers}}" as="s" hint-placeholder-count="3">
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 48px; border-top: 1px solid #F7F5FC">
+        <span style="font-size: 14px; font-weight: 800">{{s.label}}</span>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <button onClick="{{s.minus}}" aria-label="{{s.minusLabel}}" style="width: 34px; height: 34px; border-radius: 17px; border: none; background: #F7F5FC; color: #2A2633; font-size: 18px; font-weight: 800; padding: 0; font-family: inherit">−</button>
+          <span style="font-size: 16px; font-weight: 900; min-width: 64px; text-align: center">{{s.value}}</span>
+          <button onClick="{{s.plus}}" aria-label="{{s.plusLabel}}" style="width: 34px; height: 34px; border-radius: 17px; border: none; background: #F7F5FC; color: #2A2633; font-size: 18px; font-weight: 800; padding: 0; font-family: inherit">+</button>
+        </div>
+      </div>
+    </sc-for>
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 48px; border-top: 1px solid #F7F5FC">
+      <span style="font-size: 14px; font-weight: 800">现在</span>
+      <span style="font-size: 13px; font-weight: 700; color: #6F6A78">55.4 kg · 取最近 7 天平均</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid #F7F5FC">
+      <span style="font-size: 14px; font-weight: 800">平时动得多吗</span>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: #F7F5FC; border-radius: 999px; padding: 3px">
+        <sc-for list="{{acts}}" as="o" hint-placeholder-count="4">
+          <button onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 8px 0 10px; border-top: 1px solid #F7F5FC">
+      <span style="font-size: 14px; font-weight: 800">减的节奏</span>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #F7F5FC; border-radius: 999px; padding: 3px">
+        <sc-for list="{{paces}}" as="o" hint-placeholder-count="3">
+          <button onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sex: 'f', age: 28, h: 167, goal: 520, act: 1, pace: 0 };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var w = 55.4;
+    var goal = s.goal / 10;
+    var actF = [1.2, 1.375, 1.55, 1.725][s.act];
+    var paceKg = [0.25, 0.4, 0.5][s.pace];
+    var bmrOf = function (kg) { return 10 * kg + 6.25 * s.h - 5 * s.age + (s.sex === 'f' ? -161 : 5); };
+    var bmr = Math.round(bmrOf(w));
+    var tdee = Math.round(bmr * actF);
+    var keep = Math.round(bmrOf(goal) * actF / 10) * 10;
+    var losing = goal < w - 0.05;
+    var target = losing ? Math.max(bmr, tdee - paceKg * 7700 / 7, tdee * 0.75) : tdee;
+    target = Math.round(target / 10) * 10;
+    var lo = Math.max(bmr, target - 80), hi = target + 80;
+    lo = Math.round(lo / 10) * 10;
+    var realPace = (tdee - target) * 7 / 7700;
+    var weeks = losing && realPace > 0 ? Math.ceil((w - goal) / realPace) : 0;
+    var pro = Math.round(1.6 * w);
+    var fat = Math.round(Math.max(0.8 * w, target * 0.25 / 9));
+    var carb = Math.max(0, Math.round((target - pro * 4 - fat * 9) / 4));
+
+    var seg = function (on) {
+      return 'height: 34px; border: none; border-radius: 999px; padding: 0 12px; font-size: 13px; font-family: inherit; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78');
+    };
+    var mk = function (key, list) {
+      return list.map(function (label, i) {
+        return { label: label, style: seg(s[key] === (key === 'sex' ? ['f', 'm'][i] : i)), pick: function () { var o = {}; o[key] = key === 'sex' ? ['f', 'm'][i] : i; self.setState(o); } };
+      });
+    };
+    var step = function (key, label, unit, d, fmt) {
+      return {
+        label: label, value: fmt(s[key]) + ' ' + unit,
+        minusLabel: label + '减少', plusLabel: label + '增加',
+        minus: function () { var o = {}; o[key] = self.state[key] - d; self.setState(o); },
+        plus: function () { var o = {}; o[key] = self.state[key] + d; self.setState(o); }
+      };
+    };
+    return {
+      headline: losing ? '每天吃在这个范围，就在慢慢变轻' : '已经到目标了，按维持来吃',
+      band: lo + ' – ' + hi,
+      why: '基础代谢 ' + bmr + ' · 日常消耗 ' + tdee + (losing ? ' · 每周约轻 ' + realPace.toFixed(2) + ' kg' : '') + ' · 不会低于基础代谢',
+      pro: pro + ' g', fat: fat + ' g', carb: carb + ' g',
+      after: losing ? '大约 ' + weeks + ' 周到 ' + goal.toFixed(1) + ' kg。到了以后自动换成维持：每天约 ' + keep + ' kcal，体重和体型都稳住。' : '维持热量每天约 ' + keep + ' kcal，蛋白质继续吃够，体型更稳。',
+      sexes: mk('sex', ['女', '男']),
+      acts: mk('act', ['久坐', '常走动', '有运动', '运动多']),
+      paces: mk('pace', ['慢慢来', '正常', '快一点']),
+      steppers: [
+        step('age', '年龄', '岁', 1, function (v) { return v; }),
+        step('h', '身高', 'cm', 1, function (v) { return v; }),
+        step('goal', '想到', 'kg', 5, function (v) { return (v / 10).toFixed(1); })
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

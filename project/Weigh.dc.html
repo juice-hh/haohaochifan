@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>好好吃饭 早上称重</title>
+<script src="./support.js"></script>
+<script src="./journal.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
+.weight-field{display:flex;align-items:baseline;justify-content:center;gap:6px;border-radius:12px;cursor:text}
+.weight-field:focus-within{outline:2px solid #C9BFF5;outline-offset:5px}
+.weight-input{box-sizing:content-box;padding:0;border:0;background:transparent;color:#7A66E0;font:inherit;font-size:80px;font-weight:900;letter-spacing:-1px;line-height:1;text-align:center;outline:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; padding: 50px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="{{backHref}}" aria-label="关闭" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+    </a>
+    <span style="width: 44px"></span>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px">
+    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">早上好</h1>
+    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 18px">
+      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
+      <span style="position: relative">{{headingNote}}</span>
+    </div>
+  </div>
+  <span style="font-size: 16px; font-weight: 600; color: #6F6A78; margin-top: -4px">{{dateLabel}}</span>
+
+  <div style="background: #FFFFFF; border-radius: 32px; padding: 26px 20px 22px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; align-items: center; gap: 18px">
+    <label class="weight-field">
+      <input id="weight-input" class="weight-input" type="text" inputmode="decimal" enterkeyhint="done" maxlength="7" placeholder="—" autocomplete="off" spellcheck="false" aria-label="体重（公斤）" aria-invalid="{{invalid}}" aria-describedby="weight-error" value="{{draft}}" style="{{weightWidth}}" onInput="{{typeWeight}}" onBlur="{{commitWeight}}" onKeyDown="{{finishTyping}}">
+      <span style="font-size: 24px; font-weight: 800">kg</span>
+    </label>
+    <div style="display: flex; align-items: center; gap: 10px; width: 100%">
+      <button onClick="{{minus}}" aria-label="减 0.1" aria-disabled="{{noWeight}}" style="width: 48px; height: 48px; border-radius: 24px; border: none; background: #F7F5FC; color: #2A2633; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"></path></svg>
+      </button>
+      <div style="position: relative; flex-grow: 1; height: 48px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; gap: 6px">
+        <sc-for list="{{ticks}}" as="t" hint-placeholder-count="25">
+          <div style="{{t.style}}"></div>
+        </sc-for>
+        <div style="position: absolute; left: 50%; bottom: 0; width: 4px; height: 42px; margin-left: -2px; border-radius: 2px; background: #7A66E0"></div>
+      </div>
+      <button onClick="{{plus}}" aria-label="加 0.1" aria-disabled="{{noWeight}}" style="width: 48px; height: 48px; border-radius: 24px; border: none; background: #F7F5FC; color: #2A2633; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12M12 6v12"></path></svg>
+      </button>
+    </div>
+    <span id="weight-error" aria-live="polite" style="{{errorStyle}}">{{error}}</span>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; align-items: center; gap: 14px">
+    <div style="position: relative; width: 104px; height: 96px; flex-shrink: 0">
+      <sc-for list="{{pile}}" as="p" hint-placeholder-count="5">
+        <div style="{{p.style}}"></div>
+      </sc-for>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1">
+      <span style="font-size: 16px; font-weight: 900">{{comparisonTitle}}</span>
+      <span style="font-size: 13px; font-weight: 600; color: #6F6A78">{{comparisonText}}</span>
+      <sc-if value="{{deltaStr}}">
+        <span style="align-self: flex-start; font-size: 15px; font-weight: 900; padding: 8px 12px; border-radius: 14px; background: #ECE8FB; color: #5B48B8">{{deltaStr}}</span>
+      </sc-if>
+    </div>
+  </div>
+  <span style="font-size: 12px; font-weight: 600; color: #6F6A78; text-align: center">{{saveHint}}</span>
+
+  <div style="flex-grow: 1"></div>
+
+  <button type="button" onClick="{{saveWeight}}" style="height: 54px; flex-shrink: 0; border: 0; font-family: inherit; cursor: pointer; border-radius: 999px; background: #7A66E0; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 800; box-shadow: 0 10px 22px rgba(122, 102, 224, 0.3)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+    记下
+  </button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+const { min: minWeight, max: maxWeight } = Journal.weightLimits;
+const formatWeight = (tenths) => (tenths / 10).toFixed(1);
+
+function parseWeight(text) {
+  const value = text.trim().normalize("NFKC").replace(/[,。]/g, ".");
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
+  const tenths = Number(value) * 10;
+  return tenths >= minWeight && tenths <= maxWeight ? Math.round(tenths) : null;
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const selected = Journal.selected(Journal.today);
+    this.date = selected > Journal.today ? Journal.today : selected;
+    this.fromDay = Journal.params.get("from") === "day";
+    this.via = Journal.params.get("via") === "album" ? "album" : "week";
+    this.previous = Journal.previousWeight(this.date);
+    const initial = Journal.weight(this.date);
+    const w = initial === null ? null : Math.round(initial * 10);
+    this.state = { w, draft: w === null ? "" : formatWeight(w), error: "" };
+  }
+
+  typeWeight(draft) {
+    this.setState({ draft, w: parseWeight(draft) ?? this.state.w, error: "" });
+  }
+
+  commitWeight() {
+    const w = parseWeight(this.state.draft);
+    if (w === null) {
+      this.setState({ error: "请输入 0.1 到 500 公斤之间的体重。" });
+      return false;
+    }
+    this.setState({ w, draft: formatWeight(w), error: "" });
+    return true;
+  }
+
+  adjustWeight(step) {
+    if (this.state.w === null) return;
+    const w = Math.min(maxWeight, Math.max(minWeight, this.state.w + step));
+    this.setState({ w, draft: formatWeight(w), error: "" });
+  }
+
+  backHref(status) {
+    const extra = status ? { status } : {};
+    return Journal.link(this.fromDay ? "Day" : "Main", this.date, {
+      ...(this.fromDay ? { from: this.via } : {}), ...extra
+    });
+  }
+
+  saveWeight() {
+    if (!this.commitWeight()) {
+      document.getElementById("weight-input").focus();
+      return;
+    }
+    try {
+      Journal.saveWeight(this.date, this.state.w);
+      location.replace(this.backHref("weighed"));
+    } catch {
+      this.setState({ error: "暂时没能保存体重，请重试。" });
+    }
+  }
+
+  renderVals() {
+    var w = this.state.w;
+    var ticks = [];
+    for (var i = -12; i <= 12; i++) {
+      var major = (w + i) % 5 === 0;
+      ticks.push({ style: 'width: 3px; flex-shrink: 0; border-radius: 2px; height: ' + (major ? 28 : 14) + 'px; background: ' + (major ? '#C9BFF5' : '#E4DFF5') });
+    }
+    var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF'];
+    var spots = [[8, 30, -10], [40, 24, 8], [20, 8, 4], [48, 2, -6], [28, 40, 12]];
+    var pile = tints.map(function (c, j) {
+      var p = spots[j];
+      return { style: 'position: absolute; left: ' + p[0] + 'px; top: ' + p[1] + 'px; width: 52px; height: 52px; box-sizing: border-box; border-radius: 14px; border: 3px solid #FFFFFF; background: ' + c + '; transform: rotate(' + p[2] + 'deg); box-shadow: 0 5px 12px rgba(90, 70, 160, 0.14)' };
+    });
+    const { draft, error } = this.state;
+    const typed = parseWeight(draft);
+    const previous = this.previous;
+    const change = previous && typed !== null ? typed - Math.round(previous.kg * 10) : null;
+    const dateLabel = Journal.shortDate(this.date);
+    const width = Math.max(3.5, Math.min(5.3, draft.length - (/[.,]/.test(draft) ? 0.5 : 0)));
+    return {
+      draft, error, invalid: Boolean(error),
+      dateLabel: dateLabel + " · " + Journal.dayName(this.date),
+      headingNote: this.date === Journal.today ? "记一笔体重" : "补记这天的体重",
+      backHref: this.backHref(),
+      noWeight: w === null,
+      comparisonTitle: previous ? (previous.example ? "上次体重 · 示例" : "上次记录") : "体重记录",
+      comparisonText: previous
+        ? Journal.shortDate(previous.date) + " · " + previous.kg.toFixed(1) + " kg"
+        : "保存后可以在周记里查看",
+      saveHint: "体重会记到" + dateLabel + "，同一天再次保存可修正",
+      weightWidth: "width: " + width + "ch",
+      errorStyle: error ? "font-size: 13px; font-weight: 700; color: #B63843" : "display: none",
+      typeWeight: (event) => this.typeWeight(event.target.value),
+      commitWeight: () => this.commitWeight(),
+      finishTyping: (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.target.blur();
+        }
+      },
+      saveWeight: () => this.saveWeight(),
+      ticks: ticks,
+      pile: pile,
+      deltaStr: change === null ? "" : change === 0 ? "持平"
+        : (change > 0 ? "↑" : "↓") + formatWeight(Math.abs(change)) + " kg",
+      minus: () => this.adjustWeight(-1),
+      plus: () => this.adjustWeight(1)
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Day.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "单日详情",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "周视图",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "Record.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "拍一餐",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "Weigh.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "早上称重",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "Goal.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "我的目标",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "Album.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "饭相册",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "Love.dc.html": {
+      "h": 1240,
+      "is_interactive": true,
+      "title": "我爱吃的",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-04T10:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 3210,
+      "text": "好好吃饭 · 第一版页面",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Day.dc.html",
+    "Record.dc.html",
+    "Weigh.dc.html",
+    "Goal.dc.html",
+    "Album.dc.html",
+    "Love.dc.html"
+  ],
+  "pages": [],
+  "title": "好好吃饭 页面设计"
+}
