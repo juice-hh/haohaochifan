@@ -226,6 +226,7 @@ class Component extends DCLogic {
     const current = raw.find((day) => day.date === selected);
     const entry = current.entry;
     const [carb, protein, fat] = entry.percentages;
+    const hasMacros = entry.grams.some((value) => value > 0);
     const recorded = raw.map((day) => day.entry.kcal).filter((kcal) => kcal > 0);
     const avg = recorded.length && Math.round(recorded.reduce((a, b) => a + b, 0) / recorded.length);
     const change = weights.length > 1 ? Math.round((weights.at(-1) - weights[0]) * 10) / 10 : 0;
@@ -258,9 +259,9 @@ class Component extends DCLogic {
         b1: "width: " + carb + "%; background: #F6CF5C",
         b2: "width: " + protein + "%; background: #A996F2",
         b3: "width: " + fat + "%; background: #8FCFA6",
-        p1: entry.kcal ? carb + "%" : "—",
-        p2: entry.kcal ? protein + "%" : "—",
-        p3: entry.kcal ? fat + "%" : "—"
+        p1: hasMacros ? carb + "%" : "—",
+        p2: hasMacros ? protein + "%" : "—",
+        p3: hasMacros ? fat + "%" : "—"
       }
     };
   }

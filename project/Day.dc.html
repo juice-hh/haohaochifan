@@ -97,7 +97,8 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       </div>
       <span style="font-size: 12px; font-weight: 700; color: #C9372C">已记录估算</span>
     </div>
-    <span style="font-size: 12px; font-weight: 600; color: #6F6A78; margin-top: -6px">按已填写的营养克数换算</span>
+    <span style="font-size: 12px; font-weight: 600; color: #6F6A78; margin-top: -6px">按已填写的热量或营养克数汇总</span>
+    <sc-if value="{{hasMacros}}">
     <div style="position: relative; padding: 5px 0">
       <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px">
         <div style="{{barCarb}}"></div>
@@ -122,6 +123,8 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
         <span style="font-size: 12px; font-weight: 700; color: #24844A"></span>
       </div>
     </div>
+    </sc-if>
+    <sc-if value="{{missingMacros}}"><p class="goal-note">未填写三大营养素，暂不展示比例</p></sc-if>
   </div>
   </sc-if>
   <sc-if value="{{hasMeals}}">
@@ -190,7 +193,7 @@ class Component extends DCLogic {
     const [carbGrams, proteinGrams, fatGrams] = entry.grams;
     const status = Journal.params.get("status");
     const notice = status === "weighed" ? "已记下当天体重"
-      : status === "updated" ? "已保存修改" : status === "restored" ? "已恢复这餐" : "";
+      : status === "saved" ? "已记下这一餐" : status === "updated" ? "已保存修改" : status === "restored" ? "已恢复这餐" : "";
     return {
       stickers, dayName: Journal.dayName(date), dateLabel: Journal.shortDate(date),
       notice, error: this.state.error,
@@ -211,6 +214,8 @@ class Component extends DCLogic {
       previousWeightLabel: "上次记录",
       previousWeight: previous?.kg.toFixed(1) ?? "—",
       delta: delta === null ? "" : delta === 0 ? "持平" : (delta > 0 ? "↑" : "↓") + Math.abs(delta).toFixed(1),
+      hasMacros: entry.grams.some((value) => value > 0),
+      missingMacros: !entry.grams.some((value) => value > 0),
       kcal: entry.kcal, carb, protein, fat, carbGrams, proteinGrams, fatGrams,
       barCarb: "width: " + carb + "%; background: #F6CF5C",
       barProtein: "width: " + protein + "%; background: #A996F2",

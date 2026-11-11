@@ -365,3 +365,45 @@ x-dc {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+
+
+.record-mode {
+  display: flex;
+  gap: 8px;
+}
+
+.record-mode button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid #E4DFF5;
+  border-radius: 16px;
+  background: transparent;
+  color: #6F6A78;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.record-mode button[aria-pressed="true"] {
+  border-color: #C9BFF5;
+  background: #ECE8FB;
+  color: #5B48B8;
+}
+
+.record-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  background: #F7F5FC;
+}
+
+.record-save[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: default;
+}
