@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="./mobile.css">
 <title>好好吃饭 周视图</title>
 <script src="./support.js"></script>
 <script src="./journal.js"></script>
@@ -14,10 +16,10 @@ body{margin:0}
 a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; padding: 52px 16px 0; display: flex; flex-direction: column; gap: 10px">
+<div class="screen screen--week" style="position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 10px">
   <div style="display: flex; align-items: center; justify-content: space-between">
     <span style="font-size: 15px; font-weight: 800; color: #5B48B8">好好吃饭</span>
-    <a href="{{weighHref}}" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.8); border: 0.5px solid #E4DFF5; display: flex; align-items: center; gap: 6px; color: #5B48B8; font-size: 14px; font-weight: 700">
+    <a class="week-weigh" href="{{weighHref}}" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.8); border: 0.5px solid #E4DFF5; display: flex; align-items: center; gap: 6px; color: #5B48B8; font-size: 14px; font-weight: 700">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><path d="M9 10a3 3 0 0 1 6 0"></path><path d="M12 10l1.2-1.6"></path></svg>
       称重
     </a>
@@ -58,8 +60,8 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         </button>
       </sc-for>
     </div>
-    <svg width="358" height="92" viewBox="0 0 358 92" aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none">
-      <polyline points="{{linePts}}" fill="none" stroke="#C9BFF5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+    <svg width="100%" height="92" viewBox="0 0 358 92" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none">
+      <polyline points="{{linePts}}" vector-effect="non-scaling-stroke" fill="none" stroke="#C9BFF5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
     </svg>
     <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
       <span style="{{d.numStyle}}">{{d.w}}</span>
@@ -99,7 +101,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     <span role="status" style="font-size: 13px; font-weight: 800; color: #5B48B8">{{savedMessage}}</span>
   </sc-if>
 
-  <div style="position: absolute; left: 14px; right: 14px; bottom: 26px; display: flex; align-items: center; gap: 10px; z-index: 30">
+  <div class="week-dock" style="display: flex; align-items: center; gap: 10px">
     <nav aria-label="主导航" style="flex-grow: 1; height: 62px; box-sizing: border-box; padding: 4px; border-radius: 31px; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 28px rgba(60, 40, 120, 0.14); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
       <a href="{{currentWeekHref}}" aria-current="page" style="border-radius: 27px; background: rgba(122, 102, 224, 0.13); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #7A66E0; font-size: 10px; font-weight: 700">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V11M9.3 19V7M14.6 19v-6M20 19V9"></path></svg>
@@ -128,7 +130,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    const date = Journal.selected();
+    const date = Journal.selected(Journal.today);
     const savedMessage = Journal.params.get("status") === "weighed"
       ? "已记下" + Journal.shortDate(date) + "的体重"
       : Journal.params.get("saved") === "1" ? "已记到" + Journal.shortDate(date) : "";
@@ -165,20 +167,21 @@ class Component extends DCLogic {
     const high = weights.length ? Math.max(...weights) : 0;
     const span = Math.max(0.7, high - Math.min(high, ...weights));
     const yOf = (weight) => Math.round(40 + (high - weight) / span * 34);
-    const colW = 358 / 7;
+    const chartWidth = 358;
     var pts = [];
     var tip = { style: "display: none" };
     var days = raw.map(function (d, i) {
       var on = selected === d.date;
-      var cx = (i + 0.5) * colW;
+      const center = (i + 0.5) / raw.length;
+      const centerPercent = (center * 100) + "%";
       var y = yOf(d.w);
-      if (d.w !== null) pts.push(Math.round(cx) + ',' + y);
+      if (d.w !== null) pts.push(center * chartWidth + ',' + y);
       if (on && d.w !== null) {
-        var left = Math.max(0, Math.min(358 - 104, Math.round(cx - 52)));
+        const tipLeft = "clamp(0px, " + centerPercent + " - 52px, 100% - 104px)";
         tip = {
           w: d.w.toFixed(1),
           label: Journal.savedWeight(d.date) === null ? "示例体重" : "当天体重",
-          style: 'position: absolute; left: ' + left + 'px; top: ' + Math.max(0, y - 56) + 'px; width: 104px; box-sizing: border-box; padding: 6px 0; border-radius: 14px; background: #FFFFFF; box-shadow: 0 6px 16px rgba(90, 70, 160, 0.14); display: flex; flex-direction: column; align-items: center; z-index: 20'
+          style: 'position: absolute; left: ' + tipLeft + '; top: ' + Math.max(0, y - 56) + 'px; width: 104px; box-sizing: border-box; padding: 6px 0; border-radius: 14px; background: #FFFFFF; box-shadow: 0 6px 16px rgba(90, 70, 160, 0.14); display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 20'
         };
       }
       var tiles = [];
@@ -194,8 +197,8 @@ class Component extends DCLogic {
         aria: '周' + d.wd + '，' + d.n + ' 餐' + (d.w === null ? '' : '，体重 ' + d.w.toFixed(1) + ' 公斤'),
         colStyle: 'display: flex; flex-direction: column; align-items: stretch; border: none; padding: 0; font-family: inherit; cursor: pointer; border-radius: 22px; background: ' + (on ? '#ECE8FB' : 'transparent'),
         pileStyle: 'position: relative; height: 112px',
-        numStyle: 'position: absolute; left: ' + Math.round(cx - 22) + 'px; width: 44px; top: ' + (y + 9) + 'px; text-align: center; font-size: 11px; font-weight: 800; color: #6F6A78; display: ' + (on || d.w === null ? 'none' : 'block'),
-        dotStyle: (d.w === null ? 'display: none; ' : '') + 'position: absolute; left: ' + Math.round(cx - (on ? 7 : 5)) + 'px; top: ' + (y - (on ? 7 : 5)) + 'px; width: ' + (on ? 14 : 10) + 'px; height: ' + (on ? 14 : 10) + 'px; box-sizing: border-box; border-radius: 7px; background: ' + (on ? '#7A66E0' : '#FFFFFF') + '; border: ' + (on ? '3px solid #FFFFFF' : '2.5px solid #C9BFF5') + '; box-shadow: ' + (on ? '0 0 0 2px #7A66E0' : 'none') + '; z-index: 10',
+        numStyle: 'position: absolute; left: ' + centerPercent + '; transform: translateX(-50%); pointer-events: none; width: 44px; top: ' + (y + 9) + 'px; text-align: center; font-size: 11px; font-weight: 800; color: #6F6A78; display: ' + (on || d.w === null ? 'none' : 'block'),
+        dotStyle: (d.w === null ? 'display: none; ' : '') + 'position: absolute; left: ' + centerPercent + '; transform: translateX(-50%); pointer-events: none; top: ' + (y - (on ? 7 : 5)) + 'px; width: ' + (on ? 14 : 10) + 'px; height: ' + (on ? 14 : 10) + 'px; box-sizing: border-box; border-radius: 7px; background: ' + (on ? '#7A66E0' : '#FFFFFF') + '; border: ' + (on ? '3px solid #FFFFFF' : '2.5px solid #C9BFF5') + '; box-shadow: ' + (on ? '0 0 0 2px #7A66E0' : 'none') + '; z-index: 10',
         wdStyle: 'width: 28px; height: 24px; line-height: 24px; border-radius: 12px; font-size: 13px; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78'),
         dateStyle: 'font-size: 13px; font-weight: ' + (on || d.today ? 800 : 600) + '; color: ' + (on ? '#5B48B8' : d.today ? '#2A2633' : '#6F6A78')
       };

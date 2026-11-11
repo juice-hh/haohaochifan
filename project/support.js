@@ -120,9 +120,6 @@
     const Component = new Function("DCLogic", script.textContent + "\nreturn Component;")(DCLogic);
     component = new Component(props);
     update(component.renderVals());
-
-    // Center the fixed-width artboard in the desktop browser.
-    root.style.cssText = "display: block; width: fit-content; margin-inline: auto;";
   }
 
   document.addEventListener("DOMContentLoaded", start, { once: true });
