@@ -48,32 +48,57 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
         </button>
         <span style="font-size: 18px; font-weight: 900">{{monthLabel}}</span>
-        <button aria-label="下个月" onClick="{{nextMonth}}" aria-disabled="{{atCurrentMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+        <button aria-label="下个月" onClick="{{nextMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
         </button>
       </div>
+      <div class="calendar-plan-toolbar">
+        <span>{{calendarHint}}</span>
+        <button type="button" class="plan-action" data-active="{{planning}}" onClick="{{switchPlanning}}">{{planAction}}</button>
+      </div>
+      <sc-if value="{{planning}}">
+        <div class="plan-picker" role="group" aria-label="计划贴纸">
+          <sc-for list="{{stickers}}" as="s">
+            <button type="button" class="plan-chip" aria-pressed="{{s.active}}" onClick="{{s.pick}}">
+              <span aria-hidden="true">{{s.icon}}</span> {{s.label}}
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
       <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; font-size: 12px; font-weight: 700; color: #6F6A78">
         <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
       </div>
       <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px">
         <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
-          <sc-if value="{{c.empty}}"><div style="height: 62px"></div></sc-if>
-          <sc-if value="{{c.href}}">
-          <a href="{{c.href}}" aria-label="{{c.aria}}" style="{{c.style}}">
-            <div style="position: relative; width: 34px; height: 34px">
-              <sc-for list="{{c.tiles}}" as="t" hint-placeholder-count="2">
-                <div style="{{t.style}}"></div>
-              </sc-for>
-            </div>
-            <span style="{{c.numStyle}}">{{c.day}}</span>
-            <span style="{{c.dotStyle}}"></span>
-          </a>
-          </sc-if>
+          <div class="calendar-cell" data-selected="{{c.selected}}">
+            <sc-if value="{{c.date}}">
+              <div class="calendar-cell-face" aria-hidden="true">
+                <div class="calendar-food-stack">
+                  <sc-for list="{{c.tiles}}" as="t" hint-placeholder-count="2">
+                    <div style="{{t.style}}"></div>
+                  </sc-for>
+                </div>
+                <span style="{{c.numStyle}}">{{c.day}}</span>
+                <span style="{{c.dotStyle}}"></span>
+                <sc-if value="{{showCalendarPlans}}">
+                  <span class="plan-markers">
+                    <sc-for list="{{c.plans}}" as="p"><span>{{p.icon}}</span></sc-for>
+                  </span>
+                </sc-if>
+              </div>
+              <sc-if value="{{planning}}">
+                <button type="button" class="calendar-cell-target" aria-label="{{c.planAria}}" aria-pressed="{{c.marked}}" onClick="{{c.toggle}}"></button>
+              </sc-if>
+              <sc-if value="{{c.href}}">
+                <a class="calendar-cell-target" href="{{c.href}}" aria-label="{{c.aria}}"></a>
+              </sc-if>
+            </sc-if>
+          </div>
         </sc-for>
       </div>
       <div style="display: flex; justify-content: center; gap: 14px; font-size: 12px; font-weight: 700; color: #6F6A78; padding-top: 4px">有 {{loggedDays}} 天留下了饭记</div>
     </div>
-    <div style="background: #FFF6DC; border-radius: 20px; padding: 12px 16px; font-size: 13px; font-weight: 700; color: #6E5410; line-height: 1.5">点一天，找回那天吃了什么。</div>
+    <p class="calendar-plan-status" role="status">{{planStatus}}</p>
   </sc-if>
 
   <sc-if value="{{isFood}}" hint-placeholder-val="{{false}}">
@@ -105,14 +130,37 @@ class Component extends DCLogic {
     this.date = Journal.selected(Journal.today);
     this.state = {
       view: Journal.params.get("view") === "food" ? "food" : "cal",
-      month: Journal.monthStart(this.date)
+      month: Journal.monthStart(this.date),
+      planning: Journal.params.get("plan") === "1",
+      sticker: Journal.planStickers[0].id,
+      planStatus: ""
     };
   }
 
   moveMonth(direction) {
-    const month = Journal.addMonths(this.state.month, direction);
-    if (month <= Journal.monthStart(Journal.today)) this.setState({ month });
+    this.setState({ month: Journal.addMonths(this.state.month, direction), planStatus: "" });
   }
+
+  switchPlanning() {
+    const planning = !this.state.planning;
+    const url = new URL(location.href);
+    if (planning) url.searchParams.set("plan", "1");
+    else url.searchParams.delete("plan");
+    history.replaceState(null, "", url);
+    this.setState({ planning, planStatus: "" });
+  }
+
+  toggleSticker(date, sticker) {
+    try {
+      const added = Journal.togglePlan(date, sticker.id);
+      this.setState({
+        planStatus: Journal.shortDate(date) + (added ? "已贴上「" : "已移除「") + sticker.label + "」"
+      });
+    } catch {
+      this.setState({ planStatus: "计划保存失败，请确认浏览器允许保存网站数据后再试。" });
+    }
+  }
+
   renderVals() {
     var self = this;
     var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF', '#EEE9FF'];
@@ -125,13 +173,19 @@ class Component extends DCLogic {
       };
     });
 
-    const month = this.state.month;
+    const { month, planning } = this.state;
+    const sticker = Journal.planStickers.find(({ id }) => id === this.state.sticker);
+    const stickers = Journal.planStickers.map((item) => ({
+      ...item,
+      active: item.id === sticker.id,
+      pick: () => this.setState({ sticker: item.id, planStatus: "" })
+    }));
     const next = Journal.addMonths(month, 1);
     const days = [];
     for (let date = month; date < next; date = Journal.addDays(date, 1)) {
       days.push(Journal.day(date));
     }
-    const cells = Array.from({ length: (Journal.weekday(month) + 6) % 7 }, () => ({ empty: true }));
+    const cells = Array.from({ length: (Journal.weekday(month) + 6) % 7 }, () => ({}));
     const groups = new Map();
     for (const [i, entry] of days.entries()) {
       const n = entry.meals.length;
@@ -148,11 +202,18 @@ class Component extends DCLogic {
           + (meal.photo ? 'center / cover url("' + meal.photo + '")' : tints[(i + j * 2) % tints.length])
           + '; transform: rotate(' + [-6, 5, -2][(i + j) % 3] + 'deg); box-shadow: 0 2px 5px rgba(90, 70, 160, 0.14)'
       }));
+      const { date } = entry;
+      const plans = Journal.plansOn(date);
+      const label = Journal.shortDate(date);
+      const planNames = plans.map(({ label }) => label).join("、");
       cells.push({
-        day: i + 1, tiles,
-        href: Journal.link("Day", entry.date, { from: "album" }),
-        aria: Journal.shortDate(entry.date) + "，" + (n ? n + " 餐" : "没记录"),
-        style: 'height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; border-radius: 14px; background: ' + (entry.date === this.date ? '#ECE8FB' : 'transparent'),
+        date, day: i + 1, tiles, plans,
+        selected: date === this.date,
+        marked: plans.some(({ id }) => id === sticker.id),
+        toggle: () => this.toggleSticker(date, sticker),
+        href: planning ? "" : Journal.link("Day", date, { from: "album" }),
+        aria: label + "，" + (n ? n + " 餐" : "没记录") + (planNames ? "，计划：" + planNames : ""),
+        planAria: label + "，" + sticker.label,
         numStyle: 'font-size: 11px; font-weight: 800; color: ' + (n ? '#2A2633' : '#807A8D'),
         dotStyle: 'width: 5px; height: 5px; border-radius: 3px; background: ' + (n ? '#A996F2' : 'transparent')
       });
@@ -178,14 +239,18 @@ class Component extends DCLogic {
     const monthNumber = Number(month.slice(5, 7));
     const count = days.reduce((sum, day) => sum + day.meals.length, 0);
     return {
-      views, cells, foods,
+      views, cells, foods, planning, stickers,
+      showCalendarPlans: planning || cells.some((cell) => cell.plans?.length),
+      calendarHint: planning ? "点日期贴上，再点一次取消" : "点日期查看饭记",
+      planAction: planning ? "完成" : "＋ 贴计划",
+      planStatus: this.state.planStatus,
+      switchPlanning: () => this.switchPlanning(),
       isCal: this.state.view === "cal", isFood: this.state.view === "food",
       monthLabel: month.slice(0, 4) + " 年 " + monthNumber + " 月",
       monthCount: monthNumber + " 月记了 " + count + " 餐",
       loggedDays: days.filter((day) => day.meals.length).length,
       emptyMonth: count === 0,
       backHref: Journal.link("Main", this.date),
-      atCurrentMonth: month >= Journal.monthStart(Journal.today),
       previousMonth: () => this.moveMonth(-1),
       nextMonth: () => this.moveMonth(1)
     };

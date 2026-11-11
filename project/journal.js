@@ -13,6 +13,12 @@ const Journal = (() => {
   const legacyPrefix = "hhcf-meals-v1:";
   const mealPrefix = "hhcf-meal-v2:";
   const weightPrefix = "hhcf-weight-v1:";
+  const planPrefix = "hhcf-plan-v1:";
+  const planStickers = [
+    { id: "workout", icon: "🏋️", label: "锻炼" },
+    { id: "walk", icon: "🚶", label: "散步" },
+    { id: "cook", icon: "🍳", label: "做饭" }
+  ];
   const weightLimits = { min: 1, max: 5000 };
   const undoKey = "hhcf-last-meal-deletion";
   let mealsByDate;
@@ -90,6 +96,29 @@ const Journal = (() => {
     } catch {
       return null;
     }
+  }
+
+  const planKey = (date, id) => planPrefix + date + ":" + id;
+
+  function plansOn(date) {
+    try {
+      return planStickers.filter(({ id }) => localStorage.getItem(planKey(date, id)) === "1");
+    } catch {
+      return [];
+    }
+  }
+
+  function togglePlan(date, id) {
+    if (!isDate(date) || !planStickers.some((sticker) => sticker.id === id)) {
+      throw new Error("请选择有效的日期和计划。");
+    }
+    const key = planKey(date, id);
+    if (localStorage.getItem(key) === "1") {
+      localStorage.removeItem(key);
+      return false;
+    }
+    localStorage.setItem(key, "1");
+    return true;
   }
 
   function legacyMeals(date) {
@@ -248,7 +277,7 @@ const Journal = (() => {
     params, today, demoDate, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
     shortDate, dayName, isDate, selected, link, day, weight, estimate,
     getMeal, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
-    savedWeight, previousWeight, saveWeight, weightLimits
+    savedWeight, previousWeight, saveWeight, weightLimits, planStickers, plansOn, togglePlan
   };
 })();
 

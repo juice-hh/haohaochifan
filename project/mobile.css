@@ -80,3 +80,141 @@ x-dc {
     transform: scale(0.8);
   }
 }
+
+.week-header-actions,
+.calendar-plan-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-plan-toolbar {
+  justify-content: space-between;
+  padding-inline: 4px;
+  color: #6F6A78;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.plan-action,
+.plan-chip {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 0;
+  border-radius: 22px;
+  background: #ECE8FB;
+  color: #5B48B8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.plan-picker {
+  display: flex;
+  gap: 6px;
+  padding: 0 4px 4px;
+}
+
+.plan-picker .plan-chip {
+  flex: 1;
+  padding-inline: 6px;
+}
+
+.plan-chip[aria-pressed="true"],
+.plan-action[data-active="true"] {
+  background: #5B48B8;
+  color: #FFFFFF;
+}
+
+.calendar-cell {
+  position: relative;
+  min-height: 62px;
+  border-radius: 14px;
+}
+
+.calendar-cell[data-selected="true"] {
+  background: #ECE8FB;
+}
+
+.calendar-cell-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-height: 62px;
+}
+
+.calendar-food-stack {
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+
+.calendar-cell-target {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.calendar-cell-target[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px #C9BFF5;
+}
+
+.calendar-cell-target:focus-visible {
+  z-index: 1;
+  outline: 2px solid #5B48B8;
+  outline-offset: -2px;
+}
+
+.plan-markers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1px;
+  height: 14px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.calendar-plan-status {
+  margin: 0;
+  padding-inline: 8px;
+  color: #5B48B8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.calendar-plan-status:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.selected-plans {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #5B48B8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.selected-plans > span {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #ECE8FB;
+}

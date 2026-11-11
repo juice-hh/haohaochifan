@@ -23,10 +23,13 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 <div class="screen screen--week" style="position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 10px">
   <div style="display: flex; align-items: center; justify-content: space-between">
     <span style="font-size: 15px; font-weight: 800; color: #5B48B8">好好吃饭</span>
-    <a class="week-weigh" href="{{weighHref}}" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.8); border: 0.5px solid #E4DFF5; display: flex; align-items: center; gap: 6px; color: #5B48B8; font-size: 14px; font-weight: 700">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><path d="M9 10a3 3 0 0 1 6 0"></path><path d="M12 10l1.2-1.6"></path></svg>
-      称重
-    </a>
+    <div class="week-header-actions">
+      <a class="plan-action" href="{{planHref}}">＋ 贴计划</a>
+      <a class="week-weigh" href="{{weighHref}}" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.8); border: 0.5px solid #E4DFF5; display: flex; align-items: center; gap: 6px; color: #5B48B8; font-size: 14px; font-weight: 700">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><path d="M9 10a3 3 0 0 1 6 0"></path><path d="M12 10l1.2-1.6"></path></svg>
+        称重
+      </a>
+    </div>
   </div>
 
   <div style="display: flex; align-items: center; gap: 12px">
@@ -41,7 +44,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
     </button>
     <span style="font-size: 16px; font-weight: 700; color: #6F6A78">{{weekLabel}}</span>
-    <button aria-label="下一周" onClick="{{nextWeek}}" aria-disabled="{{atCurrentWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+    <button aria-label="下一周" onClick="{{nextWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
     </button>
     <span style="margin-left: auto; font-size: 13px; font-weight: 700; color: #6F6A78">{{averageLabel}}</span>
@@ -60,6 +63,11 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
           <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 12px">
             <span style="{{d.wdStyle}}">{{d.wd}}</span>
             <span style="{{d.dateStyle}}">{{d.date}}</span>
+            <sc-if value="{{showWeekPlans}}">
+              <span class="plan-markers" aria-hidden="true">
+                <sc-for list="{{d.plans}}" as="p"><span>{{p.icon}}</span></sc-for>
+              </span>
+            </sc-if>
           </div>
         </button>
       </sc-for>
@@ -86,6 +94,13 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
     </div>
+    <sc-if value="{{selectedHasPlans}}">
+      <div class="selected-plans">
+        <sc-for list="{{selectedPlans}}" as="p">
+          <span><span aria-hidden="true">{{p.icon}}</span> {{p.label}}</span>
+        </sc-for>
+      </div>
+    </sc-if>
     <div style="display: flex; align-items: baseline; gap: 6px">
       <span style="font-size: 38px; font-weight: 900; color: #7A66E0; line-height: 1.05">{{sel.kcal}}</span>
       <span style="font-size: 15px; font-weight: 800">kcal</span>
@@ -149,9 +164,7 @@ class Component extends DCLogic {
 
   moveWeek(direction) {
     const date = Journal.addDays(this.state.date, direction * 7);
-    if (Journal.weekStart(date) <= Journal.weekStart(Journal.today)) {
-      this.select(date > Journal.today ? Journal.today : date);
-    }
+    this.select(date);
   }
   renderVals() {
     var self = this;
@@ -164,7 +177,7 @@ class Component extends DCLogic {
       const entry = Journal.day(date);
       return {
         date, entry, wd: Journal.dayName(date).slice(1), w: entry.weight,
-        n: entry.meals.length, today: date === Journal.today
+        n: entry.meals.length, today: date === Journal.today, plans: Journal.plansOn(date)
       };
     });
     const weights = raw.flatMap(({ w }) => w === null ? [] : [w]);
@@ -196,9 +209,10 @@ class Component extends DCLogic {
         tiles.push({ name: shown[j].name, style: 'position: absolute; left: 50%; bottom: ' + (j * (on ? 18 : 14)) + 'px; width: 38px; height: 38px; margin-left: ' + (-19 + dx) + 'px; box-sizing: border-box; border-radius: 12px; border: 2.5px solid #FFFFFF; background: ' + tints[(i * 2 + j) % tints.length] + '; transform: rotate(' + rot + 'deg); box-shadow: 0 3px 8px rgba(90, 70, 160, 0.16); z-index: ' + (j + 1) + (shown[j].photo ? '; background: center / cover url("' + shown[j].photo + '")' : '') });
       }
       return {
-        wd: d.wd, date: Number(d.date.slice(8)), w: d.w?.toFixed(1) ?? "", tiles: tiles, on: on,
+        wd: d.wd, date: Number(d.date.slice(8)), w: d.w?.toFixed(1) ?? "", tiles: tiles, on: on, plans: d.plans,
         pick: function () { self.select(d.date); },
-        aria: '周' + d.wd + '，' + d.n + ' 餐' + (d.w === null ? '' : '，体重 ' + d.w.toFixed(1) + ' 公斤'),
+        aria: '周' + d.wd + '，' + d.n + ' 餐' + (d.w === null ? '' : '，体重 ' + d.w.toFixed(1) + ' 公斤')
+          + (d.plans.length ? '，计划：' + d.plans.map(({ label }) => label).join('、') : ''),
         colStyle: 'display: flex; flex-direction: column; align-items: stretch; border: none; padding: 0; font-family: inherit; cursor: pointer; border-radius: 22px; background: ' + (on ? '#ECE8FB' : 'transparent'),
         pileStyle: 'position: relative; height: 112px',
         numStyle: 'position: absolute; left: ' + centerPercent + '; transform: translateX(-50%); pointer-events: none; width: 44px; top: ' + (y + 9) + 'px; text-align: center; font-size: 11px; font-weight: 800; color: #6F6A78; display: ' + (on || d.w === null ? 'none' : 'block'),
@@ -222,7 +236,10 @@ class Component extends DCLogic {
       weekLabel: week.slice(5).replace("-", ".") + " – " + lastDay.slice(5).replace("-", "."),
       weightNote: change ? "周内 " + (change > 0 ? "↑" : "↓") + Math.abs(change).toFixed(1) + " kg" : "饮食手账",
       averageLabel: avg ? "日均已记 " + avg + " kcal" : "",
-      atCurrentWeek: week >= Journal.weekStart(Journal.today),
+      showWeekPlans: raw.some((day) => day.plans.length),
+      selectedHasPlans: current.plans.length > 0,
+      selectedPlans: current.plans,
+      planHref: Journal.link("Album", selected, { plan: "1" }),
       previousWeek: () => this.moveWeek(-1),
       nextWeek: () => this.moveWeek(1),
       currentWeekHref: Journal.link("Main", Journal.today),
