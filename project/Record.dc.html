@@ -72,6 +72,10 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <button type="button" class="meal-remove-photo" onClick="{{removePhoto}}">移除照片</button>
     </sc-if>
     <p class="meal-photo-hint" role="status">{{photoHint}}</p>
+    <p class="meal-photo-hint">拍照或选图后会发送给 OpenAI 估算食物和营养，结果可修改。</p>
+    <p class="meal-photo-hint" role="status">{{recognitionNote}}</p>
+    <sc-if value="{{canRecognize}}"><button type="button" class="plan-action" onClick="{{recognize}}">重新识别照片</button></sc-if>
+    <sc-if value="{{recognizing}}"><button type="button" class="plan-action" onClick="{{cancelRecognition}}">停止识别，手动填写</button></sc-if>
   </section>
 
   <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 10px">
@@ -83,14 +87,14 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <span style="font-size: 13px; font-weight: 700; color: #6F6A78; flex-shrink: 0">吃的是</span>
       <input value="{{name}}" onInput="{{setName}}" maxlength="60" placeholder="给这一餐起个名字" style="flex-grow: 1; min-width: 0; border: none; background: transparent; font-size: 16px; font-weight: 800; color: #2A2633; font-family: inherit; outline: none">
     </label>
-    <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
-      <label style="display: flex; align-items: center; gap: 10px; height: 34px">
-        <span style="{{r.dot}}"></span>
-        <span style="font-size: 14px; font-weight: 700; width: 46px">{{r.label}}</span>
-        <input type="range" min="0" max="150" step="1" value="{{r.value}}" onChange="{{r.change}}" style="{{r.slider}}">
-        <span style="font-size: 14px; font-weight: 900; width: 44px; text-align: right">{{r.grams}}</span>
-      </label>
-    </sc-for>
+    <div class="nutrition-fields">
+      <sc-for list="{{rows}}" as="r">
+        <label class="goal-field">
+          <span>{{r.label}}</span>
+          <input type="number" inputmode="decimal" min="0" max="10000" step="0.1" value="{{r.value}}" onInput="{{r.change}}">
+        </label>
+      </sc-for>
+    </div>
     <div style="position: relative; padding: 4px 0 0">
       <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px">
         <div style="{{bar1}}"></div><div style="{{bar2}}"></div><div style="{{bar3}}"></div>
@@ -147,15 +151,20 @@ class Component extends DCLogic {
     this.via = Journal.params.get("via") === "album" ? "album" : "week";
     this.photoRequest = 0;
     this.cameraRequest = 0;
+    this.recognitionRequest = 0;
+    this.recognitionController = null;
     this.stream = null;
-    window.addEventListener("pagehide", () => this.releaseCamera());
+    window.addEventListener("pagehide", () => { this.releaseCamera(); this.recognitionController?.abort(); });
     this.saving = false;
     const [carb, pro, fat] = this.original?.grams ?? [0, 0, 0];
     this.state = {
       meal: this.original?.kind ?? "dinner", carb, pro, fat, date: this.date,
       name: this.original?.name ?? (Journal.params.get("name") ?? "").slice(0, 60),
       photo: null, busy: false, error: "",
-      camera: "closed", cameraError: ""
+      camera: "closed", cameraError: "", recognizing: false, recognitionNote: "",
+      portion: this.original?.portion ?? "",
+      calories: this.original?.kcal ?? ""
+
     };
   }
 
@@ -172,6 +181,7 @@ class Component extends DCLogic {
 
   async openCamera() {
     if (this.state.camera !== "closed" || this.saving) return;
+    this.cancelRecognition();
     const request = ++this.cameraRequest;
     this.setState({ camera: "loading", cameraError: "" });
     try {
@@ -208,6 +218,7 @@ class Component extends DCLogic {
       this.photoRequest++;
       this.releaseCamera();
       this.setState({ camera: "closed", photo, busy: false, error: "" });
+      this.recognize(photo);
     } catch {
       this.setState({ cameraError: "没能拍下照片，请重试或从相册选。" });
     }
@@ -216,6 +227,7 @@ class Component extends DCLogic {
   async choosePhoto(event) {
     const file = event.target.files[0];
     if (!file || this.saving) return;
+    this.cancelRecognition();
     const request = ++this.photoRequest;
     this.releaseCamera();
     this.setState({ camera: "closed", cameraError: "", busy: true, error: "" });
@@ -229,7 +241,10 @@ class Component extends DCLogic {
         image.src = url;
       });
       const photo = makePhoto(image, image.naturalWidth, image.naturalHeight);
-      if (request === this.photoRequest) this.setState({ photo, busy: false });
+      if (request === this.photoRequest) {
+        this.setState({ photo, busy: false });
+        this.recognize(photo);
+      }
     } catch {
       if (request === this.photoRequest) {
         this.setState({ busy: false, error: "这张照片无法读取，请换一张 JPG 或 PNG。" });
@@ -239,8 +254,60 @@ class Component extends DCLogic {
     }
   }
 
+  cancelRecognition() {
+    this.recognitionRequest++;
+    this.recognitionController?.abort();
+    this.setState({ recognizing: false });
+  }
+
+  async recognize(photo = this.state.photo ?? Journal.photoFor(this.original)) {
+    if (!photo || this.saving) return;
+    this.cancelRecognition();
+    const request = this.recognitionRequest;
+    const controller = new AbortController();
+    this.recognitionController = controller;
+    this.setState({ recognizing: true, recognitionNote: "正在识别食物和估算份量…" });
+    const timer = setTimeout(() => controller.abort(), 55000);
+    try {
+      if (photo.startsWith("blob:")) {
+        const blob = await (await fetch(photo)).blob();
+        photo = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
+      const response = await fetch("/api/recognize", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo }), signal: controller.signal
+      });
+      const result = await response.json();
+      if (request !== this.recognitionRequest) return;
+      if (!response.ok) throw new Error(result.error || "识别失败，请重试。");
+      if (!result.foodVisible) {
+        this.setState({ recognitionNote: "没看清可识别的食物，请换一张照片或手动填写。" });
+        return;
+      }
+      this.setState({
+        name: result.name, portion: result.portion, calories: result.kcal,
+        carb: result.carb, pro: result.pro, fat: result.fat,
+        recognitionNote: "AI 估算，请核对后保存。" + result.notes
+      });
+    } catch (error) {
+      if (request === this.recognitionRequest) {
+        this.setState({ recognitionNote: error.name === "AbortError"
+          ? "识别超时，可以重试或手动填写。"
+          : error.message.startsWith("Unexpected") ? "识别服务暂时不可用，请手动填写或稍后重试。" : error.message });
+      }
+    } finally {
+      clearTimeout(timer);
+      if (request === this.recognitionRequest) this.setState({ recognizing: false });
+    }
+  }
+
   async save() {
-    if (this.state.busy || this.state.camera !== "closed" || this.saving) return;
+    if (this.state.busy || this.state.recognizing || this.state.camera !== "closed" || this.saving) return;
     const { meal, carb, pro, fat, photo, date } = this.state;
     const hasPhoto = photo === null ? Boolean(this.original?.photoKey || this.original?.photo) : Boolean(photo);
     const name = this.state.name.trim() || (hasPhoto ? Journal.kinds[meal] + "照片" : "");
@@ -248,10 +315,18 @@ class Component extends DCLogic {
       this.setState({ error: "拍一张照片，或写下这餐吃了什么。" });
       return;
     }
+    const numeric = ["carb", "pro", "fat", "portion", "calories"];
+    if (!numeric.every((key) => this.state[key] === "" ||
+        Number.isFinite(Number(this.state[key])) && Number(this.state[key]) >= 0 && Number(this.state[key]) <= 10000)) {
+      this.setState({ error: "请填写 0 到 10000 之间的有效数值。" });
+      return;
+    }
     this.saving = true;
     this.setState({ error: "" });
     try {
-      await Journal.saveMeal(date, { name, kind: meal, grams: [carb, pro, fat] }, this.original, photo);
+      await Journal.saveMeal(date, { name, kind: meal, grams: [carb, pro, fat].map(Number),
+        portion: this.state.portion === "" ? null : Number(this.state.portion),
+        kcal: this.state.calories === "" ? null : Number(this.state.calories) }, this.original, photo);
     } catch (error) {
       this.saving = false;
       this.setState({
@@ -292,28 +367,26 @@ class Component extends DCLogic {
         style: 'height: 40px; border: none; border-radius: 999px; font-size: 14px; font-family: inherit; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78')
       };
     });
-    var defs = [
-      { key: 'carb', label: '碳水', color: '#F6CF5C' },
-      { key: 'pro', label: '蛋白质', color: '#A996F2' },
-      { key: 'fat', label: '脂肪', color: '#8FCFA6' }
-    ];
-    var rows = defs.map(function (d) {
-      return {
-        label: d.label,
-        value: s[d.key],
-        grams: s[d.key] + ' g',
-        dot: 'width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; background: ' + d.color,
-        slider: 'flex-grow: 1; min-width: 0; accent-color: ' + d.color,
-        change: function (e) { var o = {}; o[d.key] = Number(e.target.value); self.setState(o); }
-      };
-    });
-    const estimate = Journal.estimate([s.carb, s.pro, s.fat]);
+    const rows = [
+      { key: "portion", label: "总份量（克）" },
+      { key: "calories", label: "热量（kcal）" },
+      { key: "carb", label: "碳水（克）" },
+      { key: "pro", label: "蛋白质（克）" },
+      { key: "fat", label: "脂肪（克）" }
+    ].map(({ key, label }) => ({
+      label, value: s[key],
+      change: (event) => {
+        this.cancelRecognition();
+        this.setState({ [key]: event.target.value, recognitionNote: "按你的修改保存。" });
+      }
+    }));
+    const estimate = Journal.estimate([s.carb, s.pro, s.fat].map(Number));
     const [carb, pro, fat] = estimate.percentages;
     const dateLabel = Journal.shortDate(this.date);
     const cameraOpen = s.camera !== "closed";
     const photo = s.photo ?? Journal.photoFor(this.original);
     return {
-      meals, rows, name: s.name, photo, busy: s.busy || cameraOpen || this.saving, error: s.error,
+      meals, rows, name: s.name, photo, busy: s.busy || s.recognizing || cameraOpen || this.saving, error: s.error,
       title: this.original ? "编辑这一餐" : this.date === Journal.today ? "拍一餐" : "补记 " + dateLabel,
       editing: Boolean(this.original),
       missingRecord: this.missingRecord,
@@ -324,6 +397,11 @@ class Component extends DCLogic {
       closeHref: this.returnToDay
         ? Journal.link("Day", this.date, { from: this.via })
         : Journal.link("Main", this.date),
+      recognizing: s.recognizing,
+      recognitionNote: s.recognitionNote,
+      canRecognize: Boolean(photo) && !s.recognizing && !s.busy && !cameraOpen,
+      recognize: () => this.recognize(),
+      cancelRecognition: () => { this.cancelRecognition(); this.setState({ recognitionNote: "可以手动填写后保存。" }); },
       cameraOpen,
       cameraWaiting: s.camera !== "ready",
       cameraFailed: Boolean(s.cameraError) && !cameraOpen,
@@ -337,18 +415,19 @@ class Component extends DCLogic {
       },
       capturePhoto: () => this.capturePhoto(),
       choosePhoto: (event) => this.choosePhoto(event),
-      setName: (event) => this.setState({ name: event.target.value, error: "" }),
+      setName: (event) => { this.cancelRecognition(); this.setState({ name: event.target.value, error: "" }); },
       removePhoto: () => {
+        this.cancelRecognition();
         this.photoRequest++;
-        this.setState({ photo: "", busy: false, error: "" });
+        this.setState({ photo: "", busy: false, error: "", recognitionNote: "" });
       },
       save: () => this.save(),
       deleteMeal: () => this.deleteMeal(),
-      saveLabel: this.original ? "保存修改" : "记到" + dateLabel,
+      saveLabel: s.recognizing ? "正在识别…" : this.original ? "确认并保存修改" : "确认并记到" + dateLabel,
       bar1: "width: " + carb + "%; background: #F6CF5C",
       bar2: "width: " + pro + "%; background: #A996F2",
       bar3: "width: " + fat + "%; background: #8FCFA6",
-      kcal: estimate.kcal ? String(estimate.kcal) : "—",
+      kcal: s.calories !== "" ? s.calories : estimate.kcal ? String(estimate.kcal) : "—",
       ratioText: estimate.kcal ? [carb, pro, fat].join(" : ") : "暂无营养估算"
     };
   }

@@ -3,6 +3,14 @@
   "framework": null,
   "outputDirectory": "project",
   "rewrites": [
-    { "source": "/", "destination": "/Main.dc.html" }
-  ]
+    {
+      "source": "/",
+      "destination": "/Main.dc.html"
+    }
+  ],
+  "functions": {
+    "api/recognize.js": {
+      "maxDuration": 60
+    }
+  }
 }

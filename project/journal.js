@@ -349,7 +349,9 @@ const Journal = (() => {
     return {
       date, meals,
       weight: savedWeight(date),
-      ...nutrition(energy)
+      ...nutrition(energy),
+      kcal: Math.round(meals.reduce((sum, meal) => sum + (Number.isFinite(meal.kcal)
+        ? meal.kcal : estimate(meal.grams ?? [0, 0, 0]).kcal), 0))
     };
   }
 
