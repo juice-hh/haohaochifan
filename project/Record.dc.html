@@ -376,8 +376,9 @@ class Component extends DCLogic {
     ].map(({ key, label }) => ({
       label, value: s[key],
       change: (event) => {
+        const value = event.target.value;
         this.cancelRecognition();
-        this.setState({ [key]: event.target.value, recognitionNote: "按你的修改保存。" });
+        this.setState({ [key]: value, recognitionNote: "按你的修改保存。" });
       }
     }));
     const estimate = Journal.estimate([s.carb, s.pro, s.fat].map(Number));
@@ -415,7 +416,7 @@ class Component extends DCLogic {
       },
       capturePhoto: () => this.capturePhoto(),
       choosePhoto: (event) => this.choosePhoto(event),
-      setName: (event) => { this.cancelRecognition(); this.setState({ name: event.target.value, error: "" }); },
+      setName: (event) => { const name = event.target.value; this.cancelRecognition(); this.setState({ name, error: "" }); },
       removePhoto: () => {
         this.cancelRecognition();
         this.photoRequest++;
