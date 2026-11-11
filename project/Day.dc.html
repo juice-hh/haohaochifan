@@ -97,15 +97,13 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       </div>
       <span style="font-size: 12px; font-weight: 700; color: #C9372C">已记录估算</span>
     </div>
-    <span style="font-size: 12px; font-weight: 600; color: #6F6A78; margin-top: -6px">三大营养素按热量占比，黑线是目标 4 : 3 : 3</span>
+    <span style="font-size: 12px; font-weight: 600; color: #6F6A78; margin-top: -6px">按已填写的营养克数换算</span>
     <div style="position: relative; padding: 5px 0">
       <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px">
         <div style="{{barCarb}}"></div>
         <div style="{{barProtein}}"></div>
         <div style="{{barFat}}"></div>
       </div>
-      <div style="position: absolute; left: 40%; top: 0; width: 3px; height: 22px; border-radius: 2px; background: #2A2633"></div>
-      <div style="position: absolute; left: 70%; top: 0; width: 3px; height: 22px; border-radius: 2px; background: #2A2633"></div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
       <div style="display: flex; flex-direction: column">
@@ -178,8 +176,9 @@ class Component extends DCLogic {
       : "";
     const stickers = entry.meals.slice(-5).map(function (meal, i) {
       const s = list[i];
+      const photo = Journal.photoFor(meal);
       return {
-        name: meal.name, photo: meal.photo, textOnly: !meal.photo,
+        name: meal.name, photo, textOnly: !photo,
         editHref: editHref(meal), label: meal.id ? "编辑贴纸 " + meal.name : "",
         outer: 'position: absolute; left: ' + (s.x / 358 * 100) + '%; top: ' + s.y + 'px; width: ' + (s.w / 358 * 100) + '%; height: ' + s.h + 'px; box-sizing: border-box; padding: 6px; background: #FFFFFF; border-radius: ' + s.rad + '; transform: rotate(' + s.r + 'deg); box-shadow: 0 8px 20px rgba(90, 70, 160, 0.14); z-index: ' + (i + 1),
         inner: 'width: 100%; height: 100%; border-radius: ' + s.rad + '; background: ' + s.bg + '; color: ' + s.fg + '; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; overflow-wrap: anywhere; font-size: 15px; font-weight: 800'
@@ -207,9 +206,9 @@ class Component extends DCLogic {
       recordHref: Journal.link("Record", date, { from: "day", via: fromAlbum ? "album" : "week" }),
       weighHref: Journal.link("Weigh", date, { from: "day", via: this.from }),
       weighAction: Journal.savedWeight(date) === null ? "记体重" : "修改体重",
-      weightLabel: entry.weight === null ? "记体重" : Journal.savedWeight(date) === null ? "当天体重 · 示例" : "当天体重",
+      weightLabel: entry.weight === null ? "记体重" : "当天体重",
       weight: entry.weight?.toFixed(1) ?? "—",
-      previousWeightLabel: previous?.example ? "上次体重 · 示例" : "上次记录",
+      previousWeightLabel: "上次记录",
       previousWeight: previous?.kg.toFixed(1) ?? "—",
       delta: delta === null ? "" : delta === 0 ? "持平" : (delta > 0 ? "↑" : "↓") + Math.abs(delta).toFixed(1),
       kcal: entry.kcal, carb, protein, fat, carbGrams, proteinGrams, fatGrams,
@@ -218,7 +217,7 @@ class Component extends DCLogic {
       barFat: "width: " + fat + "%; background: #8FCFA6",
       meals: entry.meals.map((meal) => ({
         name: meal.name,
-        kind: meal.id ? Journal.kinds[meal.kind] + " · 编辑 ›" : "示例",
+        kind: (Journal.kinds[meal.kind] ?? "饭记") + " · 编辑 ›",
         editHref: editHref(meal)
       }))
     };

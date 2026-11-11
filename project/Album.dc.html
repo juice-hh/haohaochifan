@@ -193,15 +193,19 @@ class Component extends DCLogic {
         const group = groups.get(meal.name) ?? { name: meal.name, count: 0, c: groups.size };
         group.count++;
         group.date = entry.date;
-        if (meal.photo) group.photo = meal.photo;
+        const photo = Journal.photoFor(meal);
+        if (photo) group.photo = photo;
         groups.set(meal.name, group);
       }
-      const tiles = entry.meals.slice(-3).map((meal, j) => ({
-        style: 'position: absolute; left: ' + (5 + [0, 3, -2][j]) + 'px; top: ' + (8 - j * 4)
-          + 'px; width: 24px; height: 24px; box-sizing: border-box; border-radius: 8px; border: 2px solid #FFFFFF; background: '
-          + (meal.photo ? 'center / cover url("' + meal.photo + '")' : tints[(i + j * 2) % tints.length])
-          + '; transform: rotate(' + [-6, 5, -2][(i + j) % 3] + 'deg); box-shadow: 0 2px 5px rgba(90, 70, 160, 0.14)'
-      }));
+      const tiles = entry.meals.slice(-3).map((meal, j) => {
+        const photo = Journal.photoFor(meal);
+        return {
+          style: 'position: absolute; left: ' + (5 + [0, 3, -2][j]) + 'px; top: ' + (8 - j * 4)
+            + 'px; width: 24px; height: 24px; box-sizing: border-box; border-radius: 8px; border: 2px solid #FFFFFF; background: '
+            + (photo ? 'center / cover url("' + photo + '")' : tints[(i + j * 2) % tints.length])
+            + '; transform: rotate(' + [-6, 5, -2][(i + j) % 3] + 'deg); box-shadow: 0 2px 5px rgba(90, 70, 160, 0.14)'
+        };
+      });
       const { date } = entry;
       const plans = Journal.plansOn(date);
       const label = Journal.shortDate(date);

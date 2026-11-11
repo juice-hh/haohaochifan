@@ -1,4 +1,4 @@
-// Shared demo dates and browser-local journal records.
+// Shared dates and browser-local journal records.
 const Journal = (() => {
   const params = new URLSearchParams(location.search);
   const dateParts = new Intl.DateTimeFormat("en-CA", {
@@ -6,7 +6,6 @@ const Journal = (() => {
   }).formatToParts();
   const part = (type) => dateParts.find((entry) => entry.type === type).value;
   const today = [part("year"), part("month"), part("day")].join("-");
-  const demoDate = "2026-11-06";
   const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
   const kinds = { breakfast: "早餐", lunch: "午餐", dinner: "晚餐", snack: "加餐" };
   const factors = [4, 4, 9];
@@ -22,15 +21,6 @@ const Journal = (() => {
   const weightLimits = { min: 1, max: 5000 };
   const undoKey = "hhcf-last-meal-deletion";
   let mealsByDate;
-  const seeds = [
-    [55.6, 1520, [45, 30, 25], ["三明治", "鸡肉饭", "青菜牛肉面"]],
-    [55.4, 2050, [56, 20, 24], ["贝果", "三文鱼饭", "麻辣烫", "奶茶"]],
-    [55.9, 1480, [40, 35, 25], ["蓝莓酸奶", "鸡肉沙拉", "海苔饭团"]],
-    [55.6, 1560, [42, 33, 25], ["煎蛋吐司", "番茄牛腩饭", "豆腐青菜"]],
-    [55.4, 2480, [52, 20, 28], ["贝果", "麻辣烫", "蛋糕", "烤串", "啤酒"]],
-    [55.8, 1610, [44, 31, 25], ["燕麦碗", "三文鱼饭"]],
-    [55.4, 520, [50, 22, 28], ["番茄牛腩饭"]]
-  ];
 
   const asDate = (date) => new Date(date + "T00:00:00Z");
   const key = (date) => date.toISOString().slice(0, 10);
@@ -49,9 +39,15 @@ const Journal = (() => {
   }
   const shortDate = (date) => Number(date.slice(5, 7)) + "月" + Number(date.slice(8)) + "日";
   const dayName = (date) => "周" + weekdays[weekday(date)];
-  const fixture = new Map(seeds.map((day, i) => [addDays("2026-11-02", i), day]));
   const validWeight = (value) =>
     Number.isInteger(value) && value >= weightLimits.min && value <= weightLimits.max;
+  function parseWeight(text) {
+    const value = text.trim().normalize("NFKC").replace(/[,。]/g, ".");
+    if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
+    const tenths = Number(value) * 10;
+    return tenths >= weightLimits.min && tenths <= weightLimits.max ? Math.round(tenths) : null;
+  }
+
   function savedWeight(date) {
     try {
       const value = Number(localStorage.getItem(weightPrefix + date));
@@ -60,18 +56,32 @@ const Journal = (() => {
       return null;
     }
   }
-  function weight(date) {
-    return savedWeight(date) ?? fixture.get(date)?.[0] ?? null;
-  }
   function previousWeight(date) {
     const dates = Object.keys(localStorage)
       .filter((key) => key.startsWith(weightPrefix))
       .map((key) => key.slice(weightPrefix.length))
       .filter((key) => key < date && isDate(key) && savedWeight(key) !== null);
-    if (fixture.has(date)) dates.push(...[...fixture.keys()].filter((key) => key < date));
     const previous = dates.sort().at(-1);
-    return previous ? { date: previous, kg: weight(previous), example: savedWeight(previous) === null } : null;
+    return previous ? { date: previous, kg: savedWeight(previous) } : null;
   }
+
+  function latestWeight() {
+    const kg = savedWeight(today);
+    return kg === null ? previousWeight(today) : { date: today, kg };
+  }
+
+  function readGoal() {
+    const goal = readJSON(localStorage, "hhcf-goal-v1");
+    return {
+      habit: typeof goal?.habit === "string" ? goal.habit : "",
+      weight: validWeight(goal?.weight) ? goal.weight : null
+    };
+  }
+
+  function saveGoal(goal) {
+    localStorage.setItem("hhcf-goal-v1", JSON.stringify(goal));
+  }
+
   function saveWeight(date, tenths) {
     if (!isDate(date) || date > today) throw new Error("请选择今天或过去的日期。");
     if (!validWeight(tenths)) throw new Error("请输入有效的体重。");
@@ -82,7 +92,7 @@ const Journal = (() => {
     const parsed = asDate(date);
     return Number.isFinite(parsed.valueOf()) && key(parsed) === date;
   }
-  function selected(fallback = demoDate) {
+  function selected(fallback = today) {
     const date = params.get("date");
     return isDate(date) ? date : fallback;
   }
@@ -119,6 +129,63 @@ const Journal = (() => {
     }
     localStorage.setItem(key, "1");
     return true;
+  }
+
+  let photoDatabase;
+  const photoURLs = new Map();
+  let photoUpdateScheduled = false;
+
+  function openPhotoDatabase() {
+    if (!photoDatabase) {
+      photoDatabase = new Promise((resolve, reject) => {
+        const request = indexedDB.open("hhcf-photos", 1);
+        request.onupgradeneeded = () => request.result.createObjectStore("photos");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      }).catch((error) => {
+        photoDatabase = undefined;
+        throw error;
+      });
+    }
+    return photoDatabase;
+  }
+
+  async function accessPhotos(mode, operation) {
+    const database = await openPhotoDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction("photos", mode);
+      const request = operation(transaction.objectStore("photos"));
+      transaction.oncomplete = () => resolve(request.result);
+      transaction.onabort = () => reject(transaction.error ?? request.error);
+    });
+  }
+
+  function photoFor(meal) {
+    if (!meal?.photoKey) return meal?.photo ?? "";
+    const { photoKey } = meal;
+    if (!photoURLs.has(photoKey)) {
+      photoURLs.set(photoKey, "");
+      accessPhotos("readonly", (store) => store.get(photoKey))
+        .then((photo) => {
+          if (!photo) return;
+          photoURLs.set(photoKey, URL.createObjectURL(new Blob([photo], { type: "image/jpeg" })));
+          if (!photoUpdateScheduled) {
+            photoUpdateScheduled = true;
+            requestAnimationFrame(() => {
+              photoUpdateScheduled = false;
+              window.dispatchEvent(new Event("journalphotos"));
+            });
+          }
+        })
+        .catch(() => {});
+    }
+    return photoURLs.get(photoKey);
+  }
+
+  function discardPhoto(photoKey) {
+    if (photoKey) {
+      accessPhotos("readwrite", (store) => store.delete(photoKey)).catch(() => {});
+    }
   }
 
   function legacyMeals(date) {
@@ -184,7 +251,7 @@ const Journal = (() => {
     }).filter(({ meals }) => meals.length);
   }
 
-  function saveMeal(date, meal, original) {
+  async function saveMeal(date, meal, original, replacementPhoto) {
     if (!isDate(date) || date > today) throw new Error("请选择今天或过去的日期。");
     const id = original?.id ?? crypto.randomUUID();
     if (original) assertCurrent(original);
@@ -192,9 +259,26 @@ const Journal = (() => {
       ...meal, date, revision: crypto.randomUUID(),
       createdAt: original ? original.createdAt ?? 0 : Date.now()
     };
-    // Legacy records remain readable. An unchanged photo can stay in its original record.
-    if (legacyMeal(id)?.photo === record.photo && id.startsWith("legacy:")) delete record.photo;
-    localStorage.setItem(mealPrefix + id, JSON.stringify(record));
+    const legacyPhoto = original ? legacyMeal(id)?.photo : undefined;
+    let addedPhotoKey;
+    if (replacementPhoto !== null && legacyPhoto) record.photo = "";
+    if (replacementPhoto) {
+      addedPhotoKey = record.revision;
+      const jpeg = await (await fetch(replacementPhoto)).arrayBuffer();
+      await accessPhotos("readwrite", (store) => store.put(jpeg, addedPhotoKey));
+      record.photoKey = addedPhotoKey;
+    } else if (replacementPhoto === null && original) {
+      if (original.photoKey) record.photoKey = original.photoKey;
+      else if (original.photo !== undefined && original.photo !== legacyPhoto) record.photo = original.photo;
+    }
+    try {
+      if (original) assertCurrent(original);
+      localStorage.setItem(mealPrefix + id, JSON.stringify(record));
+    } catch (error) {
+      discardPhoto(addedPhotoKey);
+      throw error;
+    }
+    if (replacementPhoto !== null) discardPhoto(original?.photoKey);
     mealsByDate = undefined;
   }
 
@@ -258,26 +342,22 @@ const Journal = (() => {
 
   const estimate = (grams) => nutrition(grams.map((value, i) => value * factors[i]));
   function day(date) {
-    const seed = fixture.get(date);
-    const examples = (seed?.[3] ?? []).map((name) => ({ name, example: true }));
-    const records = readMeals(date);
+    const meals = readMeals(date);
     const energy = factors.map((factor, i) =>
-      (seed ? seed[1] * seed[2][i] / 100 : 0)
-      + records.reduce((sum, meal) => sum + (meal.grams?.[i] ?? 0) * factor, 0)
+      meals.reduce((sum, meal) => sum + (meal.grams?.[i] ?? 0) * factor, 0)
     );
     return {
-      date,
-      meals: [...examples, ...records],
-      weight: weight(date),
+      date, meals,
+      weight: savedWeight(date),
       ...nutrition(energy)
     };
   }
 
   return {
-    params, today, demoDate, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
-    shortDate, dayName, isDate, selected, link, day, weight, estimate,
-    getMeal, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
-    savedWeight, previousWeight, saveWeight, weightLimits, planStickers, plansOn, togglePlan
+    params, today, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
+    shortDate, dayName, isDate, selected, link, day, estimate,
+    getMeal, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
+    savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, readGoal, saveGoal, planStickers, plansOn, togglePlan
   };
 })();
 

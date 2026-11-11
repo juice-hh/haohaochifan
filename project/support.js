@@ -120,6 +120,7 @@
     const Component = new Function("DCLogic", script.textContent + "\nreturn Component;")(DCLogic);
     component = new Component(props);
     update(component.renderVals());
+    window.addEventListener("journalphotos", () => update(component.renderVals()));
   }
 
   document.addEventListener("DOMContentLoaded", start, { once: true });

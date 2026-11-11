@@ -90,12 +90,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 const { min: minWeight, max: maxWeight } = Journal.weightLimits;
 const formatWeight = (tenths) => (tenths / 10).toFixed(1);
 
-function parseWeight(text) {
-  const value = text.trim().normalize("NFKC").replace(/[,。]/g, ".");
-  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
-  const tenths = Number(value) * 10;
-  return tenths >= minWeight && tenths <= maxWeight ? Math.round(tenths) : null;
-}
+const { parseWeight } = Journal;
 
 class Component extends DCLogic {
   constructor(props) {
@@ -105,7 +100,7 @@ class Component extends DCLogic {
     this.fromDay = Journal.params.get("from") === "day";
     this.via = Journal.params.get("via") === "album" ? "album" : "week";
     this.previous = Journal.previousWeight(this.date);
-    const initial = Journal.weight(this.date);
+    const initial = Journal.savedWeight(this.date);
     const w = initial === null ? null : Math.round(initial * 10);
     this.state = { w, draft: w === null ? "" : formatWeight(w), error: "" };
   }
@@ -175,7 +170,7 @@ class Component extends DCLogic {
       headingNote: this.date === Journal.today ? "记一笔体重" : "补记这天的体重",
       backHref: this.backHref(),
       noWeight: w === null,
-      comparisonTitle: previous ? (previous.example ? "上次体重 · 示例" : "上次记录") : "体重记录",
+      comparisonTitle: previous ? "上次记录" : "体重记录",
       comparisonText: previous
         ? Journal.shortDate(previous.date) + " · " + previous.kg.toFixed(1) + " kg"
         : "保存后可以在周记里查看",

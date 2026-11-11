@@ -42,6 +42,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <span style="font-size: 18px; font-weight: 900">下一餐吃什么</span>
       <span style="font-size: 13px; font-weight: 700; color: #6F6A78">{{suggestionLabel}}</span>
     </div>
+    <sc-if value="{{next}}">
     <div style="display: flex; gap: 12px; align-items: center">
       <div style="position: relative; width: 128px; height: 116px; flex-shrink: 0; background: #F3F0FB; border-radius: 24px">
         <sc-for list="{{next.pile}}" as="p" hint-placeholder-count="3">
@@ -50,14 +51,15 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       </div>
       <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
         <span style="font-size: 16px; font-weight: 900; overflow-wrap: anywhere">{{next.name}}</span>
-        <span style="font-size: 12px; font-weight: 600; color: #6F6A78; line-height: 1.5">{{next.parts}}</span>
         <span style="align-self: flex-start; font-size: 11px; font-weight: 800; color: #5B48B8; background: #EEE9FF; padding: 3px 8px; border-radius: 8px">{{next.why}}</span>
       </div>
     </div>
     <div style="display: flex; gap: 8px">
-      <button onClick="{{shuffle}}" style="flex: 1; height: 44px; border: none; border-radius: 999px; background: #F7F5FC; color: #2A2633; font-size: 15px; font-weight: 800; font-family: inherit">换一个</button>
-      <a href="{{recordHref}}" style="flex: 1.4; height: 44px; border-radius: 999px; background: #7A66E0; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; box-shadow: 0 10px 22px rgba(122, 102, 224, 0.3)">就吃这个</a>
+      <sc-if value="{{canShuffle}}"><button onClick="{{shuffle}}" style="flex: 1; height: 44px; border: none; border-radius: 999px; background: #F7F5FC; color: #2A2633; font-size: 15px; font-weight: 800; font-family: inherit">换一个</button></sc-if>
+      <a href="{{recordHref}}" style="flex: 1.4; height: 44px; border-radius: 999px; background: #7A66E0; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; box-shadow: 0 10px 22px rgba(122, 102, 224, 0.3)">再记一餐</a>
     </div>
+    </sc-if>
+    <sc-if value="{{empty}}"><a class="plan-action" href="{{recordHref}}">记第一餐</a></sc-if>
   </div>
 
   <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 14px 16px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 10px">
@@ -123,12 +125,6 @@ const tints = [
   ["#FFEADB", "#9A4B12"], ["#FDE6F0", "#9B2C5C"], ["#FFF4C9", "#7D6206"],
   ["#E3F6E2", "#2D6B2A"], ["#E1EEFF", "#2B5B9A"], ["#EEE9FF", "#5B48B8"]
 ];
-const samples = [
-  { food: "海苔饭团", side: "鸡肉蔬菜沙拉" },
-  { food: "番茄牛腩饭", side: "一份时蔬" },
-  { food: "全麦吐司", side: "原味酸奶" }
-];
-const sides = ["一份时蔬", "豆腐", "海苔饭团", "原味酸奶"];
 const palette = (index) => tints[index % tints.length];
 
 function sticker(label, tint, [x, y, width, height, rotation], index, photo = "") {
@@ -151,7 +147,7 @@ function countFoods(days) {
       const key = meal.name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
       const group = groups.get(key) ?? { name: meal.name, count: 0, date: day.date, photo: "" };
       group.count++;
-      if (!group.photo && meal.photo) group.photo = meal.photo;
+      if (!group.photo) group.photo = Journal.photoFor(meal);
       groups.set(key, group);
     }
   }
@@ -168,18 +164,7 @@ class Component extends DCLogic {
     const days = Journal.recentMealDays(30);
     const count = days.reduce((sum, day) => sum + day.meals.length, 0);
     const favorites = countFoods(days).slice(0, 3);
-    const options = favorites.length
-      ? Array.from({ length: 3 }, (_, i) => {
-        const favorite = favorites[i % favorites.length];
-        const available = sides.filter((side) => !favorite.name.includes(side));
-        return {
-          food: favorite.name, side: available[i % available.length] ?? "一道喜欢的小菜",
-          why: "近 30 天记过 " + favorite.count + " 次", photo: favorite.photo
-        };
-      })
-      : samples;
-    const current = options[this.state.idx];
-    const name = current.food + " + " + current.side;
+    const current = favorites[this.state.idx % Math.max(1, favorites.length)];
     const date = Journal.selected(Journal.today);
     const favs = favorites.map((favorite, index) => ({
       ...favorite,
@@ -197,23 +182,21 @@ class Component extends DCLogic {
       parts: day.meals.slice(0, 4).map((meal) => meal.name).join(" · ") + (day.meals.length > 4 ? "…" : ""),
       href: Journal.link("Day", day.date, { from: "album" }),
       pile: day.meals.slice(0, 3).map((meal, i) => sticker("", palette(i),
-        [[6, 24, 42, 42, -10], [26, 16, 42, 42, 8], [14, 4, 42, 42, -3]][i], i, meal.photo))
+        [[6, 24, 42, 42, -10], [26, 16, 42, 42, 8], [14, 4, 42, 42, -3]][i], i, Journal.photoFor(meal)))
     }));
     return {
       sourceLabel: count ? "最近 30 天记了 " + count + " 餐" : "先记下平常吃的一餐",
-      suggestionLabel: count ? "从饭相册里挑一道熟悉的食物" : "先看看这几个搭配示例",
-      next: {
-        name, parts: "用「" + current.food + "」搭「" + current.side + "」",
-        why: current.why ?? "示例搭配",
-        pile: [
-          sticker(current.side, palette(3), [53, 31, 65, 62, 8], 0),
-          sticker(current.food, palette(0), [10, 17, 74, 70, -7], 1, current.photo)
-        ]
-      },
+      suggestionLabel: count ? "从你记过的食物里选" : "记下平常吃的食物，就能在这里快速再记。",
+      next: current ? {
+        name: current.name,
+        why: "近 30 天记过 " + current.count + " 次",
+        pile: [sticker(current.name, palette(0), [21, 17, 86, 78, -7], 0, current.photo)]
+      } : null,
       backHref: Journal.link("Main", date),
       albumHref: Journal.link("Album", days[0]?.date ?? Journal.today, { view: "food" }),
-      recordHref: Journal.link("Record", Journal.today, { name: name.length <= 60 ? name : current.food }),
-      shuffle: () => this.setState({ idx: (this.state.idx + 1) % options.length }),
+      recordHref: Journal.link("Record", Journal.today, current ? { name: current.name } : {}),
+      canShuffle: favorites.length > 1,
+      shuffle: () => this.setState({ idx: this.state.idx + 1 }),
       empty: !count, favs, combos, noCombos: !combos.length,
       rules: count
         ? ["最近 30 天有 " + days.length + " 天留下饭记。", "「" + favorites[0].name + "」记了 " + favorites[0].count + " 次。"]
