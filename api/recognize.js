@@ -52,10 +52,12 @@ module.exports = async function handler(req, res) {
     if (!response.ok) {
       const status = response.status;
       const failure = await response.json().catch(() => ({}));
-      if (failure.error?.code === "insufficient_quota") {
+      const upstreamCode = failure.error?.code || failure.error?.type;
+      const code = typeof upstreamCode === "string" && /^[a-z_]{1,64}$/.test(upstreamCode) ? upstreamCode : "upstream_error";
+      if (code === "insufficient_quota") {
         return res.status(503).json({ error: "OpenAI API 账户额度不足，请在 API 平台补充额度后重试。可以先手动记录。" });
       }
-      return res.status(502).json({ error: status === 429
+      return res.status(status === 429 ? 429 : 502).json({ code, error: status === 429
         ? "识别额度不足或请求繁忙，请稍后重试，也可以先手动记录。"
         : status === 401 ? "识别服务的密钥无效，请更新服务端配置。"
         : "识别服务暂时不可用，请稍后重试。" });
