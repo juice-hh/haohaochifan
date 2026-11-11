@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
       const failure = await response.json().catch(() => ({}));
       const upstreamCode = failure.error?.code || failure.error?.type;
       const code = typeof upstreamCode === "string" && /^[a-z_]{1,64}$/.test(upstreamCode) ? upstreamCode : "upstream_error";
-      if (code === "insufficient_quota") {
+      if (["insufficient_quota", "credit_balance_exhausted", "billing_hard_limit_reached"].includes(code)) {
         return res.status(503).json({ error: "OpenAI API 账户额度不足，请在 API 平台补充额度后重试。可以先手动记录。" });
       }
       return res.status(status === 429 ? 429 : 502).json({ code, error: status === 429
