@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-1">
+<link rel="stylesheet" href="./mobile.css?v=20261112-2">
 <title>好好吃饭 拍一餐</title>
-<script src="./support.js?v=20261112-1"></script>
-<script src="./journal.js?v=20261112-1"></script>
+<script src="./support.js?v=20261112-2"></script>
+<script src="./journal.js?v=20261112-2"></script>
 </head>
 <body>
 <x-dc>
@@ -149,6 +149,7 @@ class Component extends DCLogic {
     this.original = editId ? Journal.getMeal(editId) : null;
     this.missingRecord = Boolean(editId && !this.original);
     this.date = this.original?.date ?? (selected > Journal.today ? Journal.today : selected);
+    this.returnPage = ["Main", "Album", "Love", "Goal"].includes(Journal.params.get("returnTo")) ? Journal.params.get("returnTo") : "Main";
     this.returnToDay = Boolean(editId) || Journal.params.get("from") === "day";
     this.via = Journal.params.get("via") === "album" ? "album" : "week";
     this.photoRequest = 0;
@@ -354,7 +355,7 @@ class Component extends DCLogic {
     }
     location.replace(this.returnToDay
       ? Journal.link("Day", date, { from: this.via, status: this.original ? "updated" : "saved" })
-      : Journal.link("Main", date, { saved: "1" }));
+      : Journal.link(this.returnPage, date, { saved: "1" }));
   }
 
   deleteMeal() {
@@ -416,7 +417,7 @@ class Component extends DCLogic {
       setDate: (event) => this.setState({ date: event.target.value, error: "" }),
       closeHref: this.returnToDay
         ? Journal.link("Day", this.date, { from: this.via })
-        : Journal.link("Main", this.date),
+        : Journal.link(this.returnPage, this.date),
       autoRecognize: s.autoRecognize,
       manualMode: !s.autoRecognize,
       useAI: () => this.setRecordingMode(true),

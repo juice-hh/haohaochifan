@@ -7,10 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-1">
+<link rel="stylesheet" href="./mobile.css?v=20261112-2">
 <title>好好吃饭 我爱吃的</title>
-<script src="./support.js?v=20261112-1"></script>
-<script src="./journal.js?v=20261112-1"></script>
+<script src="./support.js?v=20261112-2"></script>
+<script src="./journal.js?v=20261112-2"></script>
+<script src="./navigation.js?v=20261112-2"></script>
 </head>
 <body>
 <x-dc>
@@ -20,7 +21,7 @@ body{margin:0}
 a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 </style>
 </helmet>
-<div class="screen screen--love" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
+<div class="screen screen--tabs screen--love" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
   <div style="display: flex; align-items: center">
     <a href="{{backHref}}" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; padding-right: 8px">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
@@ -118,6 +119,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     </a>
   </sc-for>
   <span style="font-size: 12px; font-weight: 600; color: #6F6A78; text-align: center; padding-top: 4px">随饭相册的记录更新</span>
+  <journal-nav page="Love" date="{{navDate}}"></journal-nav>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1240}}'>
@@ -185,6 +187,7 @@ class Component extends DCLogic {
         [[6, 24, 42, 42, -10], [26, 16, 42, 42, 8], [14, 4, 42, 42, -3]][i], i, Journal.photoFor(meal)))
     }));
     return {
+      navDate: date,
       sourceLabel: count ? "最近 30 天记了 " + count + " 餐" : "先记下平常吃的一餐",
       suggestionLabel: count ? "从你记过的食物里选" : "记下平常吃的食物，就能在这里快速再记。",
       next: current ? {

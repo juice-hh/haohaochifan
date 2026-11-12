@@ -7,10 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-1">
+<link rel="stylesheet" href="./mobile.css?v=20261112-2">
 <title>好好吃饭 我的目标</title>
-<script src="./support.js?v=20261112-1"></script>
-<script src="./journal.js?v=20261112-1"></script>
+<script src="./support.js?v=20261112-2"></script>
+<script src="./journal.js?v=20261112-2"></script>
+<script src="./navigation.js?v=20261112-2"></script>
 </head>
 <body>
 <x-dc>
@@ -20,7 +21,7 @@ body{margin:0}
 a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 </style>
 </helmet>
-<div class="screen" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
+<div class="screen screen--tabs" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
   <div style="display: flex; align-items: center; justify-content: space-between">
     <a href="Main.dc.html" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; padding-right: 8px">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
@@ -62,6 +63,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <button type="submit" class="plan-action goal-save">保存目标</button>
     <p class="goal-note" role="status">{{message}}</p>
   </form>
+  <journal-nav page="Goal" date="{{navDate}}"></journal-nav>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
@@ -101,6 +103,7 @@ class Component extends DCLogic {
 
   renderVals() {
     return {
+      navDate: Journal.selected(),
       ...this.state,
       hasWeight: Boolean(this.latest),
       noWeight: !this.latest,

@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-1">
+<link rel="stylesheet" href="./mobile.css?v=20261112-2">
 <title>好好吃饭 早上称重</title>
-<script src="./support.js?v=20261112-1"></script>
-<script src="./journal.js?v=20261112-1"></script>
+<script src="./support.js?v=20261112-2"></script>
+<script src="./journal.js?v=20261112-2"></script>
 </head>
 <body>
 <x-dc>
@@ -78,12 +78,13 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
   </div>
   <span style="font-size: 12px; font-weight: 600; color: #6F6A78; text-align: center">{{saveHint}}</span>
 
-  <div style="flex-grow: 1"></div>
+  <div class="record-actions">
 
   <button type="button" onClick="{{saveWeight}}" style="height: 54px; flex-shrink: 0; border: 0; font-family: inherit; cursor: pointer; border-radius: 999px; background: #7A66E0; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 800; box-shadow: 0 10px 22px rgba(122, 102, 224, 0.3)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
     记下
   </button>
+  </div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>

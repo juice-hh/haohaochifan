@@ -7,10 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-1">
+<link rel="stylesheet" href="./mobile.css?v=20261112-2">
 <title>好好吃饭 周视图</title>
-<script src="./support.js?v=20261112-1"></script>
-<script src="./journal.js?v=20261112-1"></script>
+<script src="./support.js?v=20261112-2"></script>
+<script src="./journal.js?v=20261112-2"></script>
+<script src="./navigation.js?v=20261112-2"></script>
 </head>
 <body>
 <x-dc>
@@ -20,7 +21,7 @@ body{margin:0}
 a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
-<div class="screen screen--week" style="position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 10px">
+<div class="screen screen--tabs screen--week" style="position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 10px">
   <div style="display: flex; align-items: center; justify-content: space-between">
     <span style="font-size: 15px; font-weight: 800; color: #5B48B8">好好吃饭</span>
     <div class="week-header-actions">
@@ -120,29 +121,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     <span role="status" style="font-size: 13px; font-weight: 800; color: #5B48B8">{{savedMessage}}</span>
   </sc-if>
 
-  <div class="week-dock" style="display: flex; align-items: center; gap: 10px">
-    <nav aria-label="主导航" style="flex-grow: 1; height: 62px; box-sizing: border-box; padding: 4px; border-radius: 31px; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 28px rgba(60, 40, 120, 0.14); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
-      <a href="{{currentWeekHref}}" aria-current="page" style="border-radius: 27px; background: rgba(122, 102, 224, 0.13); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #7A66E0; font-size: 10px; font-weight: 700">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V11M9.3 19V7M14.6 19v-6M20 19V9"></path></svg>
-        本周
-      </a>
-      <a href="{{albumHref}}" style="border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2A2633; font-size: 10px; font-weight: 600">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="4"></rect><circle cx="15.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 2.5-2.5L20 18"></path></svg>
-        饭相册
-      </a>
-      <a href="{{loveHref}}" style="border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2A2633; font-size: 10px; font-weight: 600">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8 0 0 1-17 0z"></path><path d="M9 4c-1 1.2 1 2 0 3.5M14 4c-1 1.2 1 2 0 3.5"></path></svg>
-        爱吃的
-      </a>
-      <a href="Goal.dc.html" style="border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2A2633; font-size: 10px; font-weight: 600">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="0.8" fill="currentColor"></circle></svg>
-        目标
-      </a>
-    </nav>
-    <a href="{{recordHref}}" aria-label="拍一餐" style="width: 62px; height: 62px; flex-shrink: 0; border-radius: 31px; background: rgba(122, 102, 224, 0.92); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid rgba(255, 255, 255, 0.6); box-shadow: 0 8px 24px rgba(122, 102, 224, 0.35); display: flex; align-items: center; justify-content: center; color: #FFFFFF">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.5-2h5L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"></path><circle cx="12" cy="12.5" r="3.5"></circle></svg>
-    </a>
-  </div>
+  <journal-nav page="Main" date="{{navDate}}"></journal-nav>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
@@ -232,6 +211,7 @@ class Component extends DCLogic {
     const change = weights.length > 1 ? Math.round((weights.at(-1) - weights[0]) * 10) / 10 : 0;
     const recordDate = selected > Journal.today ? Journal.today : selected;
     return {
+      navDate: selected,
       days, tip, linePts: pts.join(" "),
       savedMessage: this.state.savedMessage,
       weekTitle: week === Journal.weekStart(Journal.today) ? "本周" : "周记",

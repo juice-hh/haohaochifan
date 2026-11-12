@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-1">
+<link rel="stylesheet" href="./mobile.css?v=20261112-2">
 <title>好好吃饭 单日详情</title>
-<script src="./support.js?v=20261112-1"></script>
-<script src="./journal.js?v=20261112-1"></script>
+<script src="./support.js?v=20261112-2"></script>
+<script src="./journal.js?v=20261112-2"></script>
 </head>
 <body>
 <x-dc>
@@ -139,6 +139,12 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     </div>
   </sc-if>
 
+  <sc-if value="{{canRecord}}">
+    <div class="record-actions day-actions">
+      <a class="plan-action" href="{{weighHref}}">{{weighAction}}</a>
+      <a class="plan-action day-record" href="{{recordHref}}">记一餐</a>
+    </div>
+  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
