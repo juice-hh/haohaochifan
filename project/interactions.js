@@ -72,5 +72,47 @@
       event.target.blur();
     }
   });
+  // Mobile keyboards can shrink only VisualViewport while layout/sticky bounds stay tall.
+  // Keep the inset through blur until the viewport expands, so a save tap does not move away.
+  const viewport = window.visualViewport;
+  const root = document.documentElement;
+  let editingSession = false;
+  let frame = 0;
+  let revealPending = false;
+  const textEntry = (element) => element?.matches('textarea, input:not([type="file"]):not([type="date"]):not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"])');
+  function syncViewport() {
+    frame = 0;
+    const field = document.activeElement;
+    if (textEntry(field)) editingSession = true;
+    const inset = viewport && Math.abs(viewport.scale - 1) < 0.05
+      ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+    const keyboardOpen = editingSession && inset > 80;
+    root.style.setProperty("--keyboard-inset", keyboardOpen ? Math.ceil(inset) + "px" : "0px");
+    root.toggleAttribute("data-keyboard-open", keyboardOpen);
+    if (!textEntry(field) && inset <= 80) editingSession = false;
+    if (revealPending && textEntry(field) && !activeSheet) {
+      const top = (viewport?.offsetTop || 0) + 12;
+      const bottom = (viewport?.offsetTop || 0) + (viewport?.height || innerHeight);
+      const toolbar = document.querySelector(".app-toolbar")?.getBoundingClientRect();
+      const actions = document.querySelector(".record-actions")?.getBoundingClientRect();
+      const visibleTop = Math.max(top, toolbar && toolbar.bottom < bottom ? toolbar.bottom + 12 : top);
+      const visibleBottom = Math.min(bottom - 12, actions && actions.top > visibleTop ? actions.top - 12 : bottom - 12);
+      const bounds = field.getBoundingClientRect();
+      if (bounds.bottom > visibleBottom) window.scrollBy(0, bounds.bottom - visibleBottom);
+      else if (bounds.top < visibleTop) window.scrollBy(0, bounds.top - visibleTop);
+    }
+    revealPending = false;
+  }
+  function scheduleViewport(reveal = false) {
+    revealPending ||= reveal;
+    if (!frame) frame = requestAnimationFrame(syncViewport);
+  }
+  viewport?.addEventListener("resize", () => scheduleViewport(true));
+  viewport?.addEventListener("scroll", () => scheduleViewport());
+  window.addEventListener("resize", () => scheduleViewport(true));
+  document.addEventListener("focusin", () => scheduleViewport(true));
+  document.addEventListener("focusout", () => scheduleViewport());
+  window.addEventListener("pageshow", () => scheduleViewport());
+  scheduleViewport();
   window.JournalUI = { confirmAction, guardNavigation, focusField };
 })();
