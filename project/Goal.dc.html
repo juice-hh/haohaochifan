@@ -7,11 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-3">
+<link rel="stylesheet" href="./mobile.css?v=20261112-4">
 <title>好好吃饭 我的目标</title>
-<script src="./support.js?v=20261112-3"></script>
-<script src="./journal.js?v=20261112-3"></script>
-<script src="./navigation.js?v=20261112-3"></script>
+<script src="./support.js?v=20261112-4"></script>
+<script src="./journal.js?v=20261112-4"></script>
+<script src="./navigation.js?v=20261112-4"></script>
+<script src="./interactions.js?v=20261112-4"></script>
 </head>
 <body>
 <x-dc>
@@ -38,8 +39,8 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     </sc-if>
     <sc-if value="{{noWeight}}">
       <p class="goal-note">还没有体重记录。你也可以只设生活习惯目标。</p>
-      <a class="plan-action" href="{{weighHref}}">记一笔体重</a>
     </sc-if>
+    <a class="plan-action" href="{{weighHref}}">{{weighLabel}}</a>
     <sc-if value="{{savedTarget}}"><p class="goal-note">你的目标体重 {{savedTarget}} kg</p></sc-if>
   </section>
 
@@ -47,13 +48,13 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <h2>设个自己的目标</h2>
     <label class="goal-field">
       <span>想养成的习惯</span>
-      <input type="text" maxlength="80" placeholder="比如每周给自己做三顿饭" value="{{habit}}" onInput="{{setHabit}}">
+      <input onKeyDown="{{nextField}}" enterkeyhint="next" type="text" maxlength="80" placeholder="比如每周给自己做三顿饭" value="{{habit}}" onInput="{{setHabit}}">
     </label>
     <label class="goal-field">
       <span>目标体重（kg，选填）</span>
-      <input type="text" inputmode="decimal" maxlength="7" placeholder="填写你自己的目标" value="{{target}}" onInput="{{setTarget}}">
+      <input id="goal-weight" enterkeyhint="done" type="text" inputmode="decimal" maxlength="7" placeholder="填写你自己的目标" value="{{target}}" onInput="{{setTarget}}">
     </label>
-    <button type="submit" class="plan-action goal-save">保存目标</button>
+    <button type="submit" class="plan-action goal-save">{{saveLabel}}</button>
     <p class="goal-note" role="status">{{message}}</p>
   </form>
   <journal-nav page="Goal" date="{{navDate}}"></journal-nav>
@@ -70,6 +71,7 @@ class Component extends DCLogic {
       target: this.goal.weight === null ? "" : (this.goal.weight / 10).toFixed(1),
       message: ""
     };
+    JournalUI.guardNavigation(() => this.state.habit.trim() !== this.goal.habit || (this.state.target.trim() ? Journal.parseWeight(this.state.target) === null || Journal.parseWeight(this.state.target) !== this.goal.weight : this.goal.weight !== null));
   }
 
   save(event) {
@@ -78,12 +80,14 @@ class Component extends DCLogic {
     const weight = target ? Journal.parseWeight(target) : null;
     if (target && weight === null) {
       this.setState({ message: "请输入 0.1 到 500 公斤之间的体重。" });
+      JournalUI.focusField("#goal-weight");
       return;
     }
     const goal = { habit: this.state.habit.trim(), weight };
     try {
       Journal.saveGoal(goal);
       this.goal = goal;
+      document.activeElement?.blur?.();
       this.setState({
         habit: goal.habit,
         target: weight === null ? "" : (weight / 10).toFixed(1),
@@ -103,7 +107,10 @@ class Component extends DCLogic {
       currentWeight: this.latest?.kg.toFixed(1),
       weightDate: this.latest ? Journal.shortDate(this.latest.date) + "记录" : "",
       savedTarget: this.goal.weight === null ? "" : (this.goal.weight / 10).toFixed(1),
-      weighHref: Journal.link("Weigh", Journal.today),
+      weighHref: Journal.link("Weigh", Journal.today, { returnTo: "Goal" }),
+      weighLabel: this.latest ? "更新体重" : "记一笔体重",
+      nextField: (event) => { if (event.key === "Enter") { event.preventDefault(); document.getElementById("goal-weight").focus(); } },
+      saveLabel: this.state.message === "目标已保存" ? "已保存" : "保存目标",
       setHabit: (event) => this.setState({ habit: event.target.value, message: "" }),
       setTarget: (event) => this.setState({ target: event.target.value, message: "" }),
       save: (event) => this.save(event)

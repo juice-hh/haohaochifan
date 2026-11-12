@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-3">
+<link rel="stylesheet" href="./mobile.css?v=20261112-4">
 <title>好好吃饭 周视图</title>
-<script src="./support.js?v=20261112-3"></script>
-<script src="./journal.js?v=20261112-3"></script>
-<script src="./navigation.js?v=20261112-3"></script>
+<script src="./support.js?v=20261112-4"></script>
+<script src="./journal.js?v=20261112-4"></script>
+<script src="./navigation.js?v=20261112-4"></script>
 </head>
 <body>
 <x-dc>
@@ -41,11 +41,11 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     </div>
   </div>
   <div style="display: flex; align-items: center; gap: 2px; margin-top: -4px">
-    <button aria-label="上一周" onClick="{{previousWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+    <button class="app-step-button" aria-label="上一周" onClick="{{previousWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
     </button>
     <span style="font-size: 16px; font-weight: 700; color: #6F6A78">{{weekLabel}}</span>
-    <button aria-label="下一周" onClick="{{nextWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+    <button class="app-step-button" aria-label="下一周" onClick="{{nextWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
     </button>
     <span style="margin-left: auto; font-size: 13px; font-weight: 700; color: #6F6A78">{{averageLabel}}</span>
@@ -91,7 +91,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
   <div style="display: flex; flex-direction: column; gap: 8px">
     <div style="display: flex; align-items: baseline; justify-content: space-between">
       <span style="font-size: 20px; font-weight: 900">{{sel.title}}</span>
-      <a href="{{detailHref}}" style="font-size: 14px; font-weight: 700; color: #6F6A78; display: flex; align-items: center; gap: 2px">{{sel.meals}} 餐 · 查看当天
+      <a class="app-text-button" href="{{detailHref}}" style="font-size: 14px; font-weight: 700; color: #6F6A78; display: flex; align-items: center; gap: 2px">{{sel.meals}} 餐 · 查看当天
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
     </div>

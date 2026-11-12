@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-3">
+<link rel="stylesheet" href="./mobile.css?v=20261112-4">
 <title>好好吃饭 单日详情</title>
-<script src="./support.js?v=20261112-3"></script>
-<script src="./journal.js?v=20261112-3"></script>
+<script src="./support.js?v=20261112-4"></script>
+<script src="./journal.js?v=20261112-4"></script>
 </head>
 <body>
 <x-dc>
@@ -21,17 +21,13 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 .meal-row[href]:hover{background:#F7F5FC}
 </style>
 </helmet>
-<div class="screen" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <div style="display: flex; align-items: center; justify-content: space-between">
-    <a href="{{backHref}}" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; padding-right: 8px">
+<div class="screen screen--flow" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
+  <div class="app-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="返回{{backLabel}}">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-      {{backLabel}}
     </a>
-    <sc-if value="{{canRecord}}">
-      <a href="{{recordHref}}" aria-label="补记一餐" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; color: #5B48B8; display: flex; align-items: center; justify-content: center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
-      </a>
-    </sc-if>
+    <span class="app-toolbar-title">当天饭记</span>
+    <span class="app-toolbar-spacer" aria-hidden="true"></span>
   </div>
 
   <div style="display: flex; align-items: center; gap: 14px">
@@ -131,7 +127,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <div style="background: #FFFFFF; border-radius: 26px; padding: 14px 14px; display: grid; gap: 3px">
       <strong style="font-size: 15px; padding: 0 6px 5px">这天吃了什么</strong>
       <sc-for list="{{meals}}" as="m">
-        <a class="meal-row" href="{{m.editHref}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; border-radius: 9px; padding: 0 6px">
+        <a class="meal-row" href="{{m.editHref}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-radius: 14px; padding: 0 6px">
           <span style="min-width: 0; overflow-wrap: anywhere; font-size: 14px; color: #2A2633">{{m.name}}</span>
           <span style="flex-shrink: 0; font-size: 12px; color: #5B48B8">{{m.kind}}</span>
         </a>

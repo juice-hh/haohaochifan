@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-3">
+<link rel="stylesheet" href="./mobile.css?v=20261112-4">
 <title>好好吃饭 饭相册</title>
-<script src="./support.js?v=20261112-3"></script>
-<script src="./journal.js?v=20261112-3"></script>
-<script src="./navigation.js?v=20261112-3"></script>
+<script src="./support.js?v=20261112-4"></script>
+<script src="./journal.js?v=20261112-4"></script>
+<script src="./navigation.js?v=20261112-4"></script>
 </head>
 <body>
 <x-dc>
@@ -30,20 +30,20 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     </div>
   </div>
 
-  <div class="album-view-switch" role="group" aria-label="饭相册视图">
+  <div class="album-view-switch app-segmented" role="group" aria-label="饭相册视图">
     <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
-      <button type="button" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
+      <button type="button" aria-pressed="{{v.selected}}" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
     </sc-for>
   </div>
 
   <sc-if value="{{isCal}}" hint-placeholder-val="{{true}}">
     <div style="background: #FFFFFF; border-radius: 32px; padding: 16px 12px 14px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 8px">
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px">
-        <button aria-label="上个月" onClick="{{previousMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+        <button class="app-step-button" aria-label="上个月" onClick="{{previousMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
         </button>
         <span style="font-size: 18px; font-weight: 900">{{monthLabel}}</span>
-        <button aria-label="下个月" onClick="{{nextMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+        <button class="app-step-button" aria-label="下个月" onClick="{{nextMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
         </button>
       </div>
@@ -163,7 +163,7 @@ class Component extends DCLogic {
     var views = [{ id: 'cal', label: '日历' }, { id: 'food', label: '按食物' }].map(function (v) {
       var on = self.state.view === v.id;
       return {
-        label: v.label,
+        label: v.label, selected: on,
         pick: function () { self.setState({ view: v.id }); },
         style: 'height: 36px; border: none; border-radius: 999px; padding: 0 16px; font-size: 14px; font-family: inherit; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78')
       };

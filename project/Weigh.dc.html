@@ -7,10 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-3">
+<link rel="stylesheet" href="./mobile.css?v=20261112-4">
 <title>好好吃饭 早上称重</title>
-<script src="./support.js?v=20261112-3"></script>
-<script src="./journal.js?v=20261112-3"></script>
+<script src="./support.js?v=20261112-4"></script>
+<script src="./journal.js?v=20261112-4"></script>
+<script src="./interactions.js?v=20261112-4"></script>
 </head>
 <body>
 <x-dc>
@@ -23,12 +24,13 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 .weight-input{box-sizing:content-box;padding:0;border:0;background:transparent;color:#7A66E0;font:inherit;font-size:80px;font-weight:900;letter-spacing:-1px;line-height:1;text-align:center;outline:none}
 </style>
 </helmet>
-<div class="screen" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <div style="display: flex; align-items: center; justify-content: space-between">
-    <a href="{{backHref}}" aria-label="关闭" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<div class="screen screen--flow" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
+  <div class="app-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="关闭" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
     </a>
-    <span style="width: 44px"></span>
+    <span class="app-toolbar-title">记录体重</span>
+    <span class="app-toolbar-spacer" aria-hidden="true"></span>
   </div>
 
   <div style="display: flex; align-items: center; gap: 14px">
@@ -45,6 +47,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <input id="weight-input" class="weight-input" type="text" inputmode="decimal" enterkeyhint="done" maxlength="7" placeholder="—" autocomplete="off" spellcheck="false" aria-label="体重（公斤）" aria-invalid="{{invalid}}" aria-describedby="weight-error" value="{{draft}}" style="{{weightWidth}}" onInput="{{typeWeight}}" onBlur="{{commitWeight}}" onKeyDown="{{finishTyping}}">
       <span style="font-size: 24px; font-weight: 800">kg</span>
     </label>
+    <span class="weight-input-hint">点击数字输入体重</span>
     <div style="display: flex; align-items: center; gap: 10px; width: 100%">
       <button onClick="{{minus}}" aria-label="减 0.1" aria-disabled="{{noWeight}}" style="width: 48px; height: 48px; border-radius: 24px; border: none; background: #F7F5FC; color: #2A2633; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"></path></svg>
@@ -99,11 +102,13 @@ class Component extends DCLogic {
     const selected = Journal.selected(Journal.today);
     this.date = selected > Journal.today ? Journal.today : selected;
     this.fromDay = Journal.params.get("from") === "day";
+    this.returnPage = Journal.params.get("returnTo") === "Goal" ? "Goal" : "Main";
     this.via = Journal.params.get("via") === "album" ? "album" : "week";
     this.previous = Journal.previousWeight(this.date);
     const initial = Journal.savedWeight(this.date);
     const w = initial === null ? null : Math.round(initial * 10);
     this.state = { w, draft: w === null ? "" : formatWeight(w), error: "" };
+    JournalUI.guardNavigation(() => this.state.draft.trim() !== "" ? parseWeight(this.state.draft) === null || parseWeight(this.state.draft) !== w : w !== null);
   }
 
   typeWeight(draft) {
@@ -121,14 +126,14 @@ class Component extends DCLogic {
   }
 
   adjustWeight(step) {
-    if (this.state.w === null) return;
+    if (parseWeight(this.state.draft) === null) return;
     const w = Math.min(maxWeight, Math.max(minWeight, this.state.w + step));
     this.setState({ w, draft: formatWeight(w), error: "" });
   }
 
   backHref(status) {
     const extra = status ? { status } : {};
-    return Journal.link(this.fromDay ? "Day" : "Main", this.date, {
+    return Journal.link(this.fromDay ? "Day" : this.returnPage, this.date, {
       ...(this.fromDay ? { from: this.via } : {}), ...extra
     });
   }
@@ -170,7 +175,7 @@ class Component extends DCLogic {
       dateLabel: dateLabel + " · " + Journal.dayName(this.date),
       headingNote: this.date === Journal.today ? "记一笔体重" : "补记这天的体重",
       backHref: this.backHref(),
-      noWeight: w === null,
+      noWeight: typed === null,
       comparisonTitle: previous ? "上次记录" : "体重记录",
       comparisonText: previous
         ? Journal.shortDate(previous.date) + " · " + previous.kg.toFixed(1) + " kg"
