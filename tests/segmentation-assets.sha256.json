@@ -1,0 +1,12 @@
+{
+  "project/models/slimsam-5850ab45/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+  "project/models/slimsam-5850ab45/config.json": "6339884f168658d3ca6473b486973913fb33e84e625e06ae2dd7b4a808187419",
+  "project/models/slimsam-5850ab45/preprocessor_config.json": "225545a743c654e3c495ec6f545a0eaba57c8ba3fbbd8483b3cb1c0fc58db517",
+  "project/models/slimsam-5850ab45/onnx/vision_encoder_quantized.onnx": "cce23c7b2e5d4f330932738fb67ba518e04b0d99ccdd1cccd22a7da4e01f2971",
+  "project/models/slimsam-5850ab45/onnx/prompt_encoder_mask_decoder_quantized.onnx": "cb90b279f549d2cab7fd6e20c38522438c65d84bdcca3d2a764cff7d857fdce2",
+  "project/vendor/transformers-2.17.2/LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "project/vendor/transformers-2.17.2/ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a",
+  "project/vendor/transformers-2.17.2/transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
+  "project/vendor/transformers-2.17.2/ONNX-RUNTIME-LICENSE": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+  "project/vendor/transformers-2.17.2/ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865"
+}

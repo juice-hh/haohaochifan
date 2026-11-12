@@ -613,3 +613,20 @@ food-sticker canvas { width: 100%; height: 100%; display: block; filter: drop-sh
 .food-crop-controls label { font-size: 12px; color: #6F6A78; }
 .food-crop-controls input { width: 100%; min-height: 32px; accent-color: #7A66E0; }
 @media (max-width: 359px) { .food-sticker-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .food-editor-row { grid-template-columns: 60px minmax(0,1fr) 40px; gap: 6px; } }
+
+/* A sticker is a pixel mask, never a rectangular photo fallback. */
+.food-sticker-fallback small { display: block; font-size: 10px; font-weight: 500; opacity: .8; }
+.food-crop-sheet { max-height: calc(100dvh - 24px); overflow-y: auto; }
+.cutout-modes { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.cutout-modes button,.cutout-next { flex: 1; min-height: 44px; padding: 6px 10px; border: 0; border-radius: 14px; background: #FFF; color: #5B48B8; font: inherit; font-size: 12px; }
+.cutout-modes button[aria-pressed="true"] { background: #7A66E0; color: #FFF; }
+.food-crop-stage { touch-action: pan-y; cursor: crosshair; }
+.food-crop-stage img { max-height: min(280px,36dvh); }
+.cutout-points { position: absolute; inset: 0; pointer-events: none; }
+.cutout-points span { position: absolute; transform: translate(-50%,-50%); border: 2px solid #FFF; width: 16px; height: 16px; display: grid; place-items: center; border-radius: 50%; color: #FFF; font-size: 13px; font-weight: 800; }
+.cutout-points .keep { background: #5B48B8; }
+.cutout-points .exclude { background: #C84343; }
+.cutout-result { display: flex; gap: 16px; align-items: center; margin-bottom: 12px; }
+.cutout-result food-sticker { width: 100px; flex-shrink: 0; border-radius: 18px; background: repeating-conic-gradient(#EEE9F8 0% 25%,#FFF 0% 50%) 0 / 16px 16px; }
+.cutout-status { min-height: 32px; font-size: 12px !important; }
+.food-crop-sheet button:disabled { opacity: .45; }

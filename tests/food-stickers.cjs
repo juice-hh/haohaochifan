@@ -2,7 +2,7 @@ const {chromium,webkit}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const base=process.env.TEST_BASE_URL||'http://127.0.0.1:4176';
-const photo=require('node:path').resolve('project/icons/app-180.png');
+const photo=require('node:path').resolve('tests/fixtures/salad-real.jpg');
 const foods=Array.from({length:6},(_,i)=>({name:'测试食物'+(i+1),kcal:50+i*10,box:{x:100,y:100,width:700,height:700},contour:[{x:100,y:400},{x:400,y:100},{x:800,y:400},{x:400,y:800}]}));
 const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40,pro:20,fat:10,notes:'测试数据',foods};
 (async()=>{
@@ -14,6 +14,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.goto(base+'/Record.dc.html?date=2026-11-12');
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
   await p.locator('.food-editor-row').nth(5).waitFor();
+  await p.waitForFunction(()=>document.querySelector('.record-save')?.getAttribute('aria-disabled')!=='true',{},{timeout:90000});
   await p.locator('[name=food-kcal-0]').fill('123');
   assert.equal(await p.locator('[name=calories]').inputValue(),'523');
   await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');await p.reload();
@@ -26,10 +27,13 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   assert.equal(await p.locator('.food-sticker-item').count(),6);
   await p.locator('.food-sticker-item').first().click();
   assert.equal(await p.locator('[name=food-kcal-0]').inputValue(),'123');
-  await p.getByRole('button',{name:'选择食物区域 测试食物1',exact:true}).click();
-  await p.getByRole('slider',{name:'区域宽度'}).fill('300');
-  await p.getByRole('button',{name:'使用此区域'}).click();
-  assert.equal(JSON.parse(await p.locator('.food-editor-row food-sticker').first().getAttribute('box')).width,300);
+  await p.getByRole('button',{name:'单独抠出食物 测试食物1',exact:true}).click();
+  const img=await p.locator('.food-crop-stage img').boundingBox();
+  await p.mouse.click(img.x+img.width*.52,img.y+img.height*.36);
+  await p.getByRole('button',{name:'使用这张贴纸'}).waitFor();
+  await p.waitForFunction(()=>!document.querySelector('.app-sheet-confirm')?.disabled,{},{timeout:90000});
+  await p.getByRole('button',{name:'使用这张贴纸'}).click();
+  assert(JSON.parse(await p.locator('.food-editor-row food-sticker').first().getAttribute('cutout')).mask.startsWith('data:image/png'));
   await p.locator('[name=food-kcal-0]').fill('');
   await p.getByRole('button',{name:'移除食物 测试食物6',exact:true}).click();
   await p.setViewportSize({width:320,height:568});

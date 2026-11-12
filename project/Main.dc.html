@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-6">
+<link rel="stylesheet" href="./mobile.css?v=20261112-7">
 <title>好好吃饭 周视图</title>
-<script src="./support.js?v=20261112-6"></script>
-<script src="./journal.js?v=20261112-6"></script>
-<script src="./navigation.js?v=20261112-6"></script>
-<script src="./food-stickers.js?v=20261112-6"></script>
+<script src="./support.js?v=20261112-7"></script>
+<script src="./journal.js?v=20261112-7"></script>
+<script src="./navigation.js?v=20261112-7"></script>
+<script src="./food-stickers.js?v=20261112-7"></script>
 </head>
 <body>
 <x-dc>
@@ -111,7 +111,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
           <div class="food-sticker-grid">
             <sc-for list="{{g.foods}}" as="f">
               <a class="food-sticker-item" href="{{g.editHref}}" aria-label="{{f.label}}">
-                <div class="food-sticker-visual"><food-sticker photo="{{f.photo}}" box="{{f.box}}" contour="{{f.contour}}" name="{{f.name}}"></food-sticker><span class="food-kcal-badge">{{f.kcal}}</span></div>
+                <div class="food-sticker-visual"><food-sticker photo="{{f.photo}}" box="{{f.box}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><span class="food-kcal-badge">{{f.kcal}}</span></div>
                 <strong>{{f.name}}</strong>
               </a>
             </sc-for>

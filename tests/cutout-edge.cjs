@@ -1,0 +1,14 @@
+const {chromium}=require('playwright');const assert=require('node:assert/strict');const path=require('node:path');
+(async()=>{const browser=await chromium.launch({channel:'chrome'});const context=await browser.newContext({viewport:{width:390,height:844}});await context.addInitScript(()=>localStorage.setItem('hhcf-record-mode','manual'));const p=await context.newPage();
+await p.goto('http://127.0.0.1:4176/Record.dc.html');await p.getByLabel('从相册选',{exact:true}).setInputFiles(path.resolve('tests/fixtures/salad-real.jpg'));await p.getByRole('button',{name:'＋ 添加',exact:true}).click();await p.locator('[name=food-name-0]').fill('番茄');
+// Legacy boxes and polygons must never masquerade as a cutout.
+await p.evaluate(()=>{const el=document.querySelector('food-sticker');el.setAttribute('box',JSON.stringify({x:0,y:0,width:1000,height:1000}));el.setAttribute('contour',JSON.stringify([{x:0,y:0},{x:1000,y:0},{x:1000,y:1000},{x:0,y:1000}]));});
+assert.equal(await p.locator('food-sticker canvas').count(),0);assert(await p.locator('food-sticker').first().innerText().then(t=>t.includes('待抠图')));
+// Cancel an in-flight segmentation: original photo and typed fields survive.
+await p.getByRole('button',{name:'单独抠出食物 番茄'}).click();const img=await p.locator('.food-crop-stage img').boundingBox();await p.mouse.click(img.x+img.width*.24,img.y+img.height*.51);await p.getByRole('button',{name:'取消',exact:true}).click();assert.equal(await p.locator('[name=food-name-0]').inputValue(),'番茄');assert(await p.locator('.meal-photo-preview').isVisible());
+// Restart after cancellation; segmentation computes a real alpha mask.
+await p.getByRole('button',{name:'单独抠出食物 番茄'}).click();const box=await p.locator('.food-crop-stage img').boundingBox();await p.mouse.click(box.x+box.width*.24,box.y+box.height*.51);await p.waitForFunction(()=>!document.querySelector('.app-sheet-confirm')?.disabled,{},{timeout:90000});
+await p.getByRole('button',{name:'使用这张贴纸'}).click();await p.waitForFunction(()=>document.querySelector('.food-editor-row food-sticker canvas'));
+const alpha=await p.locator('.food-editor-row canvas').evaluate(c=>{const a=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let transparent=0,opaque=0;for(let i=3;i<a.length;i+=4){if(a[i]===0)transparent++;if(a[i]===255)opaque++;}return{transparent,opaque};});assert(alpha.transparent>5000&&alpha.opaque>5000,JSON.stringify(alpha));
+await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');await p.reload();await p.waitForFunction(()=>document.querySelector('.food-sticker-item canvas'));assert.equal(await p.locator('.food-kcal-badge').innerText(),'热量待补充');
+console.log('PASS no rectangle/polygon fallback, cancel + retry, real transparent mask and persistence');await browser.close();})().catch(e=>{console.error(e);process.exit(1)});
