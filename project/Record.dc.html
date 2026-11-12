@@ -7,11 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-5">
+<link rel="stylesheet" href="./mobile.css?v=20261112-6">
 <title>好好吃饭 拍一餐</title>
-<script src="./support.js?v=20261112-5"></script>
-<script src="./journal.js?v=20261112-5"></script>
-<script src="./interactions.js?v=20261112-5"></script>
+<script src="./support.js?v=20261112-6"></script>
+<script src="./journal.js?v=20261112-6"></script>
+<script src="./interactions.js?v=20261112-6"></script>
+<script src="./food-stickers.js?v=20261112-6"></script>
 </head>
 <body>
 <x-dc>
@@ -78,6 +79,23 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <p class="meal-photo-hint">{{recognitionHint}}</p>
     <sc-if value="{{canRecognize}}"><button type="button" class="plan-action" onClick="{{recognize}}">{{recognizeLabel}}</button></sc-if>
     <sc-if value="{{recognizing}}"><button type="button" class="plan-action" onClick="{{cancelRecognition}}">停止识别，手动填写</button></sc-if>
+  </section>
+
+  <section class="food-editor" aria-label="这一餐的食物贴纸">
+    <div class="food-editor-heading"><strong>这一餐的食物</strong><button class="plan-action" type="button" onClick="{{addFood}}" aria-disabled="{{foodLimit}}">＋ 添加</button></div>
+    <p class="goal-note">每种食物一张贴纸，分别标注估算热量；点照片可调整区域。</p>
+    <sc-if value="{{noFoods}}"><p class="food-missing">还没有单项食物。识别照片，或手动添加。</p></sc-if>
+    <sc-for list="{{foodRows}}" as="f">
+      <div class="food-editor-row">
+        <button type="button" class="food-editor-image" onClick="{{f.crop}}" aria-label="{{f.cropLabel}}" aria-disabled="{{noPhoto}}"><food-sticker photo="{{photo}}" box="{{f.box}}" contour="{{f.contour}}" name="{{f.name}}"></food-sticker><span>{{f.imageHint}}</span></button>
+        <div class="food-editor-fields">
+          <label><span>食物名称</span><input name="food-name-{{f.index}}" maxlength="60" enterkeyhint="done" placeholder="比如米饭" value="{{f.name}}" onInput="{{f.setName}}"></label>
+          <label><span>热量（kcal）</span><input name="food-kcal-{{f.index}}" type="number" min="0" max="10000" step="0.1" inputmode="decimal" enterkeyhint="done" placeholder="待补充" value="{{f.kcal}}" onInput="{{f.setKcal}}"></label>
+        </div>
+        <button class="food-remove" type="button" onClick="{{f.remove}}" aria-label="{{f.removeLabel}}">移除</button>
+      </div>
+    </sc-for>
+    <sc-if value="{{hasFoodTotal}}"><div class="food-total"><span>单项合计 {{foodTotal}} kcal</span><sc-if value="{{foodTotalDiffers}}"><button class="plan-action" type="button" onClick="{{useFoodTotal}}">用作整餐热量</button></sc-if></div></sc-if>
   </section>
 
   <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 10px">
@@ -164,6 +182,7 @@ class Component extends DCLogic {
     try { autoRecognize = localStorage.getItem("hhcf-record-mode") !== "manual"; } catch {}
     const [carb, pro, fat] = Journal.mealMacros(this.original).map((value) => value ?? "");
     this.state = {
+      foods: FoodStickers.normalize(this.original?.foods).map(f => ({ ...f, kcal: f.kcal ?? "" })),
       autoRecognize, meal: this.original?.kind ?? "dinner", carb, pro, fat, date: this.date,
       name: this.original?.name ?? (Journal.params.get("name") ?? "").slice(0, 60),
       photo: null, busy: false, error: "",
@@ -178,7 +197,27 @@ class Component extends DCLogic {
 
   formSignature() {
     const s = this.state;
-    return JSON.stringify([s.name.trim(), s.date, s.meal, s.carb, s.pro, s.fat, s.portion, s.calories, s.photo]);
+    return JSON.stringify([s.name.trim(), s.date, s.meal, s.carb, s.pro, s.fat, s.portion, s.calories, s.photo, s.foods]);
+  }
+
+  foodTotal(foods = this.state.foods) {
+    return foods.length && foods.every(f => f.kcal !== "" && Number.isFinite(Number(f.kcal)) && Number(f.kcal) >= 0 && Number(f.kcal) <= 10000)
+      ? Math.round(foods.reduce((sum, f) => sum + Number(f.kcal), 0) * 10) / 10 : null;
+  }
+
+  changeFoods(foods, updateTotal = false) {
+    this.cancelRecognition();
+    const total = this.foodTotal(foods);
+    this.setState({ foods, error: "", ...(updateTotal && total !== null ? { calories: String(total) } : {}) });
+  }
+
+  async cropFood(index) {
+    const photo = this.state.photo ?? Journal.photoFor(this.original);
+    if (!photo) return;
+    this.cancelRecognition();
+    const food = this.state.foods[index];
+    const region = await FoodStickers.selectRegion(photo, food.box);
+    if (region) this.changeFoods(this.state.foods.map((f, i) => i === index ? { ...f, box: region, contour: [] } : f));
   }
 
   releaseCamera() {
@@ -230,7 +269,7 @@ class Component extends DCLogic {
       const photo = makePhoto(video, video.videoWidth, video.videoHeight);
       this.photoRequest++;
       this.releaseCamera();
-      this.setState({ camera: "closed", photo, busy: false, error: "" });
+      this.setState({ camera: "closed", photo, foods: [], busy: false, error: "" });
       this.recognizeIfEnabled(photo);
     } catch {
       this.setState({ cameraError: "没能拍下照片，请重试或从相册选。" });
@@ -255,7 +294,7 @@ class Component extends DCLogic {
       });
       const photo = makePhoto(image, image.naturalWidth, image.naturalHeight);
       if (request === this.photoRequest) {
-        this.setState({ photo, busy: false });
+        this.setState({ photo, foods: [], busy: false });
         this.recognizeIfEnabled(photo);
       }
     } catch {
@@ -318,6 +357,7 @@ class Component extends DCLogic {
       }
       this.setState({
         name: result.name, portion: result.portion, calories: result.kcal,
+        foods: FoodStickers.normalize(result.foods).map(f => ({ ...f, kcal: f.kcal ?? "" })),
         carb: result.carb, pro: result.pro, fat: result.fat,
         recognitionNote: "AI 估算，请核对后保存。" + result.notes
       });
@@ -337,7 +377,7 @@ class Component extends DCLogic {
     if (this.state.busy || this.state.recognizing || this.state.camera !== "closed" || this.saving) return;
     const { meal, carb, pro, fat, photo, date } = this.state;
     const hasPhoto = photo === null ? Boolean(this.original?.photoKey || this.original?.photo) : Boolean(photo);
-    const name = this.state.name.trim() || (hasPhoto ? Journal.kinds[meal] + "照片" : "");
+    const name = this.state.name.trim() || this.state.foods.map(f => f.name.trim()).filter(Boolean).join("、").slice(0, 60) || (hasPhoto ? Journal.kinds[meal] + "照片" : "");
     if (!name) {
       this.setState({ error: "拍一张照片，或写下这餐吃了什么。" });
       JournalUI.focusField("#meal-name");
@@ -356,10 +396,17 @@ class Component extends DCLogic {
       JournalUI.focusField('input[name="' + invalid + '"]');
       return;
     }
+    const invalidFood = this.state.foods.findIndex(f => !f.name.trim() || (f.kcal !== "" && (!Number.isFinite(Number(f.kcal)) || Number(f.kcal) < 0 || Number(f.kcal) > 10000)));
+    if (invalidFood !== -1) {
+      this.setState({ error: "请填写食物名称，热量填写 0 到 10000 之间的数值或留空。" });
+      JournalUI.focusField('[name="food-' + (!this.state.foods[invalidFood].name.trim() ? 'name-' : 'kcal-') + invalidFood + '"]');
+      return;
+    }
     this.saving = true;
     this.setState({ error: "" });
     try {
-      await Journal.saveMeal(date, { name, kind: meal, grams: [carb, pro, fat].map((value) => value === "" ? null : Number(value)), nutritionFields: true,
+      await Journal.saveMeal(date, { name, kind: meal,
+        foods: FoodStickers.normalize(this.state.foods.map(f => ({ ...f, name: f.name.trim(), kcal: f.kcal === "" ? null : Number(f.kcal) }))), grams: [carb, pro, fat].map((value) => value === "" ? null : Number(value)), nutritionFields: true,
         portion: this.state.portion === "" ? null : Number(this.state.portion),
         kcal: this.state.calories === "" ? null : Number(this.state.calories) }, this.original, photo);
     } catch (error) {
@@ -424,6 +471,20 @@ class Component extends DCLogic {
     const cameraOpen = s.camera !== "closed";
     const photo = s.photo ?? Journal.photoFor(this.original);
     return {
+      foodRows: s.foods.map((f, index) => ({
+        index, name: f.name, kcal: f.kcal, box: JSON.stringify(f.box), contour: JSON.stringify(f.contour),
+        cropLabel: "选择食物区域 " + (f.name || (index + 1)), removeLabel: "移除食物 " + (f.name || (index + 1)),
+        imageHint: photo ? "调整区域" : "先添加照片",
+        crop: () => this.cropFood(index),
+        setName: event => { const value = event.target.value; this.changeFoods(s.foods.map((item, i) => i === index ? { ...item, name: value } : item)); },
+        setKcal: event => { const value = event.target.value; this.changeFoods(s.foods.map((item, i) => i === index ? { ...item, kcal: value } : item), true); },
+        remove: () => this.changeFoods(s.foods.filter((_, i) => i !== index), true)
+      })),
+      noFoods: !s.foods.length, noPhoto: !photo, foodLimit: s.foods.length >= 16,
+      addFood: () => { if (s.foods.length < 16) this.changeFoods([...s.foods, { name: "", kcal: "", box: null, contour: [] }]); },
+      hasFoodTotal: this.foodTotal() !== null, foodTotal: this.foodTotal(),
+      foodTotalDiffers: this.foodTotal() !== null && (s.calories === "" || Number(s.calories) !== this.foodTotal()),
+      useFoodTotal: () => { if (this.foodTotal() !== null) this.setState({ calories: String(this.foodTotal()) }); },
       meals, rows, name: s.name, photo, busy: s.busy || s.recognizing || cameraOpen || this.saving, error: s.error,
       title: this.original ? "编辑这一餐" : selectedDate === Journal.today ? "拍一餐" : "补记 " + dateLabel,
       editing: Boolean(this.original),

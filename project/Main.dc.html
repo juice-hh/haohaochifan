@@ -7,11 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-5">
+<link rel="stylesheet" href="./mobile.css?v=20261112-6">
 <title>好好吃饭 周视图</title>
-<script src="./support.js?v=20261112-5"></script>
-<script src="./journal.js?v=20261112-5"></script>
-<script src="./navigation.js?v=20261112-5"></script>
+<script src="./support.js?v=20261112-6"></script>
+<script src="./journal.js?v=20261112-6"></script>
+<script src="./navigation.js?v=20261112-6"></script>
+<script src="./food-stickers.js?v=20261112-6"></script>
 </head>
 <body>
 <x-dc>
@@ -102,6 +103,24 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         </sc-for>
       </div>
     </sc-if>
+  <div class="daily-food-groups" aria-label="当天食物贴纸">
+    <sc-for list="{{foodGroups}}" as="g">
+      <section class="daily-food-group">
+        <div class="daily-food-heading"><strong>{{g.kind}}</strong><span>{{g.name}}</span><a class="app-text-button" href="{{g.editHref}}" aria-label="编辑{{g.name}}">编辑</a></div>
+        <sc-if value="{{g.hasFoods}}">
+          <div class="food-sticker-grid">
+            <sc-for list="{{g.foods}}" as="f">
+              <a class="food-sticker-item" href="{{g.editHref}}" aria-label="{{f.label}}">
+                <div class="food-sticker-visual"><food-sticker photo="{{f.photo}}" box="{{f.box}}" contour="{{f.contour}}" name="{{f.name}}"></food-sticker><span class="food-kcal-badge">{{f.kcal}}</span></div>
+                <strong>{{f.name}}</strong>
+              </a>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{g.missingFoods}}"><div class="food-missing"><span>{{g.wholeKcal}} · 尚未拆分食物</span><a href="{{g.editHref}}">识别或补充食物</a></div></sc-if>
+      </section>
+    </sc-for>
+  </div>
     <div style="display: flex; align-items: baseline; gap: 6px">
       <span style="font-size: 38px; font-weight: 900; color: #7A66E0; line-height: 1.05">{{sel.kcal}}</span>
       <span style="font-size: 15px; font-weight: 800">kcal</span>
@@ -186,7 +205,7 @@ class Component extends DCLogic {
         var rot = j === 0 ? 0 : [-6, 5, -3, 7, -5][(i + j) % 5] * (on ? 1.5 : 1);
         var dx = j === 0 ? 0 : [0, 3, -3, 2, -2][(i + j) % 5] * (on ? 2 : 1);
         const photo = Journal.photoFor(shown[j]);
-        tiles.push({ name: shown[j].name, style: 'position: absolute; left: 50%; bottom: ' + (j * (on ? 18 : 14)) + 'px; width: 38px; height: 38px; margin-left: ' + (-19 + dx) + 'px; box-sizing: border-box; border-radius: 12px; border: 2.5px solid #FFFFFF; background: ' + tints[(i * 2 + j) % tints.length] + '; transform: rotate(' + rot + 'deg); box-shadow: 0 3px 8px rgba(90, 70, 160, 0.16); z-index: ' + (j + 1) + (photo ? '; background: center / cover url("' + photo + '")' : '') });
+        tiles.push({ name: shown[j].name, style: 'position: absolute; left: 50%; bottom: ' + (j * (on ? 18 : 14)) + 'px; width: 38px; height: 38px; margin-left: ' + (-19 + dx) + 'px; box-sizing: border-box; border-radius: 12px; border: 2.5px solid #FFFFFF; background: ' + tints[(i * 2 + j) % tints.length] + '; transform: rotate(' + rot + 'deg); box-shadow: 0 3px 8px rgba(90, 70, 160, 0.16); z-index: ' + (j + 1) + (photo ? '; background: center / contain no-repeat url("' + photo + '")' : '') });
       }
       return {
         wd: d.wd, date: Number(d.date.slice(8)), w: d.w?.toFixed(1) ?? "", tiles: tiles, on: on, plans: d.plans,
@@ -212,6 +231,7 @@ class Component extends DCLogic {
     const recordDate = selected > Journal.today ? Journal.today : selected;
     return {
       navDate: selected,
+      foodGroups: FoodStickers.groups(entry.meals, selected),
       days, tip, linePts: pts.join(" "),
       savedMessage: this.state.savedMessage,
       weekTitle: week === Journal.weekStart(Journal.today) ? "本周" : "周记",

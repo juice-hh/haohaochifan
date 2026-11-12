@@ -39,6 +39,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');await p.reload();
    await p.getByRole('link',{name:/查看当天/}).click();
    await p.locator('.meal-row').filter({hasText:'测试照片餐'}).click();
+   await p.waitForFunction(()=>document.querySelector('#meal-name')?.value==='测试照片餐');
    assert.equal(await p.getByPlaceholder('给这一餐起个名字').inputValue(),'测试照片餐');
    assert.equal(await p.locator('input[name=pro]').inputValue(),'25');
    await p.locator('.meal-photo-preview').waitFor();assert(await p.locator('.meal-photo-preview').evaluate(i=>i.complete&&i.naturalWidth>0));

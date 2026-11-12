@@ -1,0 +1,66 @@
+const {chromium,webkit}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const base=process.env.TEST_BASE_URL||'http://127.0.0.1:4176';
+const photo=require('node:path').resolve('project/icons/app-180.png');
+const foods=Array.from({length:6},(_,i)=>({name:'测试食物'+(i+1),kcal:50+i*10,box:{x:100,y:100,width:700,height:700},contour:[{x:100,y:400},{x:400,y:100},{x:800,y:400},{x:400,y:800}]}));
+const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40,pro:20,fat:10,notes:'测试数据',foods};
+(async()=>{
+ for(const engine of ['chromium','webkit']){
+  const browser=await(engine==='chromium'?chromium.launch({channel:'chrome'}):webkit.launch({executablePath:process.env.HOME+'/Library/Caches/ms-playwright/webkit-2336/pw_run.sh'}));
+  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
+  await p.route('**/api/recognize',r=>r.fulfill({json:meal}));
+  await p.goto(base+'/Record.dc.html?date=2026-11-12');
+  await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
+  await p.locator('.food-editor-row').nth(5).waitFor();
+  await p.locator('[name=food-kcal-0]').fill('123');
+  assert.equal(await p.locator('[name=calories]').inputValue(),'523');
+  await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');await p.reload();
+  await p.locator('.food-sticker-item').nth(5).waitFor();
+  assert.equal(await p.locator('.food-sticker-item').count(),6);
+  assert.equal(await p.locator('.food-kcal-badge').first().innerText(),'约 123 kcal');
+  await p.waitForFunction(()=>document.querySelectorAll('food-sticker canvas').length===6);
+  assert(await p.locator('[style*="contain no-repeat"]').count()>0);
+  await p.getByRole('link',{name:/查看当天/}).click();
+  assert.equal(await p.locator('.food-sticker-item').count(),6);
+  await p.locator('.food-sticker-item').first().click();
+  assert.equal(await p.locator('[name=food-kcal-0]').inputValue(),'123');
+  await p.getByRole('button',{name:'选择食物区域 测试食物1',exact:true}).click();
+  await p.getByRole('slider',{name:'区域宽度'}).fill('300');
+  await p.getByRole('button',{name:'使用此区域'}).click();
+  assert.equal(JSON.parse(await p.locator('.food-editor-row food-sticker').first().getAttribute('box')).width,300);
+  await p.locator('[name=food-kcal-0]').fill('');
+  await p.getByRole('button',{name:'移除食物 测试食物6',exact:true}).click();
+  await p.setViewportSize({width:320,height:568});
+  await p.getByRole('button',{name:'＋ 添加',exact:true}).click();
+  await p.locator('[name=food-name-5]').fill('手动补充');
+  await p.locator('[name=food-kcal-5]').fill('88');
+  assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await p.locator('.record-save').click();await p.waitForURL('**/Day.dc.html?**');await p.reload();
+  assert.equal(await p.locator('.food-sticker-item').count(),6);
+  assert.equal(await p.locator('.food-kcal-badge').first().innerText(),'热量待补充');
+  assert.equal(await p.locator('.food-kcal-badge').last().innerText(),'约 88 kcal');
+  await p.locator('.food-sticker-item').first().click();
+  await p.getByRole('button',{name:'手动记录',exact:true}).click();
+  await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
+  await p.waitForFunction(()=>document.querySelectorAll('.food-editor-row').length===0);
+  await p.locator('.record-save').click();await p.waitForURL('**/Day.dc.html?**');
+  await p.locator('.food-missing').filter({hasText:'尚未拆分食物'}).waitFor();
+  assert.equal(await p.locator('.food-sticker-item').count(),0);
+  assert.deepEqual(errors,[]);
+  console.log('PASS',engine,'recognition → individual edits → persist → all six stickers → crop → unknown calories → manual item → replacement / legacy fallback');
+  await browser.close();
+ }
+ // Exercise endpoint with isolated fake credentials and responses; no external request.
+ process.env.OPENAI_API_KEY='unit-test-placeholder';
+ const handler=require('../api/recognize.js');
+ let responseMeal=structuredClone(meal),sent;
+ global.fetch=async(_url,args)=>{sent=JSON.parse(args.body);return{ok:true,json:async()=>({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(responseMeal)}]}]})}};
+ async function request(){const res={setHeader(){},status(s){this.code=s;return this},json(body){this.body=body;return this}};await handler({method:'POST',headers:{host:'localhost'},body:{photo:'data:image/jpeg;base64,AAAA'}},res);return res}
+ let r=await request();assert.equal(r.code,200);assert.equal(r.body.kcal,450);assert(sent.text.format.schema.required.includes('foods'));
+ responseMeal.foods[0].box.width=1000;r=await request();assert.equal(r.code,502);
+ responseMeal={...meal,foodVisible:false,foods:[]};r=await request();assert.equal(r.code,200);
+ responseMeal={...meal,foods:[]};r=await request();assert.equal(r.code,502);
+ console.log('PASS endpoint food schema, per-item total, invalid geometry and empty-food validation');
+})().catch(e=>{console.error(e);process.exit(1)});
