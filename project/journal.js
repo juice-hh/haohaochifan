@@ -341,6 +341,15 @@ const Journal = (() => {
   }
 
   const estimate = (grams) => nutrition(grams.map((value, i) => value * factors[i]));
+  function mealMacros(meal) {
+    // Old photo-only records stored zeroes before unknown values were distinguished.
+    const values = meal?.grams ?? [];
+    if (!meal?.nutritionFields && !Number.isFinite(meal?.kcal) && !values.some((value) => Number(value) > 0)) {
+      return [null, null, null];
+    }
+    return [0, 1, 2].map((i) => Number.isFinite(values[i]) ? values[i] : null);
+  }
+
   function day(date) {
     const meals = readMeals(date);
     const energy = factors.map((factor, i) =>
@@ -348,6 +357,7 @@ const Journal = (() => {
     );
     return {
       date, meals,
+      macroKnown: factors.map((_, i) => meals.some((meal) => mealMacros(meal)[i] !== null)),
       weight: savedWeight(date),
       ...nutrition(energy),
       kcal: Math.round(meals.reduce((sum, meal) => sum + (Number.isFinite(meal.kcal)
@@ -358,7 +368,7 @@ const Journal = (() => {
   return {
     params, today, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
     shortDate, dayName, isDate, selected, link, day, estimate,
-    getMeal, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
+    getMeal, mealMacros, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
     savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, readGoal, saveGoal, planStickers, plansOn, togglePlan
   };
 })();

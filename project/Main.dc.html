@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./mobile.css?v=20261112-1">
 <title>好好吃饭 周视图</title>
-<script src="./support.js"></script>
-<script src="./journal.js"></script>
+<script src="./support.js?v=20261112-1"></script>
+<script src="./journal.js?v=20261112-1"></script>
 </head>
 <body>
 <x-dc>
@@ -109,10 +109,10 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; margin-top: 2px">
       <div style="{{sel.b1}}"></div><div style="{{sel.b2}}"></div><div style="{{sel.b3}}"></div>
     </div>
-    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #6F6A78">
-      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 9px; height: 9px; border-radius: 5px; background: #F6CF5C"></span>碳水 {{sel.p1}}</span>
-      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 9px; height: 9px; border-radius: 5px; background: #A996F2"></span>蛋白质 {{sel.p2}}</span>
-      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 9px; height: 9px; border-radius: 5px; background: #8FCFA6"></span>脂肪 {{sel.p3}}</span>
+    <div class="week-nutrients" aria-label="已记录营养含量">
+      <div class="week-nutrient"><span><span style="width: 9px; height: 9px; border-radius: 5px; background: #F6CF5C"></span>碳水</span><strong>{{sel.g1}}</strong><small>{{sel.p1}}</small></div>
+      <div class="week-nutrient"><span><span style="width: 9px; height: 9px; border-radius: 5px; background: #A996F2"></span>蛋白质</span><strong>{{sel.g2}}</strong><small>{{sel.p2}}</small></div>
+      <div class="week-nutrient"><span><span style="width: 9px; height: 9px; border-radius: 5px; background: #8FCFA6"></span>脂肪</span><strong>{{sel.g3}}</strong><small>{{sel.p3}}</small></div>
     </div>
   </div>
 
@@ -204,8 +204,8 @@ class Component extends DCLogic {
       var tiles = [];
       const shown = d.entry.meals.slice(-5);
       for (var j = 0; j < shown.length; j++) {
-        var rot = [-6, 5, -3, 7, -5][(i + j) % 5] * (on ? 1.5 : 1);
-        var dx = [0, 3, -3, 2, -2][(i + j) % 5] * (on ? 2 : 1);
+        var rot = j === 0 ? 0 : [-6, 5, -3, 7, -5][(i + j) % 5] * (on ? 1.5 : 1);
+        var dx = j === 0 ? 0 : [0, 3, -3, 2, -2][(i + j) % 5] * (on ? 2 : 1);
         const photo = Journal.photoFor(shown[j]);
         tiles.push({ name: shown[j].name, style: 'position: absolute; left: 50%; bottom: ' + (j * (on ? 18 : 14)) + 'px; width: 38px; height: 38px; margin-left: ' + (-19 + dx) + 'px; box-sizing: border-box; border-radius: 12px; border: 2.5px solid #FFFFFF; background: ' + tints[(i * 2 + j) % tints.length] + '; transform: rotate(' + rot + 'deg); box-shadow: 0 3px 8px rgba(90, 70, 160, 0.16); z-index: ' + (j + 1) + (photo ? '; background: center / cover url("' + photo + '")' : '') });
       }
@@ -259,9 +259,12 @@ class Component extends DCLogic {
         b1: "width: " + carb + "%; background: #F6CF5C",
         b2: "width: " + protein + "%; background: #A996F2",
         b3: "width: " + fat + "%; background: #8FCFA6",
-        p1: hasMacros ? carb + "%" : "—",
-        p2: hasMacros ? protein + "%" : "—",
-        p3: hasMacros ? fat + "%" : "—"
+        g1: entry.macroKnown[0] ? entry.grams[0] + " g" : "—",
+        g2: entry.macroKnown[1] ? entry.grams[1] + " g" : "—",
+        g3: entry.macroKnown[2] ? entry.grams[2] + " g" : "—",
+        p1: hasMacros && entry.macroKnown[0] ? "供能 " + carb + "%" : "",
+        p2: hasMacros && entry.macroKnown[1] ? "供能 " + protein + "%" : "",
+        p3: hasMacros && entry.macroKnown[2] ? "供能 " + fat + "%" : ""
       }
     };
   }

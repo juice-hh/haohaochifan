@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./mobile.css?v=20261112-1">
 <title>好好吃饭 拍一餐</title>
-<script src="./support.js"></script>
-<script src="./journal.js"></script>
+<script src="./support.js?v=20261112-1"></script>
+<script src="./journal.js?v=20261112-1"></script>
 </head>
 <body>
 <x-dc>
@@ -75,7 +75,6 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     </sc-if>
     <p class="meal-photo-hint" role="status">{{photoHint}}</p>
     <p class="meal-photo-hint">{{recognitionHint}}</p>
-    <p class="meal-photo-hint" role="status">{{recognitionNote}}</p>
     <sc-if value="{{canRecognize}}"><button type="button" class="plan-action" onClick="{{recognize}}">{{recognizeLabel}}</button></sc-if>
     <sc-if value="{{recognizing}}"><button type="button" class="plan-action" onClick="{{cancelRecognition}}">停止识别，手动填写</button></sc-if>
   </section>
@@ -89,11 +88,12 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <span style="font-size: 13px; font-weight: 700; color: #6F6A78; flex-shrink: 0">吃的是</span>
       <input value="{{name}}" onInput="{{setName}}" maxlength="60" placeholder="给这一餐起个名字" style="flex-grow: 1; min-width: 0; border: none; background: transparent; font-size: 16px; font-weight: 800; color: #2A2633; font-family: inherit; outline: none">
     </label>
+    <p class="nutrition-status" role="status">{{nutritionStatus}}</p>
     <div class="nutrition-fields">
       <sc-for list="{{rows}}" as="r">
         <label class="goal-field">
           <span>{{r.label}}</span>
-          <input type="number" inputmode="decimal" min="0" max="10000" step="0.1" value="{{r.value}}" onInput="{{r.change}}">
+          <input type="number" inputmode="decimal" min="0" max="10000" step="0.1" placeholder="未填写" value="{{r.value}}" onInput="{{r.change}}">
         </label>
       </sc-for>
     </div>
@@ -160,7 +160,7 @@ class Component extends DCLogic {
     this.saving = false;
     let autoRecognize = true;
     try { autoRecognize = localStorage.getItem("hhcf-record-mode") !== "manual"; } catch {}
-    const [carb, pro, fat] = this.original?.grams ?? [0, 0, 0];
+    const [carb, pro, fat] = Journal.mealMacros(this.original).map((value) => value ?? "");
     this.state = {
       autoRecognize, meal: this.original?.kind ?? "dinner", carb, pro, fat, date: this.date,
       name: this.original?.name ?? (Journal.params.get("name") ?? "").slice(0, 60),
@@ -314,9 +314,9 @@ class Component extends DCLogic {
       });
     } catch (error) {
       if (request === this.recognitionRequest) {
-        this.setState({ recognitionNote: error.name === "AbortError"
+        this.setState({ recognitionNote: "未能识别营养含量：" + (error.name === "AbortError"
           ? "识别超时，可以重试或手动填写。"
-          : error.message.startsWith("Unexpected") ? "识别服务暂时不可用，请手动填写或稍后重试。" : error.message });
+          : error.message.startsWith("Unexpected") ? "识别服务暂时不可用，请手动填写或稍后重试。" : error.message) });
       }
     } finally {
       clearTimeout(timer);
@@ -342,7 +342,7 @@ class Component extends DCLogic {
     this.saving = true;
     this.setState({ error: "" });
     try {
-      await Journal.saveMeal(date, { name, kind: meal, grams: [carb, pro, fat].map(Number),
+      await Journal.saveMeal(date, { name, kind: meal, grams: [carb, pro, fat].map((value) => value === "" ? null : Number(value)), nutritionFields: true,
         portion: this.state.portion === "" ? null : Number(this.state.portion),
         kcal: this.state.calories === "" ? null : Number(this.state.calories) }, this.original, photo);
     } catch (error) {
@@ -427,6 +427,10 @@ class Component extends DCLogic {
       recognizeLabel: s.autoRecognize ? "重新识别照片" : "用 AI 识别这张照片",
       recognizing: s.recognizing,
       recognitionNote: s.recognitionNote,
+      nutritionStatus: s.recognizing ? "正在识别食物和营养含量，请稍候…" : s.recognitionNote ||
+        ([s.carb, s.pro, s.fat, s.calories].some((value) => value !== "")
+          ? "已填写的营养含量可以继续修改。"
+          : "尚无营养含量。可以识别照片或手动填写；留空也能保存。"),
       canRecognize: Boolean(photo) && !s.recognizing && !s.busy && !cameraOpen,
       recognize: () => this.recognize(),
       cancelRecognition: () => { this.cancelRecognition(); this.setState({ recognitionNote: "可以手动填写后保存。" }); },

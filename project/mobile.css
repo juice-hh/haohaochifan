@@ -21,8 +21,10 @@ x-dc {
 }
 
 .screen--week {
-  --top-spacing: 52px;
-  --bottom-spacing: 26px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  --top-spacing: 12px;
+  --bottom-spacing: 8px;
 }
 
 .screen--love {
@@ -53,9 +55,14 @@ x-dc {
     min-height: 100dvh;
   }
 
+  .screen.screen--week {
+    --top-spacing: 8px;
+    --bottom-spacing: 8px;
+  }
+
   .week-dock {
     position: sticky;
-    bottom: calc(10px + env(safe-area-inset-bottom));
+    bottom: calc(8px + env(safe-area-inset-bottom));
     z-index: 30;
   }
 
@@ -407,3 +414,33 @@ x-dc {
   opacity: 0.6;
   cursor: default;
 }
+
+
+.nutrition-status {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #F7F5FC;
+  color: #5B48B8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.week-nutrients {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  color: #6F6A78;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.week-nutrient {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-nutrient > span { display: flex; align-items: center; gap: 6px; }
+.week-nutrient strong { color: #2A2633; font-size: 17px; }
+.week-nutrient small { font-size: 11px; font-weight: 600; }

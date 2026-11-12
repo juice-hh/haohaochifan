@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css">
+<link rel="stylesheet" href="./mobile.css?v=20261112-1">
 <title>好好吃饭 单日详情</title>
-<script src="./support.js"></script>
-<script src="./journal.js"></script>
+<script src="./support.js?v=20261112-1"></script>
+<script src="./journal.js?v=20261112-1"></script>
 </head>
 <body>
 <x-dc>
@@ -109,17 +109,17 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
       <div style="display: flex; flex-direction: column">
         <span style="font-size: 12px; font-weight: 700; color: #6F6A78">碳水</span>
-        <span style="font-size: 18px; font-weight: 900">{{carb}}% <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{carbGrams}}g</span></span>
+        <span style="font-size: 18px; font-weight: 900">{{carbPercent}} <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{carbAmount}}</span></span>
         <span style="font-size: 12px; font-weight: 700; color: #C9372C"></span>
       </div>
       <div style="display: flex; flex-direction: column">
         <span style="font-size: 12px; font-weight: 700; color: #6F6A78">蛋白质</span>
-        <span style="font-size: 18px; font-weight: 900">{{protein}}% <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{proteinGrams}}g</span></span>
+        <span style="font-size: 18px; font-weight: 900">{{proteinPercent}} <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{proteinAmount}}</span></span>
         <span style="font-size: 12px; font-weight: 700; color: #C9372C"></span>
       </div>
       <div style="display: flex; flex-direction: column">
         <span style="font-size: 12px; font-weight: 700; color: #6F6A78">脂肪</span>
-        <span style="font-size: 18px; font-weight: 900">{{fat}}% <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{fatGrams}}g</span></span>
+        <span style="font-size: 18px; font-weight: 900">{{fatPercent}} <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{fatAmount}}</span></span>
         <span style="font-size: 12px; font-weight: 700; color: #24844A"></span>
       </div>
     </div>
@@ -216,7 +216,13 @@ class Component extends DCLogic {
       delta: delta === null ? "" : delta === 0 ? "持平" : (delta > 0 ? "↑" : "↓") + Math.abs(delta).toFixed(1),
       hasMacros: entry.grams.some((value) => value > 0),
       missingMacros: !entry.grams.some((value) => value > 0),
-      kcal: entry.kcal, carb, protein, fat, carbGrams, proteinGrams, fatGrams,
+      kcal: entry.kcal,
+      carbPercent: entry.macroKnown[0] ? carb + "%" : "—",
+      proteinPercent: entry.macroKnown[1] ? protein + "%" : "—",
+      fatPercent: entry.macroKnown[2] ? fat + "%" : "—",
+      carbAmount: entry.macroKnown[0] ? carbGrams + "g" : "未填写",
+      proteinAmount: entry.macroKnown[1] ? proteinGrams + "g" : "未填写",
+      fatAmount: entry.macroKnown[2] ? fatGrams + "g" : "未填写",
       barCarb: "width: " + carb + "%; background: #F6CF5C",
       barProtein: "width: " + protein + "%; background: #A996F2",
       barFat: "width: " + fat + "%; background: #8FCFA6",
