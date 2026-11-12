@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-2">
+<link rel="stylesheet" href="./mobile.css?v=20261112-3">
 <title>好好吃饭 饭相册</title>
-<script src="./support.js?v=20261112-2"></script>
-<script src="./journal.js?v=20261112-2"></script>
-<script src="./navigation.js?v=20261112-2"></script>
+<script src="./support.js?v=20261112-3"></script>
+<script src="./journal.js?v=20261112-3"></script>
+<script src="./navigation.js?v=20261112-3"></script>
 </head>
 <body>
 <x-dc>
@@ -22,24 +22,18 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
 <div class="screen screen--tabs" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <div style="display: flex; align-items: center; justify-content: space-between">
-    <a href="{{backHref}}" style="height: 44px; display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; color: #6F6A78; padding-right: 8px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-      本周
-    </a>
-    <div style="display: flex; gap: 4px; background: #FFFFFF; border-radius: 999px; padding: 4px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06)">
-      <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
-        <button onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
-      </sc-for>
-    </div>
-  </div>
-
   <div style="display: flex; align-items: center; gap: 14px">
     <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">饭相册</h1>
     <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 18px">
       <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
       <span style="position: relative">{{monthCount}}</span>
     </div>
+  </div>
+
+  <div class="album-view-switch" role="group" aria-label="饭相册视图">
+    <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+      <button type="button" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
+    </sc-for>
   </div>
 
   <sc-if value="{{isCal}}" hint-placeholder-val="{{true}}">

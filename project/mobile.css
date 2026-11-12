@@ -512,3 +512,14 @@ journal-nav {
 @media (max-width: 480px) {
   journal-nav { width: 100%; }
 }
+
+/* Main tabs are peer destinations, without a back-to-home toolbar. */
+.screen.screen--tabs:not(.screen--week) { --top-spacing: 16px; }
+.album-view-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #FFFFFF;
+}
+.album-view-switch button { flex: 1; min-height: 40px; }
