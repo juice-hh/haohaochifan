@@ -1,6 +1,6 @@
 // Pixel segmentation runs locally. No photos or prompts leave this worker.
 import {env, SamModel, AutoProcessor, RawImage, Tensor} from './vendor/transformers-2.17.2/transformers.min.js';
-import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-4';
+import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-5';
 env.allowRemoteModels = false;
 env.localModelPath = new URL('./models/', import.meta.url).href;
 env.backends.onnx.wasm.wasmPaths = new URL('./vendor/transformers-2.17.2/', import.meta.url).href;
@@ -56,9 +56,12 @@ async function run({id, photo, box, points, mode, hints=[]}) {
     }
     let candidates=[];
     if(mode==='propose'){
+      // A single serving's union box can equal its only region; decode it just once.
+      hints=hints.filter((hint,index,all)=>all.findIndex(other=>['x','y','width','height'].every(key=>other[key]===hint[key]))===index);
       const seeds=[];
-      // Whole servings need broad object proposals, not a dense grid of tiny ingredients.
-      for(let y=0;y<5;y++)for(let x=0;x<5;x++)seeds.push({x:100+x*200,y:100+y*200,label:1});
+      // Keep full-image coverage for small independent servings when AI regions are imprecise.
+      // Whole-dish box proposals below and serving-level matching determine the final granularity.
+      for(let y=0;y<8;y++)for(let x=0;x<8;x++)seeds.push({x:62.5+x*125,y:62.5+y*125,label:1});
       for(const hint of hints.slice(0,16)){const p={x:hint.x+hint.width/2,y:hint.y+hint.height/2,label:1};if(!seeds.some(s=>Math.hypot(s.x-p.x,s.y-p.y)<45))seeds.push(p);}
       for(let i=0;i<seeds.length;i++){
         postMessage({id,type:'progress',stage:'proposing',current:i+1,total:seeds.length});
