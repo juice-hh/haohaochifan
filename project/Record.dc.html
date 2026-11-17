@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-2">
+<link rel="stylesheet" href="./mobile.css?v=20261117-3">
 <title>好好吃饭 拍一餐</title>
-<script src="./support.js?v=20261117-2"></script>
-<script src="./journal.js?v=20261117-2"></script>
-<script src="./interactions.js?v=20261117-2"></script>
-<script src="./food-stickers.js?v=20261117-2"></script>
+<script src="./support.js?v=20261117-3"></script>
+<script src="./journal.js?v=20261117-3"></script>
+<script src="./interactions.js?v=20261117-3"></script>
+<script src="./food-stickers.js?v=20261117-3"></script>
 </head>
 <body>
 <x-dc>
@@ -83,20 +83,20 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 
   <section class="food-editor" aria-label="这一餐的食物贴纸">
     <div class="food-editor-heading"><strong>这一餐的食物</strong><button class="plan-action" type="button" onClick="{{addFood}}" aria-disabled="{{foodLimit}}">＋ 添加</button></div>
-    <p class="goal-note">每种食物一张贴纸，分别标注估算热量；点照片可单独抠出食物。</p>
-    <sc-if value="{{noFoods}}"><p class="food-missing">还没有单项食物。识别照片，或手动添加。</p></sc-if>
+    <p class="goal-note">一份餐品一张贴纸：两个鸡蛋合成一组，沙拉整碗保留，饮料整杯或整瓶保留。热量按整组估算。</p>
+    <sc-if value="{{noFoods}}"><p class="food-missing">还没有餐品贴纸。识别照片，或手动添加一份餐品。</p></sc-if>
     <sc-for list="{{foodRows}}" as="f">
       <div class="food-editor-row">
         <button type="button" class="food-editor-image" onClick="{{f.crop}}" aria-label="{{f.cropLabel}}" aria-disabled="{{noPhoto}}"><food-sticker photo="{{photo}}" box="{{f.box}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><span>{{f.imageHint}}</span></button>
         <div class="food-editor-fields">
-          <label><span>食物名称</span><input name="food-name-{{f.index}}" maxlength="60" enterkeyhint="done" placeholder="比如米饭" value="{{f.name}}" onInput="{{f.setName}}"></label>
+          <label><span>食物名称</span><input name="food-name-{{f.index}}" maxlength="60" enterkeyhint="done" placeholder="比如鸡蛋（2个）、沙拉（1碗）" value="{{f.name}}" onInput="{{f.setName}}"></label>
           <label><span>热量（kcal）</span><input name="food-kcal-{{f.index}}" type="number" min="0" max="10000" step="0.1" inputmode="decimal" enterkeyhint="done" placeholder="待补充" value="{{f.kcal}}" onInput="{{f.setKcal}}"></label>
         </div>
         <sc-if value="{{f.reviewReason}}"><p class="food-review-note">{{f.reviewReason}}</p></sc-if>
         <button class="food-remove" type="button" onClick="{{f.remove}}" aria-label="{{f.removeLabel}}">移除</button>
       </div>
     </sc-for>
-    <sc-if value="{{hasFoodTotal}}"><div class="food-total"><span>单项合计 {{foodTotal}} kcal</span><sc-if value="{{foodTotalDiffers}}"><button class="plan-action" type="button" onClick="{{useFoodTotal}}">用作整餐热量</button></sc-if></div></sc-if>
+    <sc-if value="{{hasFoodTotal}}"><div class="food-total"><span>餐品合计 {{foodTotal}} kcal</span><sc-if value="{{foodTotalDiffers}}"><button class="plan-action" type="button" onClick="{{useFoodTotal}}">用作整餐热量</button></sc-if></div></sc-if>
   </section>
 
   <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 10px">

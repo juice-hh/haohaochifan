@@ -52,7 +52,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
   await p.waitForFunction(()=>document.querySelectorAll('.food-editor-row').length===0);
   await p.locator('.record-save').click();await p.waitForURL('**/Day.dc.html?**');
-  await p.locator('.food-missing').filter({hasText:'尚未拆分食物'}).waitFor();
+  await p.locator('.food-missing').filter({hasText:'尚未生成餐品贴纸'}).waitFor();
   assert.equal(await p.locator('.food-sticker-item').count(),0);
   assert.deepEqual(errors,[]);
   console.log('PASS',engine,'recognition → individual edits → persist → all six stickers → crop → unknown calories → manual item → replacement / legacy fallback');

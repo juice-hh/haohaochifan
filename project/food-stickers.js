@@ -98,7 +98,7 @@
   }
   function segment(photo,options={},progress=()=>{}){
     if(!worker){
-      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-2',document.baseURI),{type:'module'});
+      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-3',document.baseURI),{type:'module'});
       worker.onmessage=({data})=>{
         const job=pending.get(data.id);if(!job)return;
         if(data.type==='progress'){job.progress(data.stage,data);return;}
@@ -117,7 +117,7 @@
     document.activeElement?.blur?.();
     return new Promise(resolve=>{
       const dialog=document.createElement('dialog');dialog.className='app-sheet food-crop-sheet';dialog.setAttribute('aria-labelledby','food-crop-title');
-      dialog.innerHTML='<h2 id="food-crop-title">单独抠出食物</h2><p>点选要保留的食物；多选了餐盘或背景时，切换「排除」再点它。</p><div class="cutout-modes"><button type="button" data-mode="1" aria-pressed="true">＋ 保留食物</button><button type="button" data-mode="0" aria-pressed="false">− 排除背景</button><button type="button" class="cutout-undo">撤销点选</button></div><div class="food-crop-stage" role="button" tabindex="0" aria-label="点选照片中的食物"><img alt="完整餐食照片" draggable="false"><div class="cutout-points"></div></div><p class="cutout-status" role="status">点一下食物，生成透明背景贴纸。抠图在本机完成。</p><div class="cutout-result"><food-sticker></food-sticker><button type="button" class="cutout-next">换一种轮廓</button></div><button type="button" class="app-sheet-confirm" disabled>使用这张贴纸</button><button type="button" class="app-sheet-cancel">取消</button>';
+      dialog.innerHTML='<h2 id="food-crop-title">单独抠出食物</h2><p>按整份餐品点选。同组有两个鸡蛋时，可分别点中；沙拉保留整碗，饮料保留整瓶。多选了其他餐品或桌面时，切换「排除」。</p><div class="cutout-modes"><button type="button" data-mode="1" aria-pressed="true">＋ 保留食物</button><button type="button" data-mode="0" aria-pressed="false">− 排除背景</button><button type="button" class="cutout-undo">撤销点选</button></div><div class="food-crop-stage" role="button" tabindex="0" aria-label="点选照片中的食物"><img alt="完整餐食照片" draggable="false"><div class="cutout-points"></div></div><p class="cutout-status" role="status">点一下食物，生成透明背景贴纸。抠图在本机完成。</p><div class="cutout-result"><food-sticker></food-sticker><button type="button" class="cutout-next">换一种轮廓</button></div><button type="button" class="app-sheet-confirm" disabled>使用这张贴纸</button><button type="button" class="app-sheet-cancel">取消</button>';
       const stage=dialog.querySelector('.food-crop-stage'),status=dialog.querySelector('.cutout-status'),preview=dialog.querySelector('food-sticker'),confirm=dialog.querySelector('.app-sheet-confirm'),next=dialog.querySelector('.cutout-next');
       dialog.querySelector('img').src=photo;preview.setAttribute('photo',photo);preview.setAttribute('name',food.name||'食物');
       let points=[],mode=1,candidates=cutout(food.cutout)?[food.cutout]:[],selected=0,request=0,closed=false,busy=false;

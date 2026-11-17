@@ -1,6 +1,6 @@
 // Pixel segmentation runs locally. No photos or prompts leave this worker.
 import {env, SamModel, AutoProcessor, RawImage, Tensor} from './vendor/transformers-2.17.2/transformers.min.js';
-import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-2';
+import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-3';
 env.allowRemoteModels = false;
 env.localModelPath = new URL('./models/', import.meta.url).href;
 env.backends.onnx.wasm.wasmPaths = new URL('./vendor/transformers-2.17.2/', import.meta.url).href;
@@ -39,7 +39,7 @@ async function run({id, photo, box, points, mode, hints=[]}) {
         const logits=mask.data.subarray(i*size,(i+1)*size);
         const binaryMask=Uint8Array.from(logits,v=>v>0?1:0);
         const cleaned=cleanMask(binaryMask,image.width,image.height,prompts);
-        if(!cleaned||cleaned.area<Math.max(24,size*.0008)||cleaned.area>size*(mode==='propose'?.42:.9))continue;
+        if(!cleaned||cleaned.area<Math.max(24,size*.0008)||cleaned.area>size*.9)continue;
         const values=cleaned.values,alpha=maskAlpha(logits,values,image.width,image.height,prompts);let left=image.width,top=image.height,right=0,bottom=0;
         const pixels=new Uint8ClampedArray(size*4);
         for(let j=0;j<size;j++)if(alpha[j]){const x=j%image.width,y=Math.floor(j/image.width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);pixels[j*4]=pixels[j*4+1]=pixels[j*4+2]=255;pixels[j*4+3]=alpha[j];}
@@ -56,7 +56,8 @@ async function run({id, photo, box, points, mode, hints=[]}) {
     let candidates=[];
     if(mode==='propose'){
       const seeds=[];
-      for(let y=0;y<8;y++)for(let x=0;x<8;x++)seeds.push({x:150+x*100,y:150+y*100,label:1});
+      // Whole servings need broad object proposals, not a dense grid of tiny ingredients.
+      for(let y=0;y<5;y++)for(let x=0;x<5;x++)seeds.push({x:100+x*200,y:100+y*200,label:1});
       for(const hint of hints.slice(0,16)){const p={x:hint.x+hint.width/2,y:hint.y+hint.height/2,label:1};if(!seeds.some(s=>Math.hypot(s.x-p.x,s.y-p.y)<45))seeds.push(p);}
       for(let i=0;i<seeds.length;i++){
         postMessage({id,type:'progress',stage:'proposing',current:i+1,total:seeds.length});
@@ -66,7 +67,7 @@ async function run({id, photo, box, points, mode, hints=[]}) {
           if(same<0)candidates.push(c);else if(c.score>candidates[same].score)candidates[same]=c;
         }
       }
-      candidates.sort((a,b)=>b.score-a.score);
+      candidates.sort((a,b)=>(b.score+.12*Math.sqrt(b.area))-(a.score+.12*Math.sqrt(a.area)));
       candidates=candidates.slice(0,48).sort((a,b)=>a.box.y-b.box.y||a.box.x-b.box.x);
     }else{
       const prompts=points?.length?points:box?[{x:box.x+box.width/2,y:box.y+box.height/2,label:1}]:[];

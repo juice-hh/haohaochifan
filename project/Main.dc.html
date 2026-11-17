@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-2">
+<link rel="stylesheet" href="./mobile.css?v=20261117-3">
 <title>好好吃饭 周视图</title>
-<script src="./support.js?v=20261117-2"></script>
-<script src="./journal.js?v=20261117-2"></script>
-<script src="./navigation.js?v=20261117-2"></script>
-<script src="./food-stickers.js?v=20261117-2"></script>
+<script src="./support.js?v=20261117-3"></script>
+<script src="./journal.js?v=20261117-3"></script>
+<script src="./navigation.js?v=20261117-3"></script>
+<script src="./food-stickers.js?v=20261117-3"></script>
 </head>
 <body>
 <x-dc>
@@ -117,7 +117,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
             </sc-for>
           </div>
         </sc-if>
-        <sc-if value="{{g.missingFoods}}"><div class="food-missing"><span>{{g.wholeKcal}} · 尚未拆分食物</span><a href="{{g.editHref}}">识别或补充食物</a></div></sc-if>
+        <sc-if value="{{g.missingFoods}}"><div class="food-missing"><span>{{g.wholeKcal}} · 尚未生成餐品贴纸</span><a href="{{g.editHref}}">识别或补充食物</a></div></sc-if>
       </section>
     </sc-for>
   </div>
