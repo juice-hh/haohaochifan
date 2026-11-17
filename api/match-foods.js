@@ -18,10 +18,10 @@ module.exports=async(req,res)=>{
   const result=JSON.parse(text),seen=new Set(),used=new Set();
   if(!Array.isArray(result.matches)||result.matches.length!==foods.length)throw Error('Incomplete matches');
   for(const m of result.matches){
-   if(!Number.isInteger(m.foodIndex)||m.foodIndex<0||m.foodIndex>=foods.length||seen.has(m.foodIndex)||!['matched','uncertain','missing'].includes(m.status)||typeof m.reason!=='string'||!Array.isArray(m.maskIds)||m.maskIds.length>8)throw Error('Invalid match');
+   if(!Number.isInteger(m.foodIndex)||m.foodIndex<0||m.foodIndex>=foods.length||seen.has(m.foodIndex)||!['matched','uncertain','missing'].includes(m.status)||!['complete','partial','none'].includes(m.coverage)||typeof m.reason!=='string'||!Array.isArray(m.maskIds)||m.maskIds.length>8)throw Error('Invalid match');
    seen.add(m.foodIndex);m.reason=m.reason.slice(0,180);
    if(m.status!=='matched'){m.maskIds=[];continue;}
-   if(!m.maskIds.length)throw Error('Empty match');
+   if(!m.maskIds.length||m.coverage==='none')throw Error('Empty match');
    for(const id of m.maskIds){if(!Number.isInteger(id)||id<1||id>candidateCount||used.has(id))throw Error('Invalid mask id');used.add(id);}
   }
   return res.status(200).json(result);

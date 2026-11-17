@@ -15,7 +15,7 @@
   }
   function normalize(items) {
     return Array.isArray(items) ? items.slice(0,16).filter(f=>f&&typeof f.name==='string').map(f=>({
-      name:f.name.slice(0,60), kcal:amount(f.kcal), box:box(f.box), contour:[], cutout:cutout(f.cutout)
+      name:f.name.slice(0,60), kcal:amount(f.kcal), box:box(f.box), contour:[], cutout:cutout(f.cutout), reviewReason:typeof f.reviewReason==='string'?f.reviewReason.slice(0,180):''
     })) : [];
   }
   function groups(meals,date,via='week') {
@@ -27,6 +27,7 @@
         editHref:Journal.link('Record',date,{edit:meal.id,from:'day',via}),
         wholeKcal:Number.isFinite(meal.kcal)?'整餐约 '+Math.round(meal.kcal)+' kcal':'整餐热量未填写',
         foods:foods.map(f=>({name:f.name,photo,box:JSON.stringify(f.box),cutout:JSON.stringify(f.cutout),
+          partial:!!f.cutout&&!!f.reviewReason,
           kcal:f.kcal===null?'热量待补充':'约 '+Math.round(f.kcal)+' kcal',
           label:f.name+'，'+(f.kcal===null?'热量待补充':'约 '+Math.round(f.kcal)+' 千卡')}))
       };
@@ -73,17 +74,17 @@
   }
   function segment(photo,options={},progress=()=>{}){
     if(!worker){
-      worker=new Worker(new URL('./segmentation-worker.js?v=20261112-7',document.baseURI),{type:'module'});
+      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-1',document.baseURI),{type:'module'});
       worker.onmessage=({data})=>{
         const job=pending.get(data.id);if(!job)return;
-        if(data.type==='progress'){job.progress(data.stage);return;}
+        if(data.type==='progress'){job.progress(data.stage,data);return;}
         pending.delete(data.id);clearTimeout(job.timer);
         data.type==='result'?job.resolve(data.candidates):job.reject(new Error(data.message));
       };
       worker.onerror=()=>cancel();
     }
     return new Promise((resolve,reject)=>{
-      const id=++sequence,timer=setTimeout(()=>cancel(),90000);
+      const id=++sequence,timer=setTimeout(()=>cancel(),180000);
       pending.set(id,{resolve,reject,progress,timer});worker.postMessage({id,photo,...options});
     });
   }
@@ -128,5 +129,57 @@
       document.body.append(dialog);display();dialog.showModal();
     });
   }
-  window.FoodStickers={normalize,groups,selectRegion,segment,cancel,progressText};
+  async function loadImage(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});}
+  async function contactSheet(photo,candidates){
+    const source=await loadImage(photo),canvas=document.createElement('canvas'),cell=230,row=190;
+    canvas.width=cell*6;canvas.height=row*Math.ceil(candidates.length/6);
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#eeeaf5';ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<candidates.length;i++){
+      const c=candidates[i],mask=await loadImage(c.mask),x=(i%6)*cell,y=Math.floor(i/6)*row;
+      const layer=document.createElement('canvas');layer.width=layer.height=140;const lc=layer.getContext('2d'),b=c.box;
+      const left=b.x/1000*source.width,top=b.y/1000*source.height,w=b.width/1000*source.width,h=b.height/1000*source.height,scale=132/Math.max(w,h),dx=(140-w*scale)/2,dy=(140-h*scale)/2;
+      lc.drawImage(source,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);lc.globalCompositeOperation='destination-in';lc.drawImage(mask,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);
+      ctx.fillStyle='#fff';ctx.fillRect(x+2,y+2,cell-4,row-4);ctx.fillStyle='#19151f';ctx.font='bold 18px sans-serif';ctx.fillText('ID '+c.id,x+10,y+24);ctx.drawImage(layer,x+4,y+32);
+      // Context is only for visual verification; final stickers still use the alpha mask.
+      const side=Math.max(w*2,h*2,Math.min(source.width,source.height)*.22),sx=Math.max(0,Math.min(source.width-side,left+w/2-side/2)),sy=Math.max(0,Math.min(source.height-side,top+h/2-side/2));
+      ctx.drawImage(source,sx,sy,side,side,x+146,y+64,80,80);
+      ctx.strokeStyle='#ef3c31';ctx.lineWidth=1.5;ctx.strokeRect(x+146+(left-sx)/side*80,y+64+(top-sy)/side*80,w/side*80,h/side*80);
+      ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.fillText('context',x+146,y+157);
+    }
+    return canvas.toDataURL('image/jpeg',.9);
+  }
+  async function candidateTiles(sheet,count){
+    const source=await loadImage(sheet),tiles=[];
+    for(let i=0;i<count;i++){
+      const canvas=document.createElement('canvas');canvas.width=230;canvas.height=190;
+      canvas.getContext('2d').drawImage(source,i%6*230,Math.floor(i/6)*190,230,190,0,0,230,190);
+      tiles.push(canvas.toDataURL('image/jpeg',.92));
+    }
+    return tiles;
+  }
+  async function mergeMasks(candidates){
+    if(!candidates.length)return null;
+    const first=await loadImage(candidates[0].mask),canvas=document.createElement('canvas');canvas.width=first.width;canvas.height=first.height;const ctx=canvas.getContext('2d');
+    for(const c of candidates)ctx.drawImage(await loadImage(c.mask),0,0,canvas.width,canvas.height);
+    let left=canvas.width,top=canvas.height,right=0,bottom=0,area=0;const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]>127){const x=i/4%canvas.width,y=Math.floor(i/4/canvas.width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);area++;}
+    if(!area)return null;
+    return {mask:canvas.toDataURL('image/png'),score:Math.min(...candidates.map(c=>c.score)),box:{x:left/canvas.width*1000,y:top/canvas.height*1000,width:(right-left+1)/canvas.width*1000,height:(bottom-top+1)/canvas.height*1000}};
+  }
+
+  async function applyMatches(foods,candidates,matches){
+    if(!Array.isArray(matches)||matches.length!==foods.length)throw new Error('贴纸核对结果不完整。');
+    const ids=new Set(),indices=new Set();
+    const result=foods.map(f=>({...f,cutout:null,reviewReason:'贴纸待核对，请点选食物。'}));
+    for(const m of matches){
+      if(!Number.isInteger(m.foodIndex)||m.foodIndex<0||m.foodIndex>=foods.length||indices.has(m.foodIndex)||!Array.isArray(m.maskIds))throw new Error('贴纸对应关系无效。');
+      indices.add(m.foodIndex);
+      if(m.status!=='matched'){result[m.foodIndex].reviewReason='贴纸待核对：'+(m.reason||'请点选食物');continue;}
+      if(!m.maskIds.length)throw new Error('缺少贴纸。');
+      const selected=m.maskIds.map(id=>{if(ids.has(id))throw new Error('贴纸重复分配。');ids.add(id);const c=candidates.find(c=>c.id===id);if(!c)throw new Error('贴纸编号无效。');return c;});
+      result[m.foodIndex]={...foods[m.foodIndex],cutout:await mergeMasks(selected),reviewReason:m.coverage==='partial'?'已抠出部分食物，可点选补充。':''};
+    }
+    return result;
+  }
+  window.FoodStickers={normalize,groups,selectRegion,segment,cancel,progressText,contactSheet,candidateTiles,mergeMasks,applyMatches};
 })();

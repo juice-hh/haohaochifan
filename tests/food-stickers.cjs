@@ -11,6 +11,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.route('**/api/recognize',r=>r.fulfill({json:meal}));
+  await p.route('**/api/match-foods',r=>r.fulfill({json:{matches:foods.map((f,foodIndex)=>({foodIndex,maskIds:[foodIndex+1],status:'matched',reason:'测试对应关系'}))}}));
   await p.goto(base+'/Record.dc.html?date=2026-11-12');
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
   await p.locator('.food-editor-row').nth(5).waitFor();

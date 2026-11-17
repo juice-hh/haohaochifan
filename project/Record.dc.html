@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261112-7">
+<link rel="stylesheet" href="./mobile.css?v=20261117-1">
 <title>好好吃饭 拍一餐</title>
-<script src="./support.js?v=20261112-7"></script>
-<script src="./journal.js?v=20261112-7"></script>
-<script src="./interactions.js?v=20261112-7"></script>
-<script src="./food-stickers.js?v=20261112-7"></script>
+<script src="./support.js?v=20261117-1"></script>
+<script src="./journal.js?v=20261117-1"></script>
+<script src="./interactions.js?v=20261117-1"></script>
+<script src="./food-stickers.js?v=20261117-1"></script>
 </head>
 <body>
 <x-dc>
@@ -92,6 +92,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
           <label><span>食物名称</span><input name="food-name-{{f.index}}" maxlength="60" enterkeyhint="done" placeholder="比如米饭" value="{{f.name}}" onInput="{{f.setName}}"></label>
           <label><span>热量（kcal）</span><input name="food-kcal-{{f.index}}" type="number" min="0" max="10000" step="0.1" inputmode="decimal" enterkeyhint="done" placeholder="待补充" value="{{f.kcal}}" onInput="{{f.setKcal}}"></label>
         </div>
+        <sc-if value="{{f.reviewReason}}"><p class="food-review-note">{{f.reviewReason}}</p></sc-if>
         <button class="food-remove" type="button" onClick="{{f.remove}}" aria-label="{{f.removeLabel}}">移除</button>
       </div>
     </sc-for>
@@ -217,7 +218,7 @@ class Component extends DCLogic {
     this.cancelRecognition();
     const food = this.state.foods[index];
     const region = await FoodStickers.selectRegion(photo, food);
-    if (region) this.changeFoods(this.state.foods.map((f, i) => i === index ? { ...f, cutout: region, contour: [] } : f));
+    if (region) this.changeFoods(this.state.foods.map((f, i) => i === index ? { ...f, cutout: region, contour: [], reviewReason: "" } : f));
   }
 
   releaseCamera() {
@@ -362,21 +363,33 @@ class Component extends DCLogic {
         carb: result.carb, pro: result.pro, fat: result.fat,
         recognitionNote: "AI 估算，请核对后保存。" + result.notes
       });
-      this.setState({ cutting: true });
-      let failed=0;
-      for(let i=0;i<this.state.foods.length;i++){
-        if(request!==this.recognitionRequest)break;
-        const food=this.state.foods[i];
-        if(!food.box){failed++;continue;}
-        try{
-          const masks=await FoodStickers.segment(photo,{box:food.box},stage=>{
-            if(request===this.recognitionRequest)this.setState({recognitionNote:"食物 "+(i+1)+"/"+this.state.foods.length+"："+FoodStickers.progressText(stage)});
-          });
-          if(request!==this.recognitionRequest)break;
-          this.setState({foods:this.state.foods.map((f,j)=>j===i?{...f,cutout:masks[0]}:f)});
-        }catch{failed++;}
+      clearTimeout(timer);
+      const foods=this.state.foods;
+      if(!foods.length)return;
+      this.setState({ cutting: true, recognitionNote: "正在寻找完整食物，清理零散背景…" });
+      try {
+        const candidates=await FoodStickers.segment(photo,{mode:'propose',hints:foods.map(f=>f.box).filter(Boolean)},(stage,detail)=>{
+          if(request===this.recognitionRequest)this.setState({recognitionNote:stage==='proposing'?"正在分离食物 "+detail.current+"/"+detail.total+"…":FoodStickers.progressText(stage)});
+        });
+        if(request!==this.recognitionRequest)return;
+        const sheet=await FoodStickers.contactSheet(photo,candidates);
+        const tiles=await FoodStickers.candidateTiles(sheet,candidates.length);
+        if(request!==this.recognitionRequest)return;
+        this.setState({recognitionNote:"正在核对每张贴纸对应的食物…"});
+        const matchTimer=setTimeout(()=>controller.abort(),55000);
+        let matched;
+        try {
+          const response=await fetch('/api/match-foods',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photo,sheet,tiles,foods:foods.map(f=>f.name),candidateCount:candidates.length}),signal:controller.signal});
+          matched=await response.json();if(!response.ok)throw new Error(matched.error||'贴纸核对失败');
+        } finally {clearTimeout(matchTimer);}
+        if(request!==this.recognitionRequest)return;
+        const checked=await FoodStickers.applyMatches(foods,candidates,matched.matches);
+        if(request!==this.recognitionRequest)return;
+        const pending=checked.filter(f=>!f.cutout).length;
+        this.setState({foods:checked,cutting:false,recognitionNote:"AI 估算，请核对食物、热量和抠图边缘。"+(pending?pending+" 项贴纸需要点选确认。":"")+result.notes});
+      } catch(error) {
+        if(request===this.recognitionRequest)this.setState({cutting:false,recognitionNote:"食物和营养已保留。"+(error.name==='AbortError'?'贴纸核对超时，可点照片手动选择。':error.message||'贴纸未能完成，可手动点选。')});
       }
-      if(request===this.recognitionRequest)this.setState({cutting:false,recognitionNote:"AI 估算，请核对食物、热量和抠图边缘。"+(failed?failed+" 项未能抠图，可点照片手动选择。":"")+result.notes});
     } catch (error) {
       if (request === this.recognitionRequest) {
         this.setState({ recognitionNote: "未能识别营养含量：" + (error.name === "AbortError"
@@ -488,7 +501,7 @@ class Component extends DCLogic {
     const photo = s.photo ?? Journal.photoFor(this.original);
     return {
       foodRows: s.foods.map((f, index) => ({
-        index, name: f.name, kcal: f.kcal, box: JSON.stringify(f.box), cutout: JSON.stringify(f.cutout),
+        index, name: f.name, kcal: f.kcal, reviewReason: f.reviewReason, box: JSON.stringify(f.box), cutout: JSON.stringify(f.cutout),
         cropLabel: "单独抠出食物 " + (f.name || (index + 1)), removeLabel: "移除食物 " + (f.name || (index + 1)),
         imageHint: photo ? (f.cutout ? "调整抠图" : "点选抠图") : "先添加照片",
         crop: () => this.cropFood(index),
