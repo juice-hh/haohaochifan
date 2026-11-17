@@ -1,4 +1,6 @@
 const { recognitionInstructions } = require("../lib/sticker-policy.cjs");
+const regionSchema={type:"object",additionalProperties:false,required:["x","y","width","height"],properties:Object.fromEntries(["x","y","width","height"].map(key=>[key,{type:"number",minimum:0,maximum:1000}]))};
+const validRegion=b=>b&&["x","y","width","height"].every(k=>Number.isFinite(b[k]))&&b.x>=0&&b.y>=0&&b.width>0&&b.height>0&&b.x+b.width<=1000.01&&b.y+b.height<=1000.01;
 const schema = {
   type: "object",
   additionalProperties: false,
@@ -13,11 +15,12 @@ const schema = {
     fat: { type: "number" },
     notes: { type: "string" },
     foods: { type: "array", maxItems: 16, items: {
-      type: "object", additionalProperties: false, required: ["name", "kcal", "box", "contour"],
+      type: "object", additionalProperties: false, required: ["name", "kcal", "box", "contour", "regions"],
       properties: {
         name: { type: "string" }, kcal: { type: "number", minimum: 0, maximum: 10000 },
         box: { type: "object", additionalProperties: false, required: ["x", "y", "width", "height"],
           properties: Object.fromEntries(["x", "y", "width", "height"].map(key => [key, { type: "number", minimum: 0, maximum: 1000 }])) },
+        regions:{type:"array",minItems:1,maxItems:8,items:regionSchema},
         contour: { type: "array", maxItems: 24, items: { type: "object", additionalProperties: false, required: ["x", "y"],
           properties: { x: { type: "number", minimum: 0, maximum: 1000 }, y: { type: "number", minimum: 0, maximum: 1000 } } } }
       }
@@ -93,7 +96,8 @@ module.exports = async function handler(req, res) {
       !Array.isArray(food.contour) || food.contour.length > 24 ||
       food.contour.some(point => !point || !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 || point.x > 1000 || point.y > 1000)
     ) || (meal.foodVisible && !meal.foods.length) || (!meal.foodVisible && meal.foods.length)) throw new Error("Invalid food items");
-    meal.foods = meal.foods.map(food => ({ ...food, name: food.name.trim().slice(0, 60) }));
+    if(meal.foods.some(food=>food.regions!==undefined&&(!Array.isArray(food.regions)||!food.regions.length||food.regions.length>8||food.regions.some(b=>!validRegion(b)))))throw new Error("Invalid serving regions");
+    meal.foods = meal.foods.map(food => ({ ...food, regions:food.regions||[food.box], name: food.name.trim().slice(0, 60) }));
     if (meal.foods.length) meal.kcal = Math.round(meal.foods.reduce((sum, food) => sum + food.kcal, 0));
     if (meal.kcal > 10000) throw new Error("Invalid calorie total");
     meal.name = meal.name.slice(0, 60);

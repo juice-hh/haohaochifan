@@ -1,6 +1,6 @@
 // Pixel segmentation runs locally. No photos or prompts leave this worker.
 import {env, SamModel, AutoProcessor, RawImage, Tensor} from './vendor/transformers-2.17.2/transformers.min.js';
-import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-3';
+import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-4';
 env.allowRemoteModels = false;
 env.localModelPath = new URL('./models/', import.meta.url).href;
 env.backends.onnx.wasm.wasmPaths = new URL('./vendor/transformers-2.17.2/', import.meta.url).href;
@@ -26,10 +26,11 @@ async function run({id, photo, box, points, mode, hints=[]}) {
       cachedPhoto = photo;
     }
     const [height,width] = inputs.reshaped_input_sizes[0];
-    async function decode(prompts){
+    async function decode(prompts,region=null){
       const coords=prompts.map(p=>[p.x/1000*width,p.y/1000*height]);
       const labels=prompts.map(p=>BigInt(p.label));
-      // Point prompts preserve whole objects; imprecise language-model boxes no longer cut them off.
+      if(region){coords.push([region.x/1000*width,region.y/1000*height],[(region.x+region.width)/1000*width,(region.y+region.height)/1000*height]);labels.push(2n,3n);}
+      // Serving boxes guide SAM object scale; the output is always a predicted pixel mask, never a rectangle.
       const outputs=await model({...embeddings,
         input_points:new Tensor('float32',coords.flat(),[1,1,coords.length,2]),
         input_labels:new Tensor('int64',labels,[1,1,labels.length])});
@@ -65,6 +66,17 @@ async function run({id, photo, box, points, mode, hints=[]}) {
           if(c.score<.78)continue;
           const same=candidates.findIndex(v=>overlap(v.signature,c.signature)>.87);
           if(same<0)candidates.push(c);else if(c.score>candidates[same].score)candidates[same]=c;
+        }
+      }
+      // Explicit whole-serving proposals prevent a bowl from collapsing to its center ingredient.
+      for(const hint of hints.slice(0,16))for(const margin of [0,.15]){
+        const left=Math.max(0,hint.x-hint.width*margin),top=Math.max(0,hint.y-hint.height*margin);
+        const region={x:left,y:top,width:Math.min(1000,hint.x+hint.width*(1+margin))-left,height:Math.min(1000,hint.y+hint.height*(1+margin))-top};
+        const center={x:hint.x+hint.width/2,y:hint.y+hint.height/2,label:1};
+        for(const candidate of await decode([center],region)){
+          if(candidate.score<.78)continue;
+          const same=candidates.findIndex(c=>overlap(c.signature,candidate.signature)>.87);
+          if(same<0)candidates.push(candidate);else if(candidate.score>candidates[same].score)candidates[same]=candidate;
         }
       }
       candidates.sort((a,b)=>(b.score+.12*Math.sqrt(b.area))-(a.score+.12*Math.sqrt(a.area)));

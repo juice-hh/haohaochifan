@@ -98,7 +98,7 @@
   }
   function segment(photo,options={},progress=()=>{}){
     if(!worker){
-      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-3',document.baseURI),{type:'module'});
+      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-4',document.baseURI),{type:'module'});
       worker.onmessage=({data})=>{
         const job=pending.get(data.id);if(!job)return;
         if(data.type==='progress'){job.progress(data.stage,data);return;}
