@@ -1,6 +1,6 @@
 // Pixel segmentation runs locally. No photos or prompts leave this worker.
 import {env, SamModel, AutoProcessor, RawImage, Tensor} from './vendor/transformers-2.17.2/transformers.min.js';
-import {cleanMask,signature,overlap} from './mask-utils.mjs?v=20261117-1';
+import {cleanMask,signature,overlap,maskAlpha} from './mask-utils.mjs?v=20261117-2';
 env.allowRemoteModels = false;
 env.localModelPath = new URL('./models/', import.meta.url).href;
 env.backends.onnx.wasm.wasmPaths = new URL('./vendor/transformers-2.17.2/', import.meta.url).href;
@@ -19,6 +19,8 @@ async function run({id, photo, box, points, mode, hints=[]}) {
     if (cachedPhoto !== photo) {
       postMessage({id,type:'progress',stage:'encoding'});
       image = await RawImage.read(photo);
+      const downsample=Math.min(1,1024/Math.max(image.width,image.height));
+      if(downsample<1)image=await image.resize(Math.round(image.width*downsample),Math.round(image.height*downsample));
       inputs = await processor(image);
       embeddings = await model.get_image_embeddings(inputs);
       cachedPhoto = photo;
@@ -31,19 +33,21 @@ async function run({id, photo, box, points, mode, hints=[]}) {
       const outputs=await model({...embeddings,
         input_points:new Tensor('float32',coords.flat(),[1,1,coords.length,2]),
         input_labels:new Tensor('int64',labels,[1,1,labels.length])});
-      const masks=await processor.post_process_masks(outputs.pred_masks,inputs.original_sizes,inputs.reshaped_input_sizes);
+      const masks=await processor.post_process_masks(outputs.pred_masks,inputs.original_sizes,inputs.reshaped_input_sizes,{binarize:false});
       const results=[],mask=masks[0],size=image.width*image.height;
       for(let i=0;i<3;i++){
-        const cleaned=cleanMask(mask.data.subarray(i*size,(i+1)*size),image.width,image.height,prompts);
+        const logits=mask.data.subarray(i*size,(i+1)*size);
+        const binaryMask=Uint8Array.from(logits,v=>v>0?1:0);
+        const cleaned=cleanMask(binaryMask,image.width,image.height,prompts);
         if(!cleaned||cleaned.area<Math.max(24,size*.0008)||cleaned.area>size*(mode==='propose'?.42:.9))continue;
-        const values=cleaned.values;let left=image.width,top=image.height,right=0,bottom=0;
+        const values=cleaned.values,alpha=maskAlpha(logits,values,image.width,image.height,prompts);let left=image.width,top=image.height,right=0,bottom=0;
         const pixels=new Uint8ClampedArray(size*4);
-        for(let j=0;j<size;j++)if(values[j]){const x=j%image.width,y=Math.floor(j/image.width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);pixels[j*4]=pixels[j*4+1]=pixels[j*4+2]=pixels[j*4+3]=255;}
+        for(let j=0;j<size;j++)if(alpha[j]){const x=j%image.width,y=Math.floor(j/image.width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);pixels[j*4]=pixels[j*4+1]=pixels[j*4+2]=255;pixels[j*4+3]=alpha[j];}
         if(mode==='propose'&&(left===0||top===0||right===image.width-1||bottom===image.height-1)&&((right-left)/image.width>.7||(bottom-top)/image.height>.7))continue;
         const canvas=new OffscreenCanvas(image.width,image.height);
         canvas.getContext('2d').putImageData(new ImageData(pixels,image.width,image.height),0,0);
         const bytes=new Uint8Array(await (await canvas.convertToBlob({type:'image/png'})).arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
-        results.push({mask:'data:image/png;base64,'+btoa(binary),score:outputs.iou_scores.data[i],
+        results.push({mask:'data:image/png;base64,'+btoa(binary),edgeVersion:1,score:outputs.iou_scores.data[i],
           box:{x:left/image.width*1000,y:top/image.height*1000,width:(right-left+1)/image.width*1000,height:(bottom-top+1)/image.height*1000},
           cleanup:{removed:cleaned.removed,filled:cleaned.filled,components:cleaned.components},area:cleaned.area/size,signature:signature(values,image.width,image.height)});
       }

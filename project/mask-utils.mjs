@@ -31,3 +31,23 @@ export function cleanMask(input,width,height,points=[]){
 }
 export function signature(values,width,height){const out=new Uint8Array(1600);for(let y=0;y<40;y++)for(let x=0;x<40;x++)out[y*40+x]=values[Math.min(height-1,Math.floor((y+.5)*height/40))*width+Math.min(width-1,Math.floor((x+.5)*width/40))];return out;}
 export function overlap(a,b){let intersection=0,union=0;for(let i=0;i<a.length;i++){if(a[i]&&b[i])intersection++;if(a[i]||b[i])union++;}return union?intersection/union:0;}
+// Convert model logits to a subpixel alpha edge after binary component cleanup.
+// The narrow transition follows the model's contour; food RGB pixels are untouched.
+export function maskAlpha(logits,values,width,height,points=[]){
+ const alpha=new Uint8Array(width*height);
+ for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+  const i=y*width+x,l=logits[i];
+  if(!values[i]){
+   if(l>0)continue; // A removed component cannot reappear through feathering.
+   if(!(x>0&&values[i-1]||x<width-1&&values[i+1]||y>0&&values[i-width]||y<height-1&&values[i+width]))continue;
+  }else if(l<=0){alpha[i]=255;continue;} // Deliberately filled pinhole.
+  const gx=(logits[y*width+Math.min(width-1,x+1)]-logits[y*width+Math.max(0,x-1)])/2;
+  const gy=(logits[Math.min(height-1,y+1)*width+x]-logits[Math.max(0,y-1)*width+x])/2;
+  const t=Math.max(0,Math.min(1,.5+l/Math.max(.01,Math.hypot(gx,gy)*1.5)));
+  alpha[i]=Math.round(255*t*t*(3-2*t));
+ }
+ for(const p of points.filter(p=>p.label===0)){
+  const x=Math.max(0,Math.min(width-1,Math.round(p.x/1000*width))),y=Math.max(0,Math.min(height-1,Math.round(p.y/1000*height)));alpha[y*width+x]=0;
+ }
+ return alpha;
+}

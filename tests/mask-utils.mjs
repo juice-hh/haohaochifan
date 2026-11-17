@@ -12,3 +12,9 @@ console.log('PASS anchored components, isolated fragments, small holes, multiple
 const excluded=cleanMask(m,w,h,[{x:500,y:500,label:1},{x:375,y:375,label:0}]);assert.equal(excluded.values[15*w+15],0);assert.equal(excluded.filled,0);
 assert.equal(cleanMask(m,w,h,[{x:500,y:500,label:1},{x:950,y:950,label:1}]),null);
 console.log('PASS explicit exclusion holes stay transparent; missing positive selection is rejected');
+const {maskAlpha}=await import('../project/mask-utils.mjs');
+const logits=Float32Array.from({length:1600},(_,i)=>9.8-Math.hypot(i%40-20,Math.floor(i/40)-20));
+const binary=Uint8Array.from(logits,v=>v>0?1:0),alpha=maskAlpha(logits,binary,40,40,[{x:500,y:500,label:0}]);
+assert(alpha.some(v=>v>0&&v<255),'Edge has subpixel alpha, not hard 0/255 steps');assert.equal(alpha[0],0);assert.equal(alpha[20*40+20],0);assert.equal(alpha[21*40+21],255);
+const removed=maskAlpha(new Float32Array(16).fill(2),new Uint8Array(16),4,4);assert(removed.every(v=>v===0));
+console.log('PASS fractional edges, opaque interior, explicit exclusion and no reappearing fragments');

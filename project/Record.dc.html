@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-1">
+<link rel="stylesheet" href="./mobile.css?v=20261117-2">
 <title>好好吃饭 拍一餐</title>
-<script src="./support.js?v=20261117-1"></script>
-<script src="./journal.js?v=20261117-1"></script>
-<script src="./interactions.js?v=20261117-1"></script>
-<script src="./food-stickers.js?v=20261117-1"></script>
+<script src="./support.js?v=20261117-2"></script>
+<script src="./journal.js?v=20261117-2"></script>
+<script src="./interactions.js?v=20261117-2"></script>
+<script src="./food-stickers.js?v=20261117-2"></script>
 </head>
 <body>
 <x-dc>
@@ -150,15 +150,16 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
 function makePhoto(source, width, height) {
   if (!width || !height) throw new Error("照片还没准备好。");
-  const scale = Math.min(1, 640 / Math.max(width, height));
+  const scale = Math.min(1, 2048 / Math.max(width, height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
   const context = canvas.getContext("2d");
+  context.imageSmoothingQuality = "high";
   context.fillStyle = "#FFFFFF";
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(source, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.72);
+  return canvas.toDataURL("image/jpeg", 0.92);
 }
 
 class Component extends DCLogic {
@@ -239,7 +240,7 @@ class Component extends DCLogic {
     this.setState({ camera: "loading", cameraError: "" });
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1440 } },
         audio: false
       });
       if (request !== this.cameraRequest) {
@@ -348,7 +349,7 @@ class Component extends DCLogic {
       }
       const response = await fetch("/api/recognize", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photo }), signal: controller.signal
+        body: JSON.stringify({ photo: await FoodStickers.recognitionPhoto(photo) }), signal: controller.signal
       });
       const result = await response.json();
       if (request !== this.recognitionRequest) return;
@@ -379,7 +380,7 @@ class Component extends DCLogic {
         const matchTimer=setTimeout(()=>controller.abort(),55000);
         let matched;
         try {
-          const response=await fetch('/api/match-foods',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photo,sheet,tiles,foods:foods.map(f=>f.name),candidateCount:candidates.length}),signal:controller.signal});
+          const response=await fetch('/api/match-foods',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photo:await FoodStickers.recognitionPhoto(photo),sheet,tiles,foods:foods.map(f=>f.name),candidateCount:candidates.length}),signal:controller.signal});
           matched=await response.json();if(!response.ok)throw new Error(matched.error||'贴纸核对失败');
         } finally {clearTimeout(matchTimer);}
         if(request!==this.recognitionRequest)return;

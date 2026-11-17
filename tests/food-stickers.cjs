@@ -25,6 +25,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.waitForFunction(()=>document.querySelectorAll('food-sticker canvas').length===6);
   assert(await p.locator('[style*="contain no-repeat"]').count()>0);
   await p.getByRole('link',{name:/查看当天/}).click();
+  await p.locator('.food-sticker-item').nth(5).waitFor();
   assert.equal(await p.locator('.food-sticker-item').count(),6);
   await p.locator('.food-sticker-item').first().click();
   assert.equal(await p.locator('[name=food-kcal-0]').inputValue(),'123');

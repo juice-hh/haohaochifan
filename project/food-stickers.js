@@ -11,7 +11,7 @@
   function cutout(value) {
     const region=box(value?.box);
     return region && typeof value.mask==='string' && value.mask.length<200000 && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(value.mask)
-      ? {mask:value.mask,box:region,score:finite(value.score)?value.score:0} : null;
+      ? {mask:value.mask,box:region,score:finite(value.score)?value.score:0,edgeVersion:value.edgeVersion===1?1:0} : null;
   }
   function normalize(items) {
     return Array.isArray(items) ? items.slice(0,16).filter(f=>f&&typeof f.name==='string').map(f=>({
@@ -35,7 +35,8 @@
   }
   class FoodSticker extends HTMLElement {
     static get observedAttributes(){return ['photo','cutout','name'];}
-    connectedCallback(){this.render();}
+    connectedCallback(){this.render();this.resizeObserver=new ResizeObserver(()=>this.render());this.resizeObserver.observe(this);}
+    disconnectedCallback(){this.resizeObserver?.disconnect();this.revision=(this.revision||0)+1;}
     attributeChangedCallback(){if(this.isConnected)this.render();}
     render(){
       const revision=this.revision=(this.revision||0)+1;
@@ -51,15 +52,38 @@
       Promise.all([new Promise((r,j)=>{source.onload=r;source.onerror=j;source.src=photo}),new Promise((r,j)=>{mask.onload=r;mask.onerror=j;mask.src=item.mask})]).then(()=>{
         if(this.revision!==revision)return;
         const {x,y,width,height}=item.box,left=x/1000*source.width,top=y/1000*source.height,w=width/1000*source.width,h=height/1000*source.height;
-        const scale=232/Math.max(w,h),dx=(256-w*scale)/2,dy=(256-h*scale)/2;
-        const layer=document.createElement('canvas');layer.width=layer.height=256;
-        const lc=layer.getContext('2d');lc.drawImage(source,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);
-        lc.globalCompositeOperation='destination-in';lc.drawImage(mask,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);
-        const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+        const logicalSize=Math.max(64,this.getBoundingClientRect().width||112);
+        const size=Math.min(512,Math.max(256,Math.ceil(logicalSize*Math.min(3,window.devicePixelRatio||2))));
+        const density=size/logicalSize;
+        // A 20px kernel must not become a blurry 100px food. Preserve available source detail.
+        const scale=Math.min(size*.9/Math.max(w,h),1.25*density),dx=(size-w*scale)/2,dy=(size-h*scale)/2;
+        const layer=document.createElement('canvas');layer.width=layer.height=size;
+        const lc=layer.getContext('2d');lc.imageSmoothingEnabled=true;lc.imageSmoothingQuality='high';
+        lc.drawImage(source,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);
+        const matte=document.createElement('canvas');matte.width=matte.height=size;
+        const mc=matte.getContext('2d');mc.imageSmoothingEnabled=true;mc.imageSmoothingQuality='high';
+        mc.drawImage(mask,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);
+        // Smooth only legacy hard alpha edges, never the food's RGB texture.
+        if(!item.edgeVersion){
+          const pixels=mc.getImageData(0,0,size,size),src=pixels.data;
+          let alpha=Float32Array.from({length:size*size},(_,i)=>src[i*4+3]);
+          const passes=Math.min(8,Math.max(2,Math.ceil(scale*scale/2)));
+          for(let pass=0;pass<passes;pass++){
+            const next=new Float32Array(alpha.length);
+            for(let y=1;y<size-1;y++)for(let x=1;x<size-1;x++){
+              let total=0;for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++)total+=alpha[(y+yy)*size+x+xx]*(xx===0?2:1)*(yy===0?2:1);
+              next[y*size+x]=total/16;
+            }alpha=next;
+          }
+          for(let i=0;i<alpha.length;i++){const t=Math.max(0,Math.min(1,(alpha[i]-64)/127));src[i*4+3]=Math.round(255*t*t*(3-2*t));}
+          mc.putImageData(pixels,0,0);
+        }
+        lc.globalCompositeOperation='destination-in';lc.drawImage(matte,0,0);
+        const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
         canvas.setAttribute('aria-label',this.getAttribute('name')||'食物');canvas.setAttribute('role','img');
-        const ctx=canvas.getContext('2d');
-        for(let i=0;i<16;i++){const angle=i*Math.PI/8;ctx.drawImage(layer,Math.cos(angle)*3.5,Math.sin(angle)*3.5);}
-        ctx.globalCompositeOperation='source-in';ctx.fillStyle='#fff';ctx.fillRect(0,0,256,256);
+        const ctx=canvas.getContext('2d'),border=1.1*density;
+        for(let i=0;i<24;i++){const angle=i*Math.PI/12;ctx.drawImage(layer,Math.cos(angle)*border,Math.sin(angle)*border);}
+        ctx.globalCompositeOperation='source-in';ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
         ctx.globalCompositeOperation='source-over';ctx.drawImage(layer,0,0);
         this.replaceChildren(canvas);
       }).catch(()=>{});
@@ -74,7 +98,7 @@
   }
   function segment(photo,options={},progress=()=>{}){
     if(!worker){
-      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-1',document.baseURI),{type:'module'});
+      worker=new Worker(new URL('./segmentation-worker.js?v=20261117-2',document.baseURI),{type:'module'});
       worker.onmessage=({data})=>{
         const job=pending.get(data.id);if(!job)return;
         if(data.type==='progress'){job.progress(data.stage,data);return;}
@@ -130,6 +154,12 @@
     });
   }
   async function loadImage(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});}
+  async function recognitionPhoto(photo){
+    const source=await loadImage(photo),canvas=document.createElement('canvas'),scale=Math.min(1,960/Math.max(source.width,source.height));
+    canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+    const ctx=canvas.getContext('2d');ctx.imageSmoothingQuality='high';ctx.drawImage(source,0,0,canvas.width,canvas.height);
+    return canvas.toDataURL('image/jpeg',.82);
+  }
   async function contactSheet(photo,candidates){
     const source=await loadImage(photo),canvas=document.createElement('canvas'),cell=230,row=190;
     canvas.width=cell*6;canvas.height=row*Math.ceil(candidates.length/6);
@@ -164,7 +194,7 @@
     let left=canvas.width,top=canvas.height,right=0,bottom=0,area=0;const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
     for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]>127){const x=i/4%canvas.width,y=Math.floor(i/4/canvas.width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);area++;}
     if(!area)return null;
-    return {mask:canvas.toDataURL('image/png'),score:Math.min(...candidates.map(c=>c.score)),box:{x:left/canvas.width*1000,y:top/canvas.height*1000,width:(right-left+1)/canvas.width*1000,height:(bottom-top+1)/canvas.height*1000}};
+    return {mask:canvas.toDataURL('image/png'),edgeVersion:candidates.every(c=>c.edgeVersion===1)?1:0,score:Math.min(...candidates.map(c=>c.score)),box:{x:left/canvas.width*1000,y:top/canvas.height*1000,width:(right-left+1)/canvas.width*1000,height:(bottom-top+1)/canvas.height*1000}};
   }
 
   async function applyMatches(foods,candidates,matches){
@@ -181,5 +211,5 @@
     }
     return result;
   }
-  window.FoodStickers={normalize,groups,selectRegion,segment,cancel,progressText,contactSheet,candidateTiles,mergeMasks,applyMatches};
+  window.FoodStickers={normalize,groups,selectRegion,segment,cancel,progressText,recognitionPhoto,contactSheet,candidateTiles,mergeMasks,applyMatches};
 })();
