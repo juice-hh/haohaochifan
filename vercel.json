@@ -11,6 +11,9 @@
   "functions": {
     "api/recognize.js": {
       "maxDuration": 60
+    },
+    "api/match-foods.js": {
+      "maxDuration": 60
     }
   },
   "headers": [
