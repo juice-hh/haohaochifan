@@ -1,0 +1,99 @@
+.record-screen { gap: 10px !important; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.record-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px; }
+.record-meta input,.record-meta select { min-height: 44px; min-width: 0; max-width: 100%; border: 0; background: transparent; color: #6F6A78; font: inherit; font-size: 15px; font-weight: 650; }
+.record-date { min-width: 0; }
+.record-kind select { color: #5B48B8; padding: 0 8px; }
+.record-screen .meal-photo-card { padding: 10px; gap: 6px; border-radius: 26px; box-shadow: none; }
+.record-screen .meal-photo-preview { height: clamp(180px,29vh,246px); max-height: 246px; border-radius: 18px; object-fit: contain; }
+.photo-edit-row { width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.record-text-action { min-height: 44px; padding: 6px 10px; border: 0; background: transparent; color: #5B48B8; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
+.record-meal-name { background: #FFF; border-radius: 20px; padding: 4px; }
+.record-meal-name label { background: #FFF !important; }
+.record-recognition { padding: 0 6px; }
+.record-recognition .record-text-action { padding-left: 0; }
+.record-recognition .nutrition-status { margin: 0; font-size: 12px; line-height: 1.5; }
+.record-disclosure { display: block; background: #FFF; border-radius: 22px; padding: 0 16px; }
+.record-disclosure > summary { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; list-style: none; font-size: 15px; font-weight: 750; }
+.record-disclosure > summary::-webkit-details-marker { display: none; }
+.record-disclosure > summary::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid #8C849D; border-bottom: 1.5px solid #8C849D; transform: rotate(45deg); margin: 0 2px 4px 0; flex-shrink: 0; }
+.record-disclosure[open] > summary::after { transform: rotate(225deg); margin-bottom: 0; }
+.record-summary-value { margin-left: auto; text-align: right; color: #6F6A78; font-size: 12px; font-weight: 600; }
+.record-disclosure-body { padding: 0 0 16px; }
+.record-disclosure-body > .goal-note { margin: 6px 0 12px; font-size: 12px; line-height: 1.6; }
+.record-screen .food-editor-heading { margin-bottom: 4px; }
+.record-screen .food-editor-heading > strong { font-size: 14px; }
+.record-screen .food-editor-row { margin-top: 8px; }
+.record-settings { background: transparent; }
+.record-delete { width: 100%; min-height: 44px; border: 0; border-radius: 14px; color: #B63843; background: #FCE8E6; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.record-screen .record-actions { padding-top: 10px; }
+.record-screen :is(summary,select,input,button):focus-visible { outline: 2px solid #7A66E0; outline-offset: 3px; }
+@media (max-height: 700px) { .record-screen .meal-photo-preview { height: 180px; } }
+
+.record-screen { background: #fafaf6 !important; }
+.record-screen .app-toolbar,.record-screen .record-actions { background: #fafaf6; }
+.record-screen .record-save { border-radius: 14px !important; background: #50418f !important; box-shadow: none !important; }
+.record-screen .record-food-results { gap: 0; padding: 0 4px; border-radius: 0; background: transparent; border-top: 1px solid #e5e1e7; }
+.record-food-results h2 { margin: 0; font-size: 16px; }
+.record-food-results .food-editor-heading { margin: 0; }
+.record-food-results .food-editor-row { margin: 0 0 8px; }
+
+.record-screen .meal-photo-card[data-compact="true"] {
+  display: grid;
+  grid-template-columns: minmax(0, 144px) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 12px;
+}
+.record-screen .meal-photo-card[data-compact="true"] .meal-photo-preview { height: 126px; }
+.meal-photo-card[data-compact="true"] .meal-photo-hint { grid-column: 1 / -1; }
+
+.record-screen .meal-photo-card[data-entry="true"] {
+  margin-top: 4px;
+  padding: 0;
+  gap: 10px;
+  background: transparent;
+}
+.record-screen .meal-photo-card[data-entry="true"] .record-source-actions {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+}
+.record-source-actions .record-camera-action {
+  grid-column: 1 / -1;
+}
+.record-source-actions > :is(button, label) { box-sizing: border-box; }
+.record-screen [data-entry="true"] .record-source-actions > :is(button, label) {
+  min-height: 48px;
+  border: 1px solid #e5e1e7;
+  border-radius: 14px;
+  background: #fff;
+  color: #4b4261;
+}
+.record-screen [data-entry="true"] .record-source-actions > .record-camera-action {
+  min-height: 58px;
+  border-color: #50418f;
+  background: #50418f;
+  color: #fff;
+  font-size: 17px;
+}
+.record-entry-mode { border-top: 1px solid #e5e1e7; margin-top: 10px; }
+.record-entry-mode > button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: #656170;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.record-mode-track { display: flex; align-items: center; width: 34px; height: 20px; padding: 0 3px; box-sizing: border-box; border-radius: 999px; background: #767080; }
+.record-mode-track::after { content: ''; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.record-entry-mode [aria-checked="true"] .record-mode-track { justify-content: flex-end; background: #50418f; }
+.record-entry-mode p,.record-photo-policy,.record-entry-error { margin: 0; padding: 0 4px; font-size: 12px; line-height: 1.55; color: #656170; }
+.record-entry-error { color: #b63843; }
+.record-add-photo { align-self: flex-start; }

@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F7F5FC">
+<meta name="theme-color" content="#FAFAF6">
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
 <link rel="stylesheet" href="./mobile.css?v=20261117-5">
+<link rel="stylesheet" href="./day.css?v=20261118-1">
 <title>好好吃饭 单日详情</title>
 <script src="./support.js?v=20261117-5"></script>
 <script src="./journal.js?v=20261117-5"></script>
@@ -15,30 +16,25 @@
 </head>
 <body>
 <x-dc>
-<helmet>
-<style>
-body{margin:0}
-a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
-.meal-row[href]:hover{background:#F7F5FC}
-</style>
-</helmet>
-<div class="screen screen--flow" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <div class="app-toolbar">
+<main class="screen screen--flow day-screen">
+  <header class="app-toolbar day-toolbar">
     <a class="app-icon-button" href="{{backHref}}" aria-label="返回{{backLabel}}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>
     </a>
     <span class="app-toolbar-title">当天饭记</span>
     <span class="app-toolbar-spacer" aria-hidden="true"></span>
-  </div>
+  </header>
 
-  <div style="display: flex; align-items: center; gap: 14px">
-    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">{{dayName}}</h1>
-    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 18px">
-      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
-      <span style="position: relative">{{mealCount}}</span>
+  <div class="day-date-row">
+    <div>
+      <p class="day-date-caption">{{dayName}} <sc-if value="{{isToday}}"><span>今天</span></sc-if></p>
+      <h1>{{dateLabel}}</h1>
     </div>
+    <nav class="day-date-controls" aria-label="切换日期">
+      <a href="{{previousDay}}" aria-label="前一天">‹</a>
+      <a href="{{nextDay}}" aria-label="后一天">›</a>
+    </nav>
   </div>
-  <span style="font-size: 16px; font-weight: 600; color: #6F6A78; margin-top: -4px">{{dateLabel}}</span>
 
   <sc-if value="{{undo}}">
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 18px; padding: 8px 12px; background: #ECE8FB; color: #5B48B8">
@@ -53,102 +49,61 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <p role="alert" style="margin: 0; color: #B63843; font-size: 13px">{{error}}</p>
   </sc-if>
 
-  <div class="daily-food-groups" aria-label="当天食物贴纸">
-    <sc-for list="{{foodGroups}}" as="g">
-      <section class="daily-food-group">
-        <div class="daily-food-heading"><strong>{{g.kind}}</strong><span>{{g.name}}</span><a class="app-text-button" href="{{g.editHref}}" aria-label="编辑{{g.name}}">编辑</a></div>
-        <sc-if value="{{g.hasFoods}}">
-          <div class="food-sticker-grid">
-            <sc-for list="{{g.foods}}" as="f">
-              <a class="food-sticker-item" href="{{g.editHref}}" aria-label="{{f.label}}">
-                <div class="food-sticker-visual"><food-sticker photo="{{f.photo}}" box="{{f.box}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><span class="food-kcal-badge">{{f.kcal}}</span></div>
-                <strong>{{f.name}}</strong><sc-if value="{{f.partial}}"><small class="food-partial-note">部分已抠 · 点此补充</small></sc-if>
+  <div class="day-overview">
+    <span>{{mealCount}}</span>
+    <sc-if value="{{hasEnergy}}"><span>已记约 <strong>{{kcal}}</strong> kcal</span></sc-if>
+    <sc-if value="{{missingEnergy}}"><span>热量待补充</span></sc-if>
+  </div>
+
+  <div class="daily-food-groups day-timeline" aria-label="当天食物贴纸">
+    <sc-for list="{{mealSections}}" as="section">
+      <section class="day-meal-section">
+        <div class="day-meal-header">
+          <h2>{{section.label}}</h2>
+          <span class="day-meal-count">{{section.status}}</span>
+        </div>
+        <sc-if value="{{section.hasStickers}}">
+          <div class="food-sticker-grid day-sticker-grid">
+            <sc-for list="{{section.stickers}}" as="food">
+              <a class="food-sticker-item day-sticker" href="{{food.editHref}}" aria-label="{{food.label}}">
+                <food-sticker photo="{{food.photo}}" box="{{food.box}}" cutout="{{food.cutout}}" name="{{food.name}}"></food-sticker>
+                <strong>{{food.name}}</strong>
+                <span class="food-kcal-badge">{{food.kcal}}</span>
+                <sc-if value="{{food.partial}}"><small class="food-partial-note">部分已抠 · 可补充</small></sc-if>
               </a>
             </sc-for>
           </div>
         </sc-if>
-        <sc-if value="{{g.missingFoods}}"><div class="food-missing"><span>{{g.wholeKcal}} · 尚未生成餐品贴纸</span><a href="{{g.editHref}}">识别或补充食物</a></div></sc-if>
+        <sc-if value="{{section.hasMealsWithoutStickers}}">
+          <div class="day-entry-list">
+            <sc-for list="{{section.mealsWithoutStickers}}" as="meal">
+              <div class="day-meal-entry">
+                <a class="meal-row day-entry-link" href="{{meal.editHref}}"><span>{{meal.name}}</span><span aria-hidden="true">›</span></a>
+                <p class="food-missing">{{meal.wholeKcal}} · 尚未生成餐品贴纸</p>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
       </section>
     </sc-for>
   </div>
-  <sc-if value="{{empty}}"><div class="food-day-empty">{{emptyLabel}}</div></sc-if>
 
-  <sc-if value="{{canRecord}}">
-  <div style="background: #FFFFFF; border-radius: 32px; padding: 16px 22px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; align-items: center; justify-content: space-between">
-    <div style="display: flex; flex-direction: column">
-      <span style="font-size: 13px; font-weight: 700; color: #6F6A78">{{previousWeightLabel}}</span>
-      <span style="font-size: 26px; font-weight: 900">{{previousWeight}}</span>
-    </div>
-    <svg width="26" height="16" viewBox="0 0 28 16" fill="none" stroke="#C9BFF5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8h22M18 3l6 5-6 5"></path></svg>
-    <a href="{{weighHref}}" aria-label="{{weighAction}}" style="display: flex; flex-direction: column; color: #5B48B8">
-      <span style="font-size: 13px; font-weight: 700">{{weightLabel}} ›</span>
-      <span style="font-size: 26px; font-weight: 900">{{weight}}</span>
-    </a>
-    <sc-if value="{{delta}}">
-      <span style="font-size: 15px; font-weight: 900; padding: 8px 12px; border-radius: 16px; background: #ECE8FB; color: #5B48B8">{{delta}}</span>
-    </sc-if>
-  </div>
-
-  </sc-if>
-
-  <sc-if value="{{kcal}}">
-  <div style="background: #FFFFFF; border-radius: 32px; padding: 18px 22px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 12px">
-    <div style="display: flex; align-items: baseline; justify-content: space-between">
-      <div style="display: flex; align-items: baseline; gap: 5px">
-        <span style="font-size: 26px; font-weight: 900; color: #7A66E0; line-height: 1.1">{{kcal}}</span>
-        <span style="font-size: 14px; font-weight: 800">kcal</span>
+  <sc-if value="{{hasMacros}}">
+    <section class="day-nutrition" aria-label="已记录营养含量">
+      <h2>营养小计</h2>
+      <div class="day-macro-values">
+        <sc-for list="{{macros}}" as="macro"><div><span>{{macro.label}}</span><strong>{{macro.amount}}</strong></div></sc-for>
       </div>
-      <span style="font-size: 12px; font-weight: 700; color: #C9372C">已记录估算</span>
-    </div>
-    <span style="font-size: 12px; font-weight: 600; color: #6F6A78; margin-top: -6px">按已填写的热量或营养克数汇总</span>
-    <sc-if value="{{hasMacros}}">
-    <div style="position: relative; padding: 5px 0">
-      <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px">
-        <div style="{{barCarb}}"></div>
-        <div style="{{barProtein}}"></div>
-        <div style="{{barFat}}"></div>
-      </div>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-      <div style="display: flex; flex-direction: column">
-        <span style="font-size: 12px; font-weight: 700; color: #6F6A78">碳水</span>
-        <span style="font-size: 18px; font-weight: 900">{{carbPercent}} <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{carbAmount}}</span></span>
-        <span style="font-size: 12px; font-weight: 700; color: #C9372C"></span>
-      </div>
-      <div style="display: flex; flex-direction: column">
-        <span style="font-size: 12px; font-weight: 700; color: #6F6A78">蛋白质</span>
-        <span style="font-size: 18px; font-weight: 900">{{proteinPercent}} <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{proteinAmount}}</span></span>
-        <span style="font-size: 12px; font-weight: 700; color: #C9372C"></span>
-      </div>
-      <div style="display: flex; flex-direction: column">
-        <span style="font-size: 12px; font-weight: 700; color: #6F6A78">脂肪</span>
-        <span style="font-size: 18px; font-weight: 900">{{fatPercent}} <span style="font-size: 12px; font-weight: 700; color: #6F6A78">{{fatAmount}}</span></span>
-        <span style="font-size: 12px; font-weight: 700; color: #24844A"></span>
-      </div>
-    </div>
-    </sc-if>
-    <sc-if value="{{missingMacros}}"><p class="goal-note">未填写三大营养素，暂不展示比例</p></sc-if>
-  </div>
-  </sc-if>
-  <sc-if value="{{hasMeals}}">
-    <div style="background: #FFFFFF; border-radius: 26px; padding: 14px 14px; display: grid; gap: 3px">
-      <strong style="font-size: 15px; padding: 0 6px 5px">这天吃了什么</strong>
-      <sc-for list="{{meals}}" as="m">
-        <a class="meal-row" href="{{m.editHref}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-radius: 14px; padding: 0 6px">
-          <span style="min-width: 0; overflow-wrap: anywhere; font-size: 14px; color: #2A2633">{{m.name}}</span>
-          <span style="flex-shrink: 0; font-size: 12px; color: #5B48B8">{{m.kind}}</span>
-        </a>
-      </sc-for>
-    </div>
+    </section>
   </sc-if>
 
   <sc-if value="{{canRecord}}">
-    <div class="record-actions day-actions">
-      <a class="plan-action" href="{{weighHref}}">{{weighAction}}</a>
-      <a class="plan-action day-record" href="{{recordHref}}">记一餐</a>
+    <div class="record-actions day-actions day-dock">
+      <a class="day-weigh" href="{{weighHref}}" aria-label="{{weighAction}}"><span>{{weightLabel}}</span><sc-if value="{{hasWeight}}"><strong>{{weight}} kg</strong></sc-if></a>
+      <a class="day-add" href="{{recordHref}}"><span aria-hidden="true">＋</span>记一餐</a>
     </div>
   </sc-if>
-</div>
+</main>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
@@ -176,53 +131,52 @@ class Component extends DCLogic {
     const date = this.date;
     const entry = Journal.day(date);
     const fromAlbum = this.from === "album";
-    const editHref = (meal) => meal.id
-      ? Journal.link("Record", date, { edit: meal.id, from: "day", via: this.from })
-      : "";
-    const previous = Journal.previousWeight(date);
-    const delta = entry.weight === null || !previous ? null : Math.round((entry.weight - previous.kg) * 10) / 10;
-    const [carb, protein, fat] = entry.percentages;
-    const [carbGrams, proteinGrams, fatGrams] = entry.grams;
+    const makeDayLink = (selected) => Journal.link("Day", selected, { from: this.from });
+    const groupedMeals = FoodStickers.groups(entry.meals, date, this.from);
+    const summarize = (label, records) => {
+      const stickers = records.flatMap((meal) => meal.foods.map((food) => ({ ...food, editHref: meal.editHref })));
+      const mealsWithoutStickers = records.filter((meal) => meal.missingFoods);
+      const status = records.length ? records.length + " 笔" : date > Journal.today ? "尚未到这一天" : "未记录";
+      return { label, status, stickers, hasStickers: stickers.length > 0, mealsWithoutStickers, hasMealsWithoutStickers: mealsWithoutStickers.length > 0 };
+    };
+    const mealSections = Object.entries(Journal.kinds).map(([kind, label]) =>
+      summarize(label, groupedMeals.filter((_, index) => entry.meals[index].kind === kind)));
+    const otherMeals = groupedMeals.filter((_, index) => !Object.hasOwn(Journal.kinds, entry.meals[index].kind));
+    if (otherMeals.length) mealSections.push(summarize("其他", otherMeals));
+    const macros = ["碳水", "蛋白质", "脂肪"].map((label, index) => ({
+      label,
+      amount: entry.macroKnown[index] ? entry.grams[index] + " g" : "未填写"
+    }));
+    const hasMacros = entry.macroKnown.some(Boolean);
+    const hasEnergy = entry.meals.some((meal) => Number.isFinite(meal.kcal) || Journal.mealMacros(meal).every((amount) => amount !== null)) || entry.kcal > 0;
     const status = Journal.params.get("status");
     const notice = status === "weighed" ? "已记下当天体重"
       : status === "saved" ? "已记下这一餐" : status === "updated" ? "已保存修改" : status === "restored" ? "已恢复这餐" : "";
     return {
-      foodGroups: FoodStickers.groups(entry.meals, date, this.from), dayName: Journal.dayName(date), dateLabel: Journal.shortDate(date),
+      mealSections,
+      isToday: date === Journal.today,
+      dayName: Journal.dayName(date),
+      dateLabel: Journal.shortDate(date),
+      previousDay: makeDayLink(Journal.addDays(date, -1)),
+      nextDay: makeDayLink(Journal.addDays(date, 1)),
       notice, error: this.state.error,
       undo: Journal.pendingUndo(this.undoToken, date),
       restoreMeal: () => this.restoreMeal(),
       mealCount: entry.meals.length + " 餐已记录",
-      hasMeals: entry.meals.length > 0,
-      empty: entry.meals.length === 0,
-      emptyLabel: date > Journal.today ? "这一天还没到" : "还没有记录，可以补记一餐",
       canRecord: date <= Journal.today,
       backLabel: fromAlbum ? "饭相册" : "周记",
       backHref: Journal.link(fromAlbum ? "Album" : "Main", date),
-      recordHref: Journal.link("Record", date, { from: "day", via: fromAlbum ? "album" : "week" }),
+      recordHref: Journal.link("Record", date, { from: "day", via: this.from }),
       weighHref: Journal.link("Weigh", date, { from: "day", via: this.from }),
-      weighAction: Journal.savedWeight(date) === null ? "记体重" : "修改体重",
+      weighAction: entry.weight === null ? "记体重" : "修改体重",
       weightLabel: entry.weight === null ? "记体重" : "当天体重",
-      weight: entry.weight?.toFixed(1) ?? "—",
-      previousWeightLabel: "上次记录",
-      previousWeight: previous?.kg.toFixed(1) ?? "—",
-      delta: delta === null ? "" : delta === 0 ? "持平" : (delta > 0 ? "↑" : "↓") + Math.abs(delta).toFixed(1),
-      hasMacros: entry.grams.some((value) => value > 0),
-      missingMacros: !entry.grams.some((value) => value > 0),
-      kcal: entry.kcal,
-      carbPercent: entry.macroKnown[0] ? carb + "%" : "—",
-      proteinPercent: entry.macroKnown[1] ? protein + "%" : "—",
-      fatPercent: entry.macroKnown[2] ? fat + "%" : "—",
-      carbAmount: entry.macroKnown[0] ? carbGrams + "g" : "未填写",
-      proteinAmount: entry.macroKnown[1] ? proteinGrams + "g" : "未填写",
-      fatAmount: entry.macroKnown[2] ? fatGrams + "g" : "未填写",
-      barCarb: "width: " + carb + "%; background: #F6CF5C",
-      barProtein: "width: " + protein + "%; background: #A996F2",
-      barFat: "width: " + fat + "%; background: #8FCFA6",
-      meals: entry.meals.map((meal) => ({
-        name: meal.name,
-        kind: (Journal.kinds[meal.kind] ?? "饭记") + " · 编辑 ›",
-        editHref: editHref(meal)
-      }))
+      hasWeight: entry.weight !== null,
+      weight: entry.weight?.toFixed(1),
+      hasMacros,
+      macros,
+      hasEnergy,
+      missingEnergy: entry.meals.length > 0 && !hasEnergy,
+      kcal: entry.kcal
     };
   }
 }

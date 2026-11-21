@@ -63,6 +63,10 @@
   }
   function focusField(selector) {
     const field = document.querySelector(selector);
+    // Validation may target an optional section that is currently collapsed.
+    for (let parent = field?.parentElement; parent; parent = parent.parentElement) {
+      if (parent.tagName === "DETAILS") parent.open = true;
+    }
     field?.focus();
     field?.scrollIntoView({ block: "center", behavior: "smooth" });
   }

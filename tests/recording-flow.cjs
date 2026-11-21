@@ -23,18 +23,51 @@ async function fixture(browser, {keyboard=false, camera=false}={}) {
  const page=await context.newPage();
  await page.route('**/api/recognize',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'测试：识别暂不可用'})}));
  await page.goto(base+'/Record.dc.html?date=2026-11-12');
- await page.locator('.record-save').waitFor();
+ await page.getByRole('button',{name:'手动填写',exact:true}).waitFor();
  return {context,page};
 }
+async function startManual(p){await p.getByRole('button',{name:'手动填写',exact:true}).click();}
+async function expand(p,selector){if(!await p.locator(selector).evaluate(e=>e.open))await p.locator(selector+' > summary').click();}
 async function check(engine,name,fn){let f;try{f=await fn();results.push({engine,name,status:'PASS'});console.log('PASS',engine,name)}catch(e){results.push({engine,name,status:'FAIL',error:e.message});console.log('FAIL',engine,name,e.message)}finally{if(f?.context)await f.context.close();}}
 (async()=>{
  for(const engine of ['chromium','webkit']){
   const browser=await (engine==='chromium'?chromium.launch({channel:'chrome',args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']}):webkit.launch({executablePath:process.env.HOME+'/Library/Caches/ms-playwright/webkit-2336/pw_run.sh'}));
+  await check(engine,'compact form, meal type persistence and hidden-field validation',async()=>{
+   const f=await fixture(browser),p=f.page;
+   assert.equal(await p.getByLabel('餐别',{exact:true}).inputValue(),'dinner');
+   assert.equal(await p.locator('.record-save').isVisible(),false);
+   assert.equal(await p.locator('#meal-name').isVisible(),false);
+   assert.equal(await p.locator('.record-nutrition').isVisible(),false);
+   await startManual(p);
+   assert.equal(await p.locator('#meal-name').evaluate(e=>document.activeElement===e),true);
+   assert.equal(await p.locator('.record-save').getAttribute('aria-disabled'),'true');
+   assert.equal(await p.locator('details[open]').count(),0);
+   assert.equal(await p.getByRole('button',{name:'手动记录',exact:true}).isVisible(),false);
+   await p.getByLabel('餐别',{exact:true}).selectOption('lunch');
+   await p.getByPlaceholder('给这一餐起个名字').fill('精简流程测试');
+   await expand(p,'.record-nutrition');await p.locator('input[name=pro]').fill('-1');
+   await p.locator('.record-nutrition > summary').click();await p.locator('.record-save').click();
+   assert.equal(await p.locator('.record-nutrition').evaluate(e=>e.open),true);
+   assert.equal(await p.locator('input[name=pro]').evaluate(e=>e===document.activeElement),true);
+   await p.locator('input[name=pro]').fill('20');
+   await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');
+   await p.getByRole('link',{name:/查看当天/}).click();
+   const lunch=p.locator('.day-meal-section').filter({has:p.getByRole('heading',{name:'午餐',exact:true})});
+   await lunch.locator('.meal-row').filter({hasText:'精简流程测试'}).click();
+   await p.waitForFunction(()=>document.querySelector('#meal-name')?.value==='精简流程测试');
+   assert.equal(await p.getByLabel('餐别',{exact:true}).inputValue(),'lunch');
+   assert.equal(await p.locator('input[name=pro]').inputValue(),'20');
+   await expand(p,'.record-settings');await p.getByRole('button',{name:'删除这餐',exact:true}).click();
+   await p.getByRole('button',{name:'保留记录',exact:true}).click();
+   assert.equal(await p.getByPlaceholder('给这一餐起个名字').inputValue(),'精简流程测试');
+   return f;
+  });
   await check(engine,'photo → input macros → save → reload',async()=>{
    const f=await fixture(browser);const p=f.page;
    await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
    await p.locator('.meal-photo-preview').waitFor();
    await p.getByPlaceholder('给这一餐起个名字').fill('测试照片餐');
+   await expand(p,'.record-nutrition');
    for(const [key,value] of Object.entries({portion:'280',calories:'420',carb:'50',pro:'25',fat:'13'})) await p.locator('input[name="'+key+'"]').fill(value);
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');await p.reload();
    await p.getByRole('link',{name:/查看当天/}).click();
@@ -49,8 +82,10 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    const f=await fixture(browser);const p=f.page, input=p.getByLabel('从相册选',{exact:true});
    await input.setInputFiles(photo);await p.locator('.meal-photo-preview').waitFor();
    const previous=await p.locator('.meal-photo-preview').getAttribute('src');
+   await p.getByRole('button',{name:'更换照片',exact:true}).click();
    await input.setInputFiles([]);assert.equal(await p.locator('.meal-photo-preview').getAttribute('src'),previous);
    await p.getByRole('button',{name:'移除照片'}).click();await input.setInputFiles(photo);await p.locator('.meal-photo-preview').waitFor();
+   await p.getByRole('button',{name:'更换照片',exact:true}).click();
    await input.setInputFiles({name:'broken.jpg',mimeType:'image/jpeg',buffer:Buffer.from('not an image')});
    await p.getByRole('alert').filter({hasText:'无法读取'}).waitFor();
    assert(await p.locator('.meal-photo-preview').isVisible());
@@ -67,7 +102,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
   });
   await check(engine,'AI failure preserves photo and manual save',async()=>{
    const f=await fixture(browser);const p=f.page;
-   await p.getByRole('button',{name:'AI 辅助',exact:true}).click();await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
+   await p.getByRole('switch',{name:'自动识别',exact:true}).click();await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
    await p.locator('.nutrition-status').filter({hasText:'测试：识别暂不可用'}).waitFor();
    await p.getByPlaceholder('给这一餐起个名字').fill('手动补充');await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');return f;
   });
@@ -82,8 +117,9 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
   });
   await check(engine,'keyboard pan, blur, dismissal, zoom and tap stability',async()=>{
    const f=await fixture(browser,{keyboard:true});const p=f.page;
+   await startManual(p);
    await p.getByPlaceholder('给这一餐起个名字').fill('键盘移动测试');
-   await p.locator('input[name=fat]').fill('15');
+   await expand(p,'.record-nutrition');await p.locator('input[name=fat]').fill('15');
    await p.evaluate(()=>window.setTestViewport({height:400,offsetTop:80}));await delay(150);
    const footer=await p.locator('.record-save').boundingBox(),field=await p.locator('input[name=fat]').boundingBox();
    assert(footer.y>=80&&footer.y+footer.height<=480,'panned save is visible');
@@ -105,18 +141,19 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
   await check(engine,'AI result editable before save',async()=>{
    const f=await fixture(browser);const p=f.page;
    await p.route('**/api/recognize',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({foodVisible:true,name:'测试识别结果',portion:200,kcal:300,carb:40,pro:20,fat:7,notes:'测试响应'})}));
-   await p.getByRole('button',{name:'AI 辅助',exact:true}).click();await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
+   await p.getByRole('switch',{name:'自动识别',exact:true}).click();await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
    await p.locator('.nutrition-status').filter({hasText:'AI 估算'}).waitFor();
    assert.equal(await p.locator('input[name=pro]').inputValue(),'20');
-   await p.getByPlaceholder('给这一餐起个名字').fill('已修改餐名');await p.locator('input[name=pro]').fill('22');
+   await p.getByPlaceholder('给这一餐起个名字').fill('已修改餐名');await expand(p,'.record-nutrition');await p.locator('input[name=pro]').fill('22');
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');
    await p.getByRole('link',{name:/查看当天/}).click();await p.locator('.meal-row').filter({hasText:'已修改餐名'}).click();
    assert.equal(await p.locator('input[name=pro]').inputValue(),'22');return f;
   });
   await check(engine,'resized layout keyboard keeps focused input + save reachable',async()=>{
    const f=await fixture(browser);const p=f.page;
+   await startManual(p);
    await p.getByPlaceholder('给这一餐起个名字').fill('小屏键盘');await p.setViewportSize({width:320,height:390});
-   await p.locator('input[name=fat]').fill('12');await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');return f;
+   await expand(p,'.record-nutrition');await p.locator('input[name=fat]').fill('12');await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');return f;
   });
   if(engine==='chromium')await check(engine,'camera preview → capture → save; releases camera',async()=>{
    const f=await fixture(browser,{camera:true});const p=f.page;

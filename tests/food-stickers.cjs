@@ -14,7 +14,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.route('**/api/match-foods',r=>r.fulfill({json:{matches:foods.map((f,foodIndex)=>({foodIndex,maskIds:[foodIndex+1],status:'matched',reason:'测试对应关系'}))}}));
   await p.goto(base+'/Record.dc.html?date=2026-11-12');
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
-  await p.locator('.food-editor-row').nth(5).waitFor();
+  await p.locator('.food-editor-row').nth(5).waitFor({state:'attached'});
   await p.waitForFunction(()=>document.querySelector('.record-save')?.getAttribute('aria-disabled')!=='true',{},{timeout:90000});
   await p.locator('[name=food-kcal-0]').fill('123');
   assert.equal(await p.locator('[name=calories]').inputValue(),'523');
@@ -39,7 +39,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.locator('[name=food-kcal-0]').fill('');
   await p.getByRole('button',{name:'移除食物 测试食物6',exact:true}).click();
   await p.setViewportSize({width:320,height:568});
-  await p.getByRole('button',{name:'＋ 添加',exact:true}).click();
+  await p.getByRole('button',{name:'＋ 添加餐品',exact:true}).click();
   await p.locator('[name=food-name-5]').fill('手动补充');
   await p.locator('[name=food-kcal-5]').fill('88');
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
@@ -48,7 +48,9 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   assert.equal(await p.locator('.food-kcal-badge').first().innerText(),'热量待补充');
   assert.equal(await p.locator('.food-kcal-badge').last().innerText(),'约 88 kcal');
   await p.locator('.food-sticker-item').first().click();
+  await p.locator('.record-settings > summary').click();
   await p.getByRole('button',{name:'手动记录',exact:true}).click();
+  await p.getByRole('button',{name:'更换照片',exact:true}).click();
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
   await p.waitForFunction(()=>document.querySelectorAll('.food-editor-row').length===0);
   await p.locator('.record-save').click();await p.waitForURL('**/Day.dc.html?**');

@@ -85,7 +85,7 @@
       } else {
         updates.push((scope) => {
           const value = interpolate(scope, template);
-          if (name === "value" && node instanceof HTMLInputElement) {
+          if (name === "value" && (node instanceof HTMLInputElement || node instanceof HTMLSelectElement)) {
             if (node.value !== value) node.value = value;
           } else if (name === "href" && !value) {
             node.removeAttribute(name);

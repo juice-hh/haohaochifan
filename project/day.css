@@ -1,0 +1,54 @@
+body { margin: 0; }
+
+.day-screen {
+  --day-paper: #fafaf6;
+  --day-ink: #26243a;
+  --day-muted: #656170;
+  --day-rule: #e5e1e7;
+  --day-action: #50418f;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--day-paper);
+  color: var(--day-ink);
+  font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+}
+
+.day-screen a { color: inherit; text-decoration: none; }
+.day-screen .day-toolbar { background: var(--day-paper); }
+.day-screen .app-icon-button { background: transparent; }
+.day-date-row { display: flex; align-items: end; justify-content: space-between; gap: 8px; padding: 4px 4px 0; }
+.day-date-caption { margin: 0 0 4px; color: var(--day-muted); font-size: 13px; font-weight: 650; }
+.day-date-caption span { margin-left: 6px; color: var(--day-action); }
+.day-date-row h1 { margin: 0; font-size: 38px; line-height: 1.15; font-weight: 800; letter-spacing: -.04em; }
+.day-date-controls { display: flex; gap: 2px; }
+.day-date-controls a { display: grid; place-items: center; width: 44px; height: 44px; color: var(--day-muted); font-size: 27px; }
+.day-overview { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 14px; padding: 0 4px 10px; color: var(--day-muted); font-size: 13px; }
+.day-overview strong { color: var(--day-ink); }
+.day-timeline { gap: 0; border-top: 1px solid var(--day-rule); }
+.day-meal-section { min-width: 0; border-bottom: 1px solid var(--day-rule); }
+.day-meal-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 51px; padding: 0 4px; }
+.day-meal-header h2,.day-nutrition h2 { margin: 0; font-size: 16px; }
+.day-meal-count { font-size: 13px; color: var(--day-muted); }
+.day-sticker-grid { padding: 0 4px 10px; }
+.day-sticker { gap: 3px; padding: 5px 2px; border-radius: 10px; }
+.day-sticker food-sticker { max-width: 102px; }
+.day-sticker food-sticker canvas { filter: drop-shadow(0 4px 5px #25203e24); }
+.day-sticker > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.day-sticker .food-kcal-badge { position: static; transform: none; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--day-muted); font-size: 12px; font-weight: 600; }
+.day-entry-list { padding-bottom: 8px; }
+.day-entry-list:empty { display: none; }
+.day-entry-link { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; color: var(--day-muted) !important; font-size: 13px; }
+.day-entry-link span:first-child { overflow-wrap: anywhere; }
+.day-entry-link span:last-child { font-size: 21px; }
+.day-meal-entry .food-missing { padding: 0 4px 10px; }
+.day-nutrition { padding: 3px 4px 10px; }
+.day-macro-values { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+.day-macro-values div { display: grid; gap: 3px; padding-left: 9px; border-left: 2px solid #d7c7eb; font-size: 12px; color: var(--day-muted); }
+.day-macro-values strong { font-size: 14px; color: var(--day-ink); }
+
+.day-screen .day-dock { display: grid; grid-template-columns: minmax(86px,1fr) minmax(0,2fr); align-items: center; gap: 12px; padding-top: 9px; border-top: 1px solid var(--day-rule); background: var(--day-paper); }
+.day-dock a { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; font-size: 14px; font-weight: 750; }
+.day-dock .day-weigh { flex-direction: column; color: var(--day-action); }
+.day-dock .day-add { gap: 5px; color: #fff; background: var(--day-action); font-size: 15px; }
+.day-add span { font-size: 18px; }
