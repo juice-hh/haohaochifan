@@ -32,6 +32,74 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
 (async()=>{
  for(const engine of ['chromium','webkit']){
   const browser=await (engine==='chromium'?chromium.launch({channel:'chrome',args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']}):webkit.launch({executablePath:process.env.HOME+'/Library/Caches/ms-playwright/webkit-2336/pw_run.sh'}));
+  await check(engine,'diet focus selection, AI estimate, editing and incomplete daily totals',async()=>{
+   const f=await fixture(browser), p=f.page;
+   const date='2026-11-12';
+   await startManual(p);
+   await p.locator('#meal-name').fill('旧餐无糖分数据');
+   assert.equal(await p.locator('input[name=totalSugar]').count(),0);
+   await p.locator('.record-save').click();
+   await p.waitForURL('**/Main.dc.html?**');
+
+   const openGoal=()=>p.goto(base+'/Goal.dc.html?date='+date);
+   const openRecord=()=>p.goto(base+'/Record.dc.html?date='+date);
+   const focus=(name)=>p.getByRole('button',{name,exact:true});
+   await openGoal();
+   assert.equal(await focus('基础记录').getAttribute('aria-pressed'),'true');
+   await focus('抗糖饮食').click();
+   await p.reload();
+   assert.equal(await focus('抗糖饮食').getAttribute('aria-pressed'),'true');
+   await p.route('**/api/recognize',async route=>{
+    const {dietFocus}=route.request().postDataJSON();
+    const extra=dietFocus==='sugar'?{totalSugar:12.5,addedSugar:null}:{fiber:0};
+    await route.fulfill({json:{foodVisible:true,name:'识别测试餐',portion:200,kcal:250,carb:30,pro:15,fat:8,foods:[],notes:'',...extra}});
+   });
+   await openRecord();
+   await p.getByRole('switch',{name:'自动识别',exact:true}).click();
+   const recognition=()=>p.waitForRequest(request=>request.url().endsWith('/api/recognize'));
+   let request=recognition();
+   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
+   assert.equal((await request).postDataJSON().dietFocus,'sugar');
+   await p.locator('.record-focus-summary').filter({hasText:'总糖 12.5 g'}).waitFor();
+   await expand(p,'.record-nutrition');
+   assert.equal(await p.locator('input[name=addedSugar]').inputValue(),'');
+   await p.locator('input[name=addedSugar]').fill('13');
+   await p.locator('.record-nutrition > summary').click();
+   await p.locator('.record-save').click();
+   assert.equal(await p.locator('input[name=addedSugar]').evaluate(input=>input===document.activeElement),true);
+   await p.locator('input[name=addedSugar]').fill('3.5');
+   await p.locator('.record-save').click();
+   await p.waitForURL('**/Main.dc.html?**');
+   const total=()=>p.locator('.day-focus-nutrient').filter({has:p.getByText('总糖',{exact:true})});
+   await total().filter({hasText:'1/2 餐有记录'}).waitFor();
+   assert.equal(await total().locator('strong').textContent(),'12.5 g');
+   const dayLink=p.getByRole('link',{name:'11月12日 周四的记录',exact:true});
+   assert.match(await p.locator('.week-day-header').innerText(),/^当天记录\s+11月12日 周四$/);
+   await dayLink.click();
+   await total().filter({hasText:'12.5 g'}).waitFor();
+   await p.locator('.meal-row').filter({hasText:'识别测试餐'}).click();
+   await expand(p,'.record-nutrition');
+   assert.equal(await p.locator('input[name=addedSugar]').inputValue(),'3.5');
+   await p.locator('input[name=addedSugar]').fill('2');
+   await p.getByRole('link',{name:'关闭',exact:true}).click();
+   await p.getByRole('button',{name:'放弃修改并离开',exact:true}).click();
+   await p.waitForURL('**/Day.dc.html?**');
+
+   await openGoal();
+   await focus('抗炎饮食').click();
+   await openRecord();
+   await p.getByRole('switch',{name:'自动识别',exact:true}).click();
+   request=recognition();
+   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
+   assert.equal((await request).postDataJSON().dietFocus,'antiInflammatory');
+   await p.locator('.record-focus-summary').filter({hasText:'膳食纤维 0 g'}).waitFor();
+   assert.equal(await p.locator('input[name=totalSugar]').count(),0);
+   await p.locator('.record-save').click();
+   await p.waitForURL('**/Main.dc.html?**');
+   await total().filter({hasText:'1/3 餐有记录'}).waitFor();
+   await p.locator('.day-focus-nutrient').filter({hasText:/膳食纤维.*0 g/}).waitFor();
+   return f;
+  });
   await check(engine,'compact form, meal type persistence and hidden-field validation',async()=>{
    const f=await fixture(browser),p=f.page;
    assert.equal(await p.getByLabel('餐别',{exact:true}).inputValue(),'dinner');
@@ -51,7 +119,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    assert.equal(await p.locator('input[name=pro]').evaluate(e=>e===document.activeElement),true);
    await p.locator('input[name=pro]').fill('20');
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');
-   await p.getByRole('link',{name:/查看当天/}).click();
+   await p.getByRole('link',{name:'11月12日 周四的记录',exact:true}).click();
    const lunch=p.locator('.day-meal-section').filter({has:p.getByRole('heading',{name:'午餐',exact:true})});
    await lunch.locator('.meal-row').filter({hasText:'精简流程测试'}).click();
    await p.waitForFunction(()=>document.querySelector('#meal-name')?.value==='精简流程测试');
@@ -70,7 +138,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    await expand(p,'.record-nutrition');
    for(const [key,value] of Object.entries({portion:'280',calories:'420',carb:'50',pro:'25',fat:'13'})) await p.locator('input[name="'+key+'"]').fill(value);
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');await p.reload();
-   await p.getByRole('link',{name:/查看当天/}).click();
+   await p.getByRole('link',{name:'11月12日 周四的记录',exact:true}).click();
    await p.locator('.meal-row').filter({hasText:'测试照片餐'}).click();
    await p.waitForFunction(()=>document.querySelector('#meal-name')?.value==='测试照片餐');
    assert.equal(await p.getByPlaceholder('给这一餐起个名字').inputValue(),'测试照片餐');
@@ -146,7 +214,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    assert.equal(await p.locator('input[name=pro]').inputValue(),'20');
    await p.getByPlaceholder('给这一餐起个名字').fill('已修改餐名');await expand(p,'.record-nutrition');await p.locator('input[name=pro]').fill('22');
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');
-   await p.getByRole('link',{name:/查看当天/}).click();await p.locator('.meal-row').filter({hasText:'已修改餐名'}).click();
+   await p.getByRole('link',{name:'11月12日 周四的记录',exact:true}).click();await p.locator('.meal-row').filter({hasText:'已修改餐名'}).click();
    assert.equal(await p.locator('input[name=pro]').inputValue(),'22');return f;
   });
   await check(engine,'resized layout keyboard keeps focused input + save reachable',async()=>{

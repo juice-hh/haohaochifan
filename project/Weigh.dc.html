@@ -172,13 +172,13 @@ class Component extends DCLogic {
     const width = Math.max(3.5, Math.min(5.3, draft.length - (/[.,]/.test(draft) ? 0.5 : 0)));
     return {
       draft, error, invalid: Boolean(error),
-      dateLabel: dateLabel + " · " + Journal.dayName(this.date),
+      dateLabel: dateLabel + " " + Journal.dayName(this.date),
       headingNote: this.date === Journal.today ? "记一笔体重" : "补记这天的体重",
       backHref: this.backHref(),
       noWeight: typed === null,
       comparisonTitle: previous ? "上次记录" : "体重记录",
       comparisonText: previous
-        ? Journal.shortDate(previous.date) + " · " + previous.kg.toFixed(1) + " kg"
+        ? Journal.shortDate(previous.date) + " " + previous.kg.toFixed(1) + " kg"
         : "保存后可以在周记里查看",
       saveHint: "体重会记到" + dateLabel + "，同一天再次保存可修正",
       weightWidth: "width: " + width + "ch",

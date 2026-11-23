@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-5">
+<link rel="stylesheet" href="./mobile.css?v=20261122-9">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261117-5"></script>
-<script src="./navigation.js?v=20261117-5"></script>
-<script src="./food-stickers.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261121-1"></script>
+<script src="./navigation.js?v=20261121-2"></script>
+<script src="./food-stickers.js?v=20261122-2"></script>
 </head>
 <body>
 <x-dc>
@@ -22,80 +22,83 @@ body{margin:0}
 a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
-<div class="screen screen--tabs screen--week" style="position: relative; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 10px">
-  <div style="display: flex; align-items: center; justify-content: space-between">
-    <span style="font-size: 15px; font-weight: 800; color: #5B48B8">好好吃饭</span>
+<div class="screen screen--tabs screen--week">
+  <header class="week-header">
+    <h1>{{weekTitle}}</h1>
     <div class="week-header-actions">
-      <a class="plan-action" href="{{planHref}}">＋ 贴计划</a>
-      <a class="week-weigh" href="{{weighHref}}" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.8); border: 0.5px solid #E4DFF5; display: flex; align-items: center; gap: 6px; color: #5B48B8; font-size: 14px; font-weight: 700">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><path d="M9 10a3 3 0 0 1 6 0"></path><path d="M12 10l1.2-1.6"></path></svg>
-        称重
+      <a class="app-icon-button" href="{{planHref}}" aria-label="贴计划" title="贴计划"
+         onPointerDown="{{pressHeaderAction}}" onPointerUp="{{releaseHeaderAction}}"
+         onPointerCancel="{{releaseHeaderAction}}" onPointerLeave="{{releaseHeaderAction}}">
+        <img class="week-action-idle" src="./icons/week-plan-clipboard.png?v=3" width="26" height="26" alt="" draggable="false">
+        <img class="week-action-active" src="./icons/week-plan-clipboard-active.png" width="26" height="26" alt="" draggable="false">
+      </a>
+      <a class="app-icon-button" href="{{weighHref}}" aria-label="称重" title="称重"
+         onPointerDown="{{pressHeaderAction}}" onPointerUp="{{releaseHeaderAction}}"
+         onPointerCancel="{{releaseHeaderAction}}" onPointerLeave="{{releaseHeaderAction}}">
+        <img class="week-action-idle" src="./icons/week-weigh-scale.png?v=3" width="26" height="26" alt="" draggable="false">
+        <img class="week-action-active" src="./icons/week-weigh-scale-active.png" width="26" height="26" alt="" draggable="false">
       </a>
     </div>
-  </div>
+  </header>
 
-  <div style="display: flex; align-items: center; gap: 12px">
-    <h1 style="margin: 0; font-size: 40px; font-weight: 900; line-height: 1.1">{{weekTitle}}</h1>
-    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 9px 14px; border-radius: 18px">
-      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
-      <span style="position: relative">{{weightNote}}</span>
+  <div class="week-range">
+    <div class="week-range-controls">
+      <button type="button" class="app-step-button" aria-label="上一周" onClick="{{previousWeek}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </button>
+      <span>{{weekLabel}}</span>
+      <button type="button" class="app-step-button" aria-label="下一周" onClick="{{nextWeek}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+    </div>
+    <div class="week-range-summary">
+      <sc-if value="{{averageLabel}}"><span>{{averageLabel}}</span></sc-if>
+      <sc-if value="{{weightNote}}"><span>{{weightNote}}</span></sc-if>
     </div>
   </div>
-  <div style="display: flex; align-items: center; gap: 2px; margin-top: -4px">
-    <button class="app-step-button" aria-label="上一周" onClick="{{previousWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </button>
-    <span style="font-size: 16px; font-weight: 700; color: #6F6A78">{{weekLabel}}</span>
-    <button class="app-step-button" aria-label="下一周" onClick="{{nextWeek}}" style="width: 32px; height: 32px; border: none; background: transparent; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
-    </button>
-    <span style="margin-left: auto; font-size: 13px; font-weight: 700; color: #6F6A78">{{averageLabel}}</span>
-  </div>
 
-  <div style="position: relative; margin-top: 4px">
-    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))">
+  <section class="week-calendar" aria-label="七天餐品贴纸日历">
+    <div class="week-calendar-grid">
       <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
-        <button onClick="{{d.pick}}" aria-label="{{d.aria}}" aria-pressed="{{d.on}}" style="{{d.colStyle}}">
-          <div style="height: 92px"></div>
-          <div style="{{d.pileStyle}}">
-            <sc-for list="{{d.tiles}}" as="t" hint-placeholder-count="3">
-              <div style="{{t.style}}" title="{{t.name}}"></div>
+        <button type="button" class="week-calendar-day" onClick="{{d.pick}}" aria-label="{{d.aria}}" aria-pressed="{{d.on}}" aria-current="{{d.current}}">
+          <span class="week-weight-space"></span>
+          <span class="week-sticker-pile" aria-hidden="true">
+            <sc-for list="{{d.stickers}}" as="s" hint-placeholder-count="3">
+              <span class="week-sticker-tile" style="{{s.style}}">
+                <food-sticker photo="{{s.photo}}" cutout="{{s.cutout}}" name="{{s.name}}"></food-sticker>
+              </span>
             </sc-for>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 12px">
-            <span style="{{d.wdStyle}}">{{d.wd}}</span>
-            <span style="{{d.dateStyle}}">{{d.date}}</span>
+          </span>
+          <span class="week-calendar-caption">
+            <span class="week-weekday">{{d.wd}}</span>
+            <span class="week-date">{{d.date}}</span>
             <sc-if value="{{showWeekPlans}}">
               <span class="plan-markers" aria-hidden="true">
                 <sc-for list="{{d.plans}}" as="p"><span>{{p.icon}}</span></sc-for>
               </span>
             </sc-if>
-          </div>
+          </span>
         </button>
       </sc-for>
     </div>
-    <svg width="100%" height="92" viewBox="0 0 358 92" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; left: 0; top: 0; pointer-events: none">
+    <svg class="week-weight-chart" width="100%" viewBox="0 0 700 76" preserveAspectRatio="none" aria-hidden="true">
       <polyline points="{{linePts}}" vector-effect="non-scaling-stroke" fill="none" stroke="#C9BFF5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
     </svg>
     <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
-      <span style="{{d.numStyle}}">{{d.w}}</span>
-      <span style="{{d.dotStyle}}"></span>
+      <span style="{{d.numStyle}}" aria-hidden="true">{{d.w}}</span>
+      <span style="{{d.dotStyle}}" aria-hidden="true"></span>
     </sc-for>
-    <div style="{{tip.style}}">
-      <span style="font-size: 15px; font-weight: 900; color: #5B48B8">{{tip.w}} kg</span>
-      <span style="font-size: 11px; font-weight: 800; color: #6F6A78">{{tip.label}}</span>
-    </div>
-  </div>
+    <sc-if value="{{tip}}"><span class="week-weight-tip" style="{{tip.style}}" aria-hidden="true">{{tip.w}} kg</span></sc-if>
+  </section>
 
-  <div style="height: 1px; background: #E4DFF5; margin: 4px 0"></div>
-
-  <div style="display: flex; flex-direction: column; gap: 8px">
-    <div style="display: flex; align-items: baseline; justify-content: space-between">
-      <span style="font-size: 20px; font-weight: 900">{{sel.title}}</span>
-      <a class="app-text-button" href="{{detailHref}}" style="font-size: 14px; font-weight: 700; color: #6F6A78; display: flex; align-items: center; gap: 2px">{{sel.meals}} 餐 · 查看当天
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+  <section class="week-day-record" aria-labelledby="week-day-heading">
+    <header class="week-day-header">
+      <h2 id="week-day-heading">{{sel.title}}</h2>
+      <a class="app-text-button week-day-date-link" href="{{detailHref}}" aria-label="{{sel.dateLabel}}的记录">
+        <time datetime="{{navDate}}">{{sel.dateLabel}}</time>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
-    </div>
+    </header>
     <sc-if value="{{selectedHasPlans}}">
       <div class="selected-plans">
         <sc-for list="{{selectedPlans}}" as="p">
@@ -103,38 +106,94 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         </sc-for>
       </div>
     </sc-if>
-  <div class="daily-food-groups" aria-label="当天食物贴纸">
-    <sc-for list="{{foodGroups}}" as="g">
-      <section class="daily-food-group">
-        <div class="daily-food-heading"><strong>{{g.kind}}</strong><span>{{g.name}}</span><a class="app-text-button" href="{{g.editHref}}" aria-label="编辑{{g.name}}">编辑</a></div>
-        <sc-if value="{{g.hasFoods}}">
-          <div class="food-sticker-grid">
-            <sc-for list="{{g.foods}}" as="f">
-              <a class="food-sticker-item" href="{{g.editHref}}" aria-label="{{f.label}}">
-                <div class="food-sticker-visual"><food-sticker photo="{{f.photo}}" box="{{f.box}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><span class="food-kcal-badge">{{f.kcal}}</span></div>
-                <strong>{{f.name}}</strong><sc-if value="{{f.partial}}"><small class="food-partial-note">部分已抠 · 点此补充</small></sc-if>
-              </a>
+    <sc-if value="{{sel.emptyHint}}"><p class="week-day-empty">{{sel.emptyHint}}</p></sc-if>
+    <sc-if value="{{sel.hasMeals}}">
+      <section class="week-nutrition-panel" aria-labelledby="week-nutrition-heading">
+        <header class="week-nutrition-header">
+          <h3 id="week-nutrition-heading" aria-live="polite">{{nutrition.title}}</h3>
+          <sc-if value="{{selectedFood}}">
+            <button class="week-total-button" type="button" onClick="{{clearFood}}">看全天</button>
+          </sc-if>
+        </header>
+        <dl class="week-nutrients" aria-label="已记录营养含量">
+          <div class="week-nutrient week-energy">
+            <dt>{{nutrition.energyLabel}}</dt>
+            <dd><strong>{{nutrition.kcal}}</strong><sc-if value="{{nutrition.hasEnergy}}"><small> kcal</small></sc-if></dd>
+          </div>
+          <sc-for list="{{nutrition.macros}}" as="m">
+            <div class="week-nutrient">
+              <dt>{{m.label}}</dt>
+              <dd><strong>{{m.value}}</strong><sc-if value="{{m.known}}"><small> g</small></sc-if></dd>
+              <sc-if value="{{m.ratio}}"><dd class="week-nutrient-ratio">{{m.ratio}}</dd></sc-if>
+            </div>
+          </sc-for>
+        </dl>
+        <sc-if value="{{nutrition.hasSupply}}">
+          <div class="week-macro-bar" aria-hidden="true">
+            <sc-for list="{{nutrition.macros}}" as="m"><span style="{{m.bar}}"></span></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{hasFocusNutrients}}">
+          <div class="day-focus-nutrients" aria-label="饮食关注指标">
+            <sc-for list="{{focusNutrients}}" as="item">
+              <div class="day-focus-nutrient"><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
             </sc-for>
           </div>
         </sc-if>
-        <sc-if value="{{g.missingFoods}}"><div class="food-missing"><span>{{g.wholeKcal}} · 尚未生成餐品贴纸</span><a href="{{g.editHref}}">识别或补充食物</a></div></sc-if>
+        <sc-if value="{{selectedFood}}">
+          <footer class="week-nutrition-footer">
+            <sc-if value="{{nutrition.hasMissing}}"><span>— 表示未记录</span></sc-if>
+            <a class="app-text-button" href="{{selectedFood.editHref}}" aria-label="编辑{{selectedFood.name}}所在的餐食">编辑这餐</a>
+          </footer>
+        </sc-if>
       </section>
-    </sc-for>
-  </div>
-    <div style="display: flex; align-items: baseline; gap: 6px">
-      <span style="font-size: 38px; font-weight: 900; color: #7A66E0; line-height: 1.05">{{sel.kcal}}</span>
-      <span style="font-size: 15px; font-weight: 800">kcal</span>
-      <span style="{{sel.noteStyle}}">{{sel.note}}</span>
-    </div>
-    <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; margin-top: 2px">
-      <div style="{{sel.b1}}"></div><div style="{{sel.b2}}"></div><div style="{{sel.b3}}"></div>
-    </div>
-    <div class="week-nutrients" aria-label="已记录营养含量">
-      <div class="week-nutrient"><span><span style="width: 9px; height: 9px; border-radius: 5px; background: #F6CF5C"></span>碳水</span><strong>{{sel.g1}}</strong><small>{{sel.p1}}</small></div>
-      <div class="week-nutrient"><span><span style="width: 9px; height: 9px; border-radius: 5px; background: #A996F2"></span>蛋白质</span><strong>{{sel.g2}}</strong><small>{{sel.p2}}</small></div>
-      <div class="week-nutrient"><span><span style="width: 9px; height: 9px; border-radius: 5px; background: #8FCFA6"></span>脂肪</span><strong>{{sel.g3}}</strong><small>{{sel.p3}}</small></div>
-    </div>
-  </div>
+      <section class="week-board" data-view="{{boardView}}" aria-label="餐品贴纸">
+        <div class="week-board-switch" role="group" aria-label="贴纸视图">
+          <button type="button" aria-label="全量" title="全量" aria-pressed="{{allView}}" onClick="{{showAll}}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x="3" y="3" width="9" height="8" rx="2.6" transform="rotate(-15 7.5 7)"></rect>
+              <rect x="14" y="5" width="7" height="7" rx="2.3" transform="rotate(12 17.5 8.5)"></rect>
+              <rect x="8" y="14" width="11" height="7" rx="2.6" transform="rotate(-7 13.5 17.5)"></rect>
+            </svg>
+          </button>
+          <button type="button" aria-label="三餐" title="三餐" aria-pressed="{{mealsView}}" onClick="{{showMeals}}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="5" r="1.7"></circle><rect x="9" y="3.3" width="12" height="3.4" rx="1.7"></rect>
+              <circle cx="5" cy="12" r="1.7"></circle><rect x="9" y="10.3" width="12" height="3.4" rx="1.7"></rect>
+              <circle cx="5" cy="19" r="1.7"></circle><rect x="9" y="17.3" width="12" height="3.4" rx="1.7"></rect>
+            </svg>
+          </button>
+        </div>
+        <sc-for list="{{boardSections}}" as="g">
+          <section class="week-board-section" aria-label="{{g.label}}">
+            <sc-if value="{{g.title}}">
+              <div class="week-board-meal-heading">
+                <h3>{{g.title}}</h3>
+                <sc-if value="{{g.emptyLabel}}"><span class="week-board-empty">{{g.emptyLabel}}</span></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{g.hasStickers}}">
+              <div class="week-board-stickers">
+                <sc-for list="{{g.stickers}}" as="f">
+                  <button type="button" class="week-board-sticker" style="{{f.style}}" onClick="{{f.pick}}" aria-pressed="{{f.active}}" aria-label="{{f.label}}">
+                    <span class="week-board-art" aria-hidden="true"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker></span>
+                    <span class="week-board-caption">
+                      <strong>{{f.name}}</strong>
+                      <small>{{f.kcal}}</small>
+                      <sc-if value="{{f.partial}}"><small>部分已抠</small></sc-if>
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-for list="{{g.pending}}" as="m">
+              <div class="food-missing week-board-pending"><span>{{m.name}}<small>尚未生成餐品贴纸</small></span><a href="{{m.editHref}}" aria-label="识别或补充{{m.name}}">识别或补充</a></div>
+            </sc-for>
+          </section>
+        </sc-for>
+      </section>
+    </sc-if>
+  </section>
 
   <sc-if value="{{savedMessage}}">
     <span role="status" style="font-size: 13px; font-weight: 800; color: #5B48B8">{{savedMessage}}</span>
@@ -151,22 +210,40 @@ class Component extends DCLogic {
     const savedMessage = Journal.params.get("status") === "weighed"
       ? "已记下" + Journal.shortDate(date) + "的体重"
       : Journal.params.get("saved") === "1" ? "已记到" + Journal.shortDate(date) : "";
-    this.state = { date, savedMessage };
+    this.state = { date, savedMessage, boardView: "all", foodKey: null };
     if (savedMessage) history.replaceState(null, "", Journal.link("Main", date));
   }
 
   select(date) {
     history.replaceState(null, "", Journal.link("Main", date));
-    this.setState({ date, savedMessage: "" });
+    this.setState({ date, savedMessage: "", foodKey: null });
   }
 
   moveWeek(direction) {
     const date = Journal.addDays(this.state.date, direction * 7);
     this.select(date);
   }
+
+  boardSection(records, title = "") {
+    const stickers = records.flatMap((record) => record.foods).map((food, index) => {
+      const active = food.key === this.state.foodKey;
+      // Seed the scatter from the record so taps don't rearrange the board.
+      let hash = 0;
+      for (const character of food.key) hash = (Math.imul(hash, 31) + character.charCodeAt(0)) >>> 0;
+      const rotation = (index % 2 ? 1 : -1) * (2 + (hash % 5));
+      return {
+        ...food, active, style: `--board-tilt:${rotation}deg`,
+        pick: () => this.setState({ foodKey: active ? null : food.key })
+      };
+    });
+    return {
+      title, label: title || "全天餐品", stickers, hasStickers: stickers.length > 0,
+      emptyLabel: records.length ? "" : "未记录",
+      pending: records.filter((meal) => meal.missingFoods)
+    };
+  }
+
   renderVals() {
-    var self = this;
-    var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF', '#EEE9FF'];
     const selected = this.state.date;
     const week = Journal.weekStart(selected);
     const lastDay = Journal.addDays(week, 6);
@@ -174,46 +251,49 @@ class Component extends DCLogic {
       const date = Journal.addDays(week, i);
       const entry = Journal.day(date);
       return {
-        date, entry, wd: Journal.dayName(date).slice(1), w: entry.weight,
+        date, entry, foodGroups: FoodStickers.groups(entry.meals, date),
+        wd: Journal.dayName(date).slice(1), w: entry.weight,
         n: entry.meals.length, today: date === Journal.today, plans: Journal.plansOn(date)
       };
     });
     const weights = raw.flatMap(({ w }) => w === null ? [] : [w]);
     const high = weights.length ? Math.max(...weights) : 0;
     const span = Math.max(0.7, high - Math.min(high, ...weights));
-    const yOf = (weight) => Math.round(40 + (high - weight) / span * 34);
-    const chartWidth = 358;
-    var pts = [];
-    var tip = { style: "display: none" };
-    var days = raw.map(function (d, i) {
-      var on = selected === d.date;
+    const yOf = (weight) => Math.round(33 + (high - weight) / span * 22);
+    const chartWidth = 700;
+    const pts = [];
+    let tip = null;
+    const days = raw.map((d, i) => {
+      const on = selected === d.date;
       const center = (i + 0.5) / raw.length;
       const centerPercent = (center * 100) + "%";
-      var y = yOf(d.w);
+      const y = yOf(d.w);
       if (d.w !== null) pts.push(center * chartWidth + ',' + y);
       if (on && d.w !== null) {
-        const tipLeft = "clamp(0px, " + centerPercent + " - 52px, 100% - 104px)";
+        const tipLeft = "clamp(0px, " + centerPercent + " - 42px, 100% - 84px)";
         tip = {
           w: d.w.toFixed(1),
-          label: "当天体重",
-          style: 'position: absolute; left: ' + tipLeft + '; top: ' + Math.max(0, y - 56) + 'px; width: 104px; box-sizing: border-box; padding: 6px 0; border-radius: 14px; background: #FFFFFF; box-shadow: 0 6px 16px rgba(90, 70, 160, 0.14); display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 20'
+          style: "left:" + tipLeft + "; top:" + Math.max(0, y - 34) + "px"
         };
       }
-      var tiles = [];
-      const shown = d.entry.meals.slice(-5);
-      for (var j = 0; j < shown.length; j++) {
-        var rot = j === 0 ? 0 : [-6, 5, -3, 7, -5][(i + j) % 5] * (on ? 1.5 : 1);
-        var dx = j === 0 ? 0 : [0, 3, -3, 2, -2][(i + j) % 5] * (on ? 2 : 1);
-        const photo = Journal.photoFor(shown[j]);
-        tiles.push({ name: shown[j].name, style: 'position: absolute; left: 50%; bottom: ' + (j * (on ? 18 : 14)) + 'px; width: 38px; height: 38px; margin-left: ' + (-19 + dx) + 'px; box-sizing: border-box; border-radius: 12px; border: 2.5px solid #FFFFFF; background: ' + tints[(i * 2 + j) % tints.length] + '; transform: rotate(' + rot + 'deg); box-shadow: 0 3px 8px rgba(90, 70, 160, 0.16); z-index: ' + (j + 1) + (photo ? '; background: center / contain no-repeat url("' + photo + '")' : '') });
-      }
+      const stickers = d.foodGroups.flatMap(group => group.foods)
+        .filter(food => food.hasSticker)
+        .slice(-5)
+        .map(({ name, photo, cutout }, j) => {
+          const rotation = [0, -8, 9, -6, 7][j];
+          const offset = [0, -3, 3, -2, 2][j];
+          const bottom = j * (on ? 14 : 12);
+          return {
+            name, photo, cutout,
+            style: `bottom:${bottom}px; --tile-offset:${offset}px; --tile-rotation:${rotation}deg`
+          };
+        });
       return {
-        wd: d.wd, date: Number(d.date.slice(8)), w: d.w?.toFixed(1) ?? "", tiles: tiles, on: on, plans: d.plans,
-        pick: function () { self.select(d.date); },
-        aria: '周' + d.wd + '，' + d.n + ' 餐' + (d.w === null ? '' : '，体重 ' + d.w.toFixed(1) + ' 公斤')
+        wd: d.wd, date: Number(d.date.slice(8)), w: d.w?.toFixed(1) ?? "", stickers, on, plans: d.plans,
+        current: d.today ? "date" : "false",
+        pick: () => this.select(d.date),
+        aria: Journal.shortDate(d.date) + ' 周' + d.wd + '，' + d.n + ' 餐' + (d.w === null ? '' : '，体重 ' + d.w.toFixed(1) + ' 公斤')
           + (d.plans.length ? '，计划：' + d.plans.map(({ label }) => label).join('、') : ''),
-        colStyle: 'display: flex; flex-direction: column; align-items: stretch; border: none; padding: 0; font-family: inherit; cursor: pointer; border-radius: 22px; background: ' + (on ? '#ECE8FB' : 'transparent'),
-        pileStyle: 'position: relative; height: 112px',
         numStyle: 'position: absolute; left: ' + centerPercent + '; transform: translateX(-50%); pointer-events: none; width: 44px; top: ' + (y + 9) + 'px; text-align: center; font-size: 11px; font-weight: 800; color: #6F6A78; display: ' + (on || d.w === null ? 'none' : 'block'),
         dotStyle: (d.w === null ? 'display: none; ' : '') + 'position: absolute; left: ' + centerPercent + '; transform: translateX(-50%); pointer-events: none; top: ' + (y - (on ? 7 : 5)) + 'px; width: ' + (on ? 14 : 10) + 'px; height: ' + (on ? 14 : 10) + 'px; box-sizing: border-box; border-radius: 7px; background: ' + (on ? '#7A66E0' : '#FFFFFF') + '; border: ' + (on ? '3px solid #FFFFFF' : '2.5px solid #C9BFF5') + '; box-shadow: ' + (on ? '0 0 0 2px #7A66E0' : 'none') + '; z-index: 10',
         wdStyle: 'width: 28px; height: 24px; line-height: 24px; border-radius: 12px; font-size: 13px; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78'),
@@ -223,48 +303,95 @@ class Component extends DCLogic {
 
     const current = raw.find((day) => day.date === selected);
     const entry = current.entry;
-    const [carb, protein, fat] = entry.percentages;
-    const hasMacros = entry.grams.some((value) => value > 0);
+    const boardView = this.state.boardView;
+    const records = current.foodGroups.map((record, mealIndex) => ({
+      ...record,
+      foods: record.foods.map((food, index) => ({
+        ...food, key: record.id + ":" + index, editHref: record.editHref, mealIndex
+      }))
+    }));
+    const selectedFood = records.flatMap((record) => record.foods).find((food) => food.key === this.state.foodKey);
+    const boardSections = boardView === "all" ? [this.boardSection(records)] :
+      Object.entries(Journal.kinds)
+        .map(([key, title]) => {
+          const meals = records.filter((record) => record.kindKey === key);
+          return key !== "snack" || meals.length ? this.boardSection(meals, title) : null;
+        }).filter(Boolean);
+    const otherMeals = records.filter((record) => !Object.hasOwn(Journal.kinds, record.kindKey));
+    if (boardView === "meals" && otherMeals.length) boardSections.push(this.boardSection(otherMeals, "其他"));
+
+    const dayHasEnergy = entry.kcal > 0 || entry.meals.some((meal) =>
+      Number.isFinite(meal.kcal) || Journal.mealMacros(meal).every((amount) => amount !== null));
+    let kcal = dayHasEnergy ? entry.kcal : null;
+    let macroValues = entry.grams.map((value, i) => entry.macroKnown[i] ? value : null);
+    let percentages = entry.percentages;
+    let focusNutrients = Journal.dayFocusNutrients(entry.meals);
+    if (selectedFood) {
+      const { nutrients, energy, mealIndex } = selectedFood;
+      const meal = entry.meals[mealIndex];
+      const wholeMeal = !nutrients && records[mealIndex].foods.length === 1 &&
+        energy !== null && Number.isFinite(meal.kcal) && Math.round(meal.kcal) === Math.round(energy);
+      kcal = energy;
+      macroValues = wholeMeal ? Journal.mealMacros(meal) : ["carb", "pro", "fat"].map((key) => nutrients?.[key] ?? null);
+      percentages = macroValues.every((value) => value !== null) ? Journal.estimate(macroValues).percentages : [0, 0, 0];
+      focusNutrients = Journal.dayFocusNutrients([wholeMeal ? meal : { focusNutrients: nutrients }]);
+    }
+    const hasSupply = percentages.some((value) => value > 0);
+    const macros = [
+      { label: "碳水", color: "#E7BE54" },
+      { label: "蛋白质", color: "#A996F2" },
+      { label: "脂肪", color: "#8FCFA6" }
+    ].map(({ label, color }, index) => ({
+      label,
+      known: macroValues[index] !== null,
+      value: macroValues[index] ?? "—",
+      ratio: hasSupply && macroValues[index] !== null ? "供能 " + percentages[index] + "%" : "",
+      bar: "width:" + percentages[index] + "%; background:" + color
+    }));
     const recorded = raw.map((day) => day.entry.kcal).filter((kcal) => kcal > 0);
     const avg = recorded.length && Math.round(recorded.reduce((a, b) => a + b, 0) / recorded.length);
     const change = weights.length > 1 ? Math.round((weights.at(-1) - weights[0]) * 10) / 10 : 0;
     const recordDate = selected > Journal.today ? Journal.today : selected;
     return {
       navDate: selected,
-      foodGroups: FoodStickers.groups(entry.meals, selected),
+      boardSections, boardView, selectedFood,
+      allView: boardView === "all", mealsView: boardView === "meals",
+      showAll: () => this.setState({ boardView: "all" }),
+      showMeals: () => this.setState({ boardView: "meals" }),
+      clearFood: () => this.setState({ foodKey: null }),
+      nutrition: {
+        title: selectedFood?.name ?? "全天营养",
+        energyLabel: selectedFood ? "热量" : "已记热量",
+        hasEnergy: kcal !== null, hasSupply, macros,
+        hasMissing: kcal === null || macroValues.includes(null),
+        kcal: kcal === null ? "—" : kcal.toLocaleString("en-US")
+      },
+      focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
       days, tip, linePts: pts.join(" "),
       savedMessage: this.state.savedMessage,
       weekTitle: week === Journal.weekStart(Journal.today) ? "本周" : "周记",
       weekLabel: week.slice(5).replace("-", ".") + " – " + lastDay.slice(5).replace("-", "."),
-      weightNote: change ? "周内 " + (change > 0 ? "↑" : "↓") + Math.abs(change).toFixed(1) + " kg" : "饮食手账",
+      weightNote: change ? "周内 " + (change > 0 ? "↑" : "↓") + Math.abs(change).toFixed(1) + " kg" : "",
       averageLabel: avg ? "日均已记 " + avg + " kcal" : "",
       showWeekPlans: raw.some((day) => day.plans.length),
       selectedHasPlans: current.plans.length > 0,
       selectedPlans: current.plans,
       planHref: Journal.link("Album", selected, { plan: "1" }),
+      pressHeaderAction: (event) => {
+        if (event.isPrimary && event.pointerType === "touch") event.currentTarget.setAttribute("data-pressed", "");
+      },
+      releaseHeaderAction: (event) => {
+        if (event.isPrimary && event.pointerType === "touch") event.currentTarget.removeAttribute("data-pressed");
+      },
       previousWeek: () => this.moveWeek(-1),
       nextWeek: () => this.moveWeek(1),
-      currentWeekHref: Journal.link("Main", Journal.today),
       detailHref: Journal.link("Day", selected),
       weighHref: Journal.link("Weigh", recordDate),
-      loveHref: Journal.link("Love", selected),
-      recordHref: Journal.link("Record", recordDate),
-      albumHref: Journal.link("Album", selected),
       sel: {
-        title: (current.today ? "今天" : Journal.dayName(selected)) + " · " + Journal.shortDate(selected),
-        meals: entry.meals.length,
-        kcal: entry.kcal ? entry.kcal.toLocaleString("en-US") : "—",
-        note: entry.kcal ? "已记录估算" : "暂无营养估算",
-        noteStyle: "font-size: 13px; font-weight: 700; color: #6F6A78",
-        b1: "width: " + carb + "%; background: #F6CF5C",
-        b2: "width: " + protein + "%; background: #A996F2",
-        b3: "width: " + fat + "%; background: #8FCFA6",
-        g1: entry.macroKnown[0] ? entry.grams[0] + " g" : "—",
-        g2: entry.macroKnown[1] ? entry.grams[1] + " g" : "—",
-        g3: entry.macroKnown[2] ? entry.grams[2] + " g" : "—",
-        p1: hasMacros && entry.macroKnown[0] ? "供能 " + carb + "%" : "",
-        p2: hasMacros && entry.macroKnown[1] ? "供能 " + protein + "%" : "",
-        p3: hasMacros && entry.macroKnown[2] ? "供能 " + fat + "%" : ""
+        title: current.today ? "今日记录" : "当天记录",
+        dateLabel: Journal.shortDate(selected) + (current.today ? "" : " " + Journal.dayName(selected)),
+        hasMeals: entry.meals.length > 0,
+        emptyHint: entry.meals.length ? "" : selected > Journal.today ? "这一天还没到" : current.today ? "今天还没有记餐" : "这一天还没有记餐"
       }
     };
   }

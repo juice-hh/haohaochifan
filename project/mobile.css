@@ -25,6 +25,14 @@ x-dc {
   min-height: 100dvh;
   --top-spacing: 12px;
   --bottom-spacing: 8px;
+  --week-weight-height: 76px;
+  --week-muted: #625D6D;
+  --week-rule: #E1DBED;
+  display: flex;
+  flex-direction: column;
+  background: #F7F5FC;
+  color: #2A2633;
+  font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
 }
 
 .screen--love {
@@ -54,10 +62,6 @@ x-dc {
     --top-spacing: 8px;
     --bottom-spacing: 8px;
   }
-
-  .week-weigh {
-    min-height: 44px;
-  }
 }
 
 @media (max-width: 359px) {
@@ -70,7 +74,6 @@ x-dc {
   }
 }
 
-.week-header-actions,
 .calendar-plan-toolbar {
   display: flex;
   align-items: center;
@@ -317,6 +320,49 @@ x-dc {
   margin-top: -10px;
 }
 
+.goal-theme {
+  padding-inline: 2px;
+  font-weight: 650;
+}
+
+.diet-focus-picker.app-segmented {
+  box-sizing: border-box;
+  width: 100%;
+  background: #F7F5FC;
+}
+
+.diet-focus-picker.app-segmented button {
+  padding-inline: 4px;
+  font-size: 13px;
+}
+
+.diet-focus-hint {
+  line-height: 1.55;
+}
+
+.day-focus-nutrients {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #E4DFF0;
+}
+
+.day-focus-nutrient {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.day-focus-nutrient strong {
+  margin-left: auto;
+}
+
+.day-focus-nutrient small {
+  color: #6F6A78;
+}
+
 .goal-current {
   margin: 0;
   color: #7A66E0;
@@ -415,26 +461,6 @@ x-dc {
   line-height: 1.5;
 }
 
-.week-nutrients {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  color: #6F6A78;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.week-nutrient {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.week-nutrient > span { display: flex; align-items: center; gap: 6px; }
-.week-nutrient strong { color: #2A2633; font-size: 17px; }
-.week-nutrient small { font-size: 11px; font-weight: 600; }
-
-
 .screen.screen--tabs {
   min-height: 100vh;
   min-height: 100dvh;
@@ -471,6 +497,11 @@ journal-nav {
 }
 
 .journal-dock nav a {
+  --nav-icon-body: #E2E1E6;
+  --nav-icon-cutout: #FFFFFF;
+  --nav-icon-detail: #7F7A88;
+  --nav-icon-green: #3C7F54;
+  --nav-icon-orange: #C16C36;
   border-radius: 27px;
   display: flex;
   flex-direction: column;
@@ -483,6 +514,19 @@ journal-nav {
   text-decoration: none;
 }
 
+.journal-dock nav svg { filter: saturate(0.25); }
+
+.journal-dock nav a:is([aria-current="page"], :active, :focus-visible) {
+  --nav-icon-body: #7A66E0;
+  --nav-icon-detail: #FFFFFF;
+  --nav-icon-green: #C5EDB2;
+  --nav-icon-orange: #FFD0A3;
+}
+
+.journal-dock nav a:is([aria-current="page"], :active, :focus-visible) svg {
+  filter: none;
+}
+
 .journal-dock nav a[aria-current="page"] {
   background: rgba(122, 102, 224, 0.13);
   color: #7A66E0;
@@ -490,6 +534,9 @@ journal-nav {
 }
 
 .journal-dock .journal-camera {
+  --nav-icon-body: #FFFFFF;
+  --nav-icon-cutout: #7A66E0;
+  --nav-icon-orange: #F6BA8A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -569,7 +616,7 @@ journal-nav {
 .app-sheet .app-danger { background: #FCE8E6; color: #B63843; }
 .app-sheet button:active { opacity: .7; }
 .app-sheet button:focus-visible { outline: 2px solid #7A66E0; outline-offset: 2px; }
-@media (max-width: 359px) { .screen h1 { font-size: 36px !important; } }
+@media (max-width: 359px) { .screen:not(.screen--week) h1 { font-size: 36px !important; } }
 
 /* Leave room to scroll the final field above the keyboard-attached action bar. */
 html[data-keyboard-open] .screen--flow {
@@ -644,3 +691,390 @@ food-sticker canvas { max-width: 100%; height: auto; }
 /* Canvas backing resolution must not change the sticker layout. */
 food-sticker { position: relative; }
 food-sticker canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+@font-face {
+  font-family: "Weekly Rounded";
+  src: url("./fonts/weekly-rounded-bold.woff") format("woff");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+.week-header, .week-range, .week-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.week-header h1 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.2;
+}
+
+.week-header h1, .week-day-header h2 {
+  font-family: "Weekly Rounded", "Yuanti SC", "PingFang SC", system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.week-header-actions, .week-range-controls {
+  display: flex;
+  align-items: center;
+}
+
+.week-header-actions { gap: 4px; }
+
+.week-header-actions .app-icon-button {
+  border-radius: 12px;
+  background: transparent;
+  color: #494155;
+}
+
+.week-header-actions .app-icon-button:hover { background: #F0EDF7; }
+
+.week-header-actions .week-action-idle { filter: saturate(0.25); }
+
+.week-header-actions .app-icon-button:is(:active, :focus-visible, [data-pressed]) {
+  background: #ECE8FB;
+  opacity: 1;
+}
+
+.week-header-actions .week-action-active,
+.week-header-actions .app-icon-button:is(:active, :focus-visible, [data-pressed]) .week-action-idle {
+  display: none;
+}
+
+.week-header-actions .app-icon-button:is(:active, :focus-visible, [data-pressed]) .week-action-active {
+  display: block;
+}
+
+.week-range {
+  color: var(--week-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-range-controls {
+  margin-left: -12px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.week-range-controls button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+}
+
+.week-range-summary {
+  display: grid;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.week-calendar { position: relative; }
+.week-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+
+.week-calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--week-muted);
+  font: inherit;
+}
+
+.week-calendar-day[aria-pressed="true"] { background: #ECE8FB; color: #5B48B8; }
+.week-weight-space, .week-weight-chart { height: var(--week-weight-height); }
+.week-weight-chart { position: absolute; inset: 0 auto auto 0; pointer-events: none; }
+
+.week-weight-tip {
+  position: absolute;
+  z-index: 20;
+  width: 84px;
+  line-height: 23px;
+  pointer-events: none;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 750;
+  color: #5B48B8;
+}
+
+.week-sticker-pile { position: relative; height: 98px; pointer-events: none; }
+
+.week-sticker-tile {
+  position: absolute;
+  left: calc(50% + var(--tile-offset));
+  transform: translateX(-50%) rotate(var(--tile-rotation));
+  width: min(42px, calc(100% - 6px));
+}
+
+.week-sticker-tile .food-sticker-fallback { display: none; }
+.week-sticker-tile canvas { filter: drop-shadow(0 1px 2px #5A46A040); }
+
+.week-calendar-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 0 8px;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 18px;
+}
+
+.week-weekday { width: 26px; border-radius: 11px; line-height: 21px; }
+.week-calendar-day[aria-current="date"] .week-date { color: #2A2633; font-weight: 800; }
+.week-calendar-day[aria-pressed="true"] .week-weekday { background: #7A66E0; color: #FFF; }
+.week-calendar-day[aria-pressed="true"] .week-date { color: #5B48B8; font-weight: 800; }
+
+.week-day-record {
+  margin-top: 14px;
+  padding: 12px 14px 16px;
+  border-radius: 20px;
+  background: #FFFFFF;
+}
+
+.week-day-header h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.week-day-header .week-day-date-link {
+  gap: 3px;
+  color: #5B48B8;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.week-day-empty { margin: 14px 0 0; font-size: 13px; color: var(--week-muted); }
+
+.week-nutrition-panel {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 4;
+  padding: 8px 0 12px;
+  background: #FFF;
+}
+
+.week-nutrition-header,
+.week-nutrition-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.week-nutrition-header h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.screen .week-total-button {
+  flex-shrink: 0;
+  margin-block: -7px;
+  padding: 0 4px 0 8px;
+  border: 0;
+  background: transparent;
+  color: #5B48B8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.week-nutrients {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-nutrient {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  color: var(--week-muted);
+  font-size: 12px;
+}
+
+.week-nutrient dd { margin: 0; overflow-wrap: anywhere; }
+.week-nutrient strong { color: #2A2633; font-size: 17px; }
+.week-nutrient small, .week-nutrient-ratio { font-size: 11px; }
+.week-energy strong { font-size: 20px; }
+
+.week-macro-bar {
+  display: flex;
+  height: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.week-day-record .selected-plans { margin-top: 8px; }
+.week-nutrition-footer { justify-content: flex-end; margin: 0 0 -7px; font-size: 12px; color: var(--week-muted); }
+.week-nutrition-footer span { margin-right: auto; }
+.week-nutrition-footer a { color: #5B48B8; font-weight: 700; }
+
+.week-board {
+  min-width: 0;
+  margin-top: 8px;
+  padding: 2px 10px 12px;
+  border: 1px solid #EEE9F6;
+  border-radius: 18px;
+  background: #F9F7FC;
+}
+
+.week-board[data-view="all"] {
+  padding: 1px 14px 10px;
+  border-color: #EFEEE8;
+  border-radius: 20px;
+  background: #FAFAF7;
+}
+
+.week-board-switch { display: flex; justify-content: flex-end; margin-right: -4px; }
+.week-board-switch button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #817A8E;
+}
+.week-board-switch svg { box-sizing: content-box; padding: 6px; border-radius: 10px; }
+.week-board-switch button[aria-pressed="true"] { color: #5B48B8; }
+.week-board-switch button[aria-pressed="true"] svg { background: #EAE3F9; }
+
+.week-board-section + .week-board-section { border-top: 1px solid var(--week-rule); }
+.week-board-meal-heading {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 5px;
+}
+.week-board-meal-heading h3 { margin: 0; font-size: 13px; }
+.week-board-empty { font-size: 12px; color: var(--week-muted); }
+.week-board-stickers { display: grid; align-items: start; }
+.week-board[data-view="meals"] .week-board-stickers { grid-template-columns: minmax(0, 1fr); gap: 1px; padding-bottom: 5px; }
+
+.week-board-sticker {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  scroll-margin-top: 220px;
+}
+
+.week-board[data-view="meals"] .week-board-sticker {
+  grid-template-columns: 60px minmax(0, 1fr);
+  justify-items: start;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 5px;
+  text-align: left;
+}
+.week-board[data-view="meals"] .week-board-art canvas { filter: none; }
+
+.week-board-sticker[aria-pressed="true"] { background: #EBE4FA; border-color: #CBBDF1; }
+.week-board-art { display: block; width: min(100%, 98px); }
+.week-board-sticker .food-sticker-fallback { padding: 4px; border-width: 2px; border-radius: 16px; background: #EEE9F8; }
+.week-board-sticker .food-sticker-fallback > span { display: none; }
+.week-board-caption { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+.week-board-caption strong { font-size: 13px; line-height: 1.4; }
+.week-board-caption small { font-size: 11px; line-height: 1.3; color: var(--week-muted); }
+
+.week-board[data-view="all"] .week-board-stickers {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  row-gap: 13px;
+  padding-bottom: 10px;
+}
+
+.week-board[data-view="all"] .week-board-sticker {
+  justify-items: start;
+  gap: 2px;
+  padding: 2px 5px 5px;
+  text-align: left;
+}
+
+.week-board[data-view="all"] .week-board-sticker:nth-child(4n + 1) {
+  grid-column: 1 / span 7;
+  --board-art-size: 132px;
+}
+.week-board[data-view="all"] .week-board-sticker:nth-child(4n + 2) {
+  grid-column: 9 / span 4;
+  margin-top: 44px;
+  --board-art-size: 80px;
+}
+.week-board[data-view="all"] .week-board-sticker:nth-child(4n + 3) {
+  grid-column: 2 / span 4;
+  margin-top: 26px;
+  --board-art-size: 84px;
+}
+.week-board[data-view="all"] .week-board-sticker:nth-child(4n + 4) {
+  grid-column: 7 / span 6;
+  --board-art-size: 116px;
+}
+.week-board[data-view="all"] .week-board-sticker:nth-child(4n + 3):last-child {
+  grid-column: 4 / span 6;
+  margin-top: 0;
+  --board-art-size: 96px;
+}
+.week-board[data-view="all"] .week-board-sticker:only-child {
+  grid-column: 3 / span 8;
+  justify-items: center;
+  text-align: center;
+}
+
+.week-board[data-view="all"] .week-board-art {
+  width: min(100%, var(--board-art-size));
+  transform: rotate(var(--board-tilt));
+}
+.week-board[data-view="all"] .week-board-art canvas { filter: none; }
+.week-board[data-view="all"] .week-board-caption { width: 100%; }
+.week-board[data-view="all"] .week-board-caption strong { font-size: 12px; font-weight: 650; line-height: 1.45; }
+.week-board[data-view="all"] .week-board-sticker[aria-pressed="true"] {
+  border-color: transparent;
+  background: transparent;
+  color: #5B48B8;
+}
+.week-board[data-view="all"] .week-board-sticker[aria-pressed="true"] .week-board-art {
+  border-radius: 50%;
+  background: #EEE8F7;
+  outline: 1px solid #E0D6F0;
+}
+
+.week-board-pending {
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 8px;
+  padding: 4px 3px;
+  overflow-wrap: anywhere;
+}
+.week-board-pending small { display: block; font-size: 11px; }
+.week-board-stickers + .week-board-pending, .week-board-pending + .week-board-pending { margin-top: 7px; border-top: 1px solid var(--week-rule); }
+.week-board[data-view="all"] .week-board-pending { margin-top: 3px; border-color: #EAE9E2; }

@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-5">
+<link rel="stylesheet" href="./mobile.css?v=20261121-8">
 <title>好好吃饭 我的目标</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261117-5"></script>
-<script src="./navigation.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261121-1"></script>
+<script src="./navigation.js?v=20261121-2"></script>
 <script src="./interactions.js?v=20261117-5"></script>
 </head>
 <body>
@@ -25,11 +25,19 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 <div class="screen screen--tabs" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
   <div style="display: flex; align-items: center; gap: 14px">
     <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">我的目标</h1>
-    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 18px">
-      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
-      <span style="position: relative">吃好了才瘦得住</span>
-    </div>
   </div>
+  <p class="goal-note goal-theme">好好吃饭，才能好好生活。</p>
+
+  <section class="goal-card" aria-labelledby="diet-focus-heading">
+    <h2 id="diet-focus-heading">饮食关注</h2>
+    <div class="diet-focus-picker app-segmented" role="group" aria-label="饮食关注">
+      <sc-for list="{{focusOptions}}" as="option">
+        <button type="button" aria-pressed="{{option.selected}}" onClick="{{option.choose}}">{{option.label}}</button>
+      </sc-for>
+    </div>
+    <p class="goal-note diet-focus-hint">{{focusHint}}</p>
+    <sc-if value="{{focusMessage}}"><p class="goal-note" role="status">{{focusMessage}}</p></sc-if>
+  </section>
 
   <section class="goal-card">
     <h2>最近一次体重</h2>
@@ -69,9 +77,21 @@ class Component extends DCLogic {
     this.state = {
       habit: this.goal.habit,
       target: this.goal.weight === null ? "" : (this.goal.weight / 10).toFixed(1),
-      message: ""
+      message: "",
+      dietFocus: Journal.readDietFocus(),
+      focusMessage: ""
     };
     JournalUI.guardNavigation(() => this.state.habit.trim() !== this.goal.habit || (this.state.target.trim() ? Journal.parseWeight(this.state.target) === null || Journal.parseWeight(this.state.target) !== this.goal.weight : this.goal.weight !== null));
+  }
+
+  chooseFocus(focus) {
+    if (this.state.dietFocus.id === focus.id) return;
+    try {
+      Journal.saveDietFocus(focus.id);
+      this.setState({ dietFocus: focus, focusMessage: "已更新，记餐时生效。" });
+    } catch {
+      this.setState({ focusMessage: "饮食关注没有保存，请检查浏览器是否允许保存网站数据。" });
+    }
   }
 
   save(event) {
@@ -102,6 +122,12 @@ class Component extends DCLogic {
     return {
       navDate: Journal.selected(),
       ...this.state,
+      focusOptions: Journal.dietFocuses.map((focus) => ({
+        label: focus.label,
+        selected: focus.id === this.state.dietFocus.id,
+        choose: () => this.chooseFocus(focus)
+      })),
+      focusHint: this.state.dietFocus.hint,
       hasWeight: Boolean(this.latest),
       noWeight: !this.latest,
       currentWeight: this.latest?.kg.toFixed(1),

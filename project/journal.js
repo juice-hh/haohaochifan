@@ -20,6 +20,13 @@ const Journal = (() => {
   ];
   const weightLimits = { min: 1, max: 5000 };
   const undoKey = "hhcf-last-meal-deletion";
+  const dietFocusKey = "hhcf-diet-focus";
+  const dietFocuses = [
+    { id: "basic", label: "基础记录", fields: [], hint: "记录热量、碳水、蛋白质和脂肪。" },
+    { id: "sugar", label: "抗糖饮食", fields: ["totalSugar", "addedSugar"], hint: "额外记录总糖和添加糖。总糖也包括水果、牛奶里天然存在的糖。" },
+    { id: "antiInflammatory", label: "抗炎饮食", fields: ["fiber"], hint: "额外记录膳食纤维，回看蔬果、全谷物和豆类等食物的摄入。" }
+  ];
+  const focusNutrients = { totalSugar: "总糖", addedSugar: "添加糖", fiber: "膳食纤维" };
   let mealsByDate;
 
   const asDate = (date) => new Date(date + "T00:00:00Z");
@@ -80,6 +87,15 @@ const Journal = (() => {
 
   function saveGoal(goal) {
     localStorage.setItem("hhcf-goal-v1", JSON.stringify(goal));
+  }
+
+  function readDietFocus() {
+    const id = readJSON(localStorage, dietFocusKey);
+    return dietFocuses.find((focus) => focus.id === id) ?? dietFocuses[0];
+  }
+
+  function saveDietFocus(id) {
+    localStorage.setItem(dietFocusKey, JSON.stringify(id));
   }
 
   function saveWeight(date, tenths) {
@@ -350,6 +366,26 @@ const Journal = (() => {
     return [0, 1, 2].map((i) => Number.isFinite(values[i]) ? values[i] : null);
   }
 
+  function mealFocusNutrient(meal, key) {
+    const amount = meal?.focusNutrients?.[key];
+    return Number.isFinite(amount) && amount >= 0 && amount <= 10000 ? amount : null;
+  }
+
+  function dayFocusNutrients(meals) {
+    if (!meals.length) return [];
+    const activeFields = readDietFocus().fields;
+    return Object.entries(focusNutrients).flatMap(([key, label]) => {
+      const amounts = meals.map((meal) => mealFocusNutrient(meal, key)).filter((value) => value !== null);
+      if (!amounts.length && !activeFields.includes(key)) return [];
+      const total = Math.round(amounts.reduce((sum, amount) => sum + amount, 0) * 10) / 10;
+      return [{
+        label,
+        amount: amounts.length ? total + " g" : "未记录",
+        coverage: amounts.length && amounts.length < meals.length ? amounts.length + "/" + meals.length + " 餐有记录" : ""
+      }];
+    });
+  }
+
   function day(date) {
     const meals = readMeals(date);
     const energy = factors.map((factor, i) =>
@@ -368,7 +404,8 @@ const Journal = (() => {
   return {
     params, today, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
     shortDate, dayName, isDate, selected, link, day, estimate,
-    getMeal, mealMacros, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
+    getMeal, mealMacros, mealFocusNutrient, dayFocusNutrients, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
+    dietFocuses, focusNutrients, readDietFocus, saveDietFocus,
     savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, readGoal, saveGoal, planStickers, plansOn, togglePlan
   };
 })();

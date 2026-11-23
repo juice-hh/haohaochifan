@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-5">
-<link rel="stylesheet" href="./record.css?v=20261118-4">
+<link rel="stylesheet" href="./mobile.css?v=20261121-1">
+<link rel="stylesheet" href="./record.css?v=20261122-1">
 <title>好好吃饭 拍一餐</title>
 <script src="./support.js?v=20261118-1"></script>
-<script src="./journal.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261121-1"></script>
 <script src="./interactions.js?v=20261118-1"></script>
-<script src="./food-stickers.js?v=20261117-5"></script>
+<script src="./food-stickers.js?v=20261122-2"></script>
 </head>
 <body>
 <x-dc>
@@ -75,6 +75,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
   </sc-if>
   <sc-if value="{{showEntry}}">
     <div class="record-entry-mode">
+      <sc-if value="{{focusName}}"><p class="record-entry-focus">{{focusName}}（{{focusFieldNames}}）</p></sc-if>
       <button type="button" role="switch" aria-checked="{{autoRecognize}}" onClick="{{toggleAI}}" aria-disabled="{{photoLoading}}">自动识别<span class="record-mode-track" aria-hidden="true"></span></button>
       <sc-if value="{{autoRecognize}}"><p>拍照或选图后，照片会发送给 OpenAI 估算营养。</p></sc-if>
     </div>
@@ -105,12 +106,23 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
         </div>
         <sc-if value="{{f.reviewReason}}"><p class="food-review-note">{{f.reviewReason}}</p></sc-if>
         <button class="food-remove" type="button" onClick="{{f.remove}}" aria-label="{{f.removeLabel}}">移除</button>
+        <details class="record-food-nutrition">
+          <summary>这份餐品的营养</summary>
+          <div class="nutrition-fields">
+            <sc-for list="{{f.nutrients}}" as="n">
+              <label class="goal-field">
+                <span>{{n.label}}（克）</span>
+                <input name="{{n.name}}" type="number" min="0" max="10000" step="0.1" inputmode="decimal" enterkeyhint="done" placeholder="未填写" value="{{n.value}}" onInput="{{n.change}}">
+              </label>
+            </sc-for>
+          </div>
+        </details>
       </div>
     </sc-for>
     <sc-if value="{{hasFoodTotal}}"><div class="food-total"><span>餐品合计 {{foodTotal}} kcal</span><sc-if value="{{foodTotalDiffers}}"><button class="plan-action" type="button" onClick="{{useFoodTotal}}">用作整餐热量</button></sc-if></div></sc-if>
   </section>
 
-  <details class="record-disclosure record-nutrition"><summary><span>营养估算</span><span class="record-summary-value">{{nutritionSummary}}</span></summary><div class="record-disclosure-body">
+  <details class="record-disclosure record-nutrition"><summary><span>营养估算</span><span class="record-summary-value">{{nutritionSummary}}<sc-if value="{{focusSummary}}"><br><span class="record-focus-summary">{{focusSummary}}</span></sc-if></span></summary><div class="record-disclosure-body">
     <p class="goal-note">估算供参考，所有数值都可以修改或留空。</p>
     <div class="nutrition-fields">
       <sc-for list="{{rows}}" as="r">
@@ -120,6 +132,20 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
         </label>
       </sc-for>
     </div>
+    <sc-if value="{{hasFocusRows}}">
+      <div class="record-focus-fields" role="group" aria-label="饮食关注">
+        <p class="record-focus-heading">饮食关注</p>
+        <p class="goal-note">{{focusEstimateHint}}</p>
+        <div class="nutrition-fields">
+          <sc-for list="{{focusRows}}" as="r">
+            <label class="goal-field">
+              <span>{{r.label}}</span>
+              <input name="{{r.key}}" type="number" enterkeyhint="done" inputmode="decimal" min="0" max="10000" step="0.1" placeholder="未填写" value="{{r.value}}" onInput="{{r.change}}">
+            </label>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
     <div style="position: relative; padding: 4px 0 0">
       <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px">
         <div style="{{bar1}}"></div><div style="{{bar2}}"></div><div style="{{bar3}}"></div>
@@ -177,6 +203,13 @@ class Component extends DCLogic {
     const editId = Journal.params.get("edit");
     this.original = editId ? Journal.getMeal(editId) : null;
     this.missingRecord = Boolean(editId && !this.original);
+    this.dietFocus = Journal.readDietFocus();
+    const originalFoods = FoodStickers.normalize(this.original?.foods);
+    this.focusKeys = Object.keys(Journal.focusNutrients).filter((key) =>
+      this.dietFocus.fields.includes(key) || Journal.mealFocusNutrient(this.original, key) !== null);
+    this.servingNutrientKeys = Object.keys(FoodStickers.nutrientLabels).filter((key) =>
+      !Object.hasOwn(Journal.focusNutrients, key) || this.focusKeys.includes(key) ||
+      originalFoods.some(food => Number.isFinite(food.nutrients?.[key])));
     this.date = this.original?.date ?? (selected > Journal.today ? Journal.today : selected);
     this.returnPage = ["Main", "Album", "Love", "Goal"].includes(Journal.params.get("returnTo")) ? Journal.params.get("returnTo") : "Main";
     this.returnToDay = Boolean(editId) || Journal.params.get("from") === "day";
@@ -193,13 +226,14 @@ class Component extends DCLogic {
     const [carb, pro, fat] = Journal.mealMacros(this.original).map((value) => value ?? "");
     const name = this.original?.name ?? (Journal.params.get("name") ?? "").slice(0, 60);
     this.state = {
-      foods: FoodStickers.normalize(this.original?.foods).map(f => ({ ...f, kcal: f.kcal ?? "" })),
+      foods: originalFoods.map(f => ({ ...f, kcal: f.kcal ?? "" })),
       autoRecognize, meal: this.original?.kind ?? "dinner", carb, pro, fat, date: this.date,
       name, started: Boolean(this.original || name.trim()),
       photo: null, photoTools: false, busy: false, error: "",
       camera: "closed", cameraError: "", recognizing: false, recognitionNote: "",
       portion: this.original?.portion ?? "",
-      calories: this.original?.kcal ?? ""
+      calories: this.original?.kcal ?? "",
+      ...Object.fromEntries(this.focusKeys.map((key) => [key, Journal.mealFocusNutrient(this.original, key) ?? ""]))
 
     };
     const initial = this.formSignature();
@@ -208,7 +242,7 @@ class Component extends DCLogic {
 
   formSignature() {
     const s = this.state;
-    return JSON.stringify([s.name.trim(), s.date, s.meal, s.carb, s.pro, s.fat, s.portion, s.calories, s.photo, s.foods]);
+    return JSON.stringify([s.name.trim(), s.date, s.meal, s.carb, s.pro, s.fat, s.portion, s.calories, this.focusKeys.map((key) => s[key]), s.photo, s.foods]);
   }
 
   foodTotal(foods = this.state.foods) {
@@ -358,7 +392,7 @@ class Component extends DCLogic {
       }
       const response = await fetch("/api/recognize", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photo: await FoodStickers.recognitionPhoto(photo) }), signal: controller.signal
+        body: JSON.stringify({ photo: await FoodStickers.recognitionPhoto(photo), dietFocus: this.dietFocus.id }), signal: controller.signal
       });
       const result = await response.json();
       if (request !== this.recognitionRequest) return;
@@ -371,6 +405,9 @@ class Component extends DCLogic {
         name: result.name, portion: result.portion, calories: result.kcal,
         foods: FoodStickers.normalize(result.foods).map(f => ({ ...f, kcal: f.kcal ?? "" })),
         carb: result.carb, pro: result.pro, fat: result.fat,
+        ...Object.fromEntries(this.dietFocus.fields.map((key) => [key,
+          Number.isFinite(result[key]) && result[key] >= 0 && result[key] <= 10000 ? result[key] : ""
+        ])),
         recognitionNote: "AI 估算，请核对后保存。" + result.notes
       });
       clearTimeout(timer);
@@ -427,12 +464,18 @@ class Component extends DCLogic {
       JournalUI.focusField('input[type="date"]');
       return;
     }
-    const numeric = ["carb", "pro", "fat", "portion", "calories"];
+    const numeric = ["carb", "pro", "fat", "portion", "calories", ...this.focusKeys];
     if (!numeric.every((key) => this.state[key] === "" ||
         Number.isFinite(Number(this.state[key])) && Number(this.state[key]) >= 0 && Number(this.state[key]) <= 10000)) {
       this.setState({ error: "请填写 0 到 10000 之间的有效数值。" });
       const invalid = numeric.find((key) => this.state[key] !== "" && (!Number.isFinite(Number(this.state[key])) || Number(this.state[key]) < 0 || Number(this.state[key]) > 10000));
       JournalUI.focusField('input[name="' + invalid + '"]');
+      return;
+    }
+    const { totalSugar, addedSugar } = this.state;
+    if (totalSugar !== undefined && totalSugar !== "" && addedSugar !== undefined && addedSugar !== "" && Number(addedSugar) > Number(totalSugar)) {
+      this.setState({ error: "添加糖是总糖的一部分，请核对两项数值。" });
+      JournalUI.focusField('input[name="addedSugar"]');
       return;
     }
     const invalidFood = this.state.foods.findIndex(f => !f.name.trim() || (f.kcal !== "" && (!Number.isFinite(Number(f.kcal)) || Number(f.kcal) < 0 || Number(f.kcal) > 10000)));
@@ -441,11 +484,31 @@ class Component extends DCLogic {
       JournalUI.focusField('[name="food-' + (!this.state.foods[invalidFood].name.trim() ? 'name-' : 'kcal-') + invalidFood + '"]');
       return;
     }
+    const foodAmounts = this.state.foods.map(food => Object.fromEntries(
+      Object.entries(food.nutrients ?? {}).filter(([, value]) => value !== "" && value != null)
+        .map(([key, value]) => [key, Number(value)])
+    ));
+    for (const [index, amounts] of foodAmounts.entries()) {
+      const invalid = Object.keys(amounts).find(key =>
+        !Number.isFinite(amounts[key]) || amounts[key] < 0 || amounts[key] > 10000);
+      const invalidSugar = ["totalSugar", "addedSugar"].find(key => amounts[key] > amounts.carb) ||
+        (amounts.addedSugar > amounts.totalSugar ? "addedSugar" : "");
+      if (invalid || invalidSugar) {
+        this.setState({ error: invalid ? "餐品营养请填写 0 到 10000 之间的数值或留空。" : "请核对该餐品的碳水、总糖和添加糖克数。" });
+        JournalUI.focusField('[name="food-' + (invalid || invalidSugar) + '-' + index + '"]');
+        return;
+      }
+    }
     this.saving = true;
     this.setState({ error: "" });
     try {
       await Journal.saveMeal(date, { name, kind: meal,
-        foods: FoodStickers.normalize(this.state.foods.map(f => ({ ...f, name: f.name.trim(), kcal: f.kcal === "" ? null : Number(f.kcal) }))), grams: [carb, pro, fat].map((value) => value === "" ? null : Number(value)), nutritionFields: true,
+        foods: FoodStickers.normalize(this.state.foods.map((f, index) => ({
+          ...f, name: f.name.trim(), kcal: f.kcal === "" ? null : Number(f.kcal),
+          nutrients: f.nutrients ? foodAmounts[index] : undefined
+        }))),
+        grams: [carb, pro, fat].map((value) => value === "" ? null : Number(value)), nutritionFields: true,
+        focusNutrients: Object.fromEntries(this.focusKeys.map((key) => [key, this.state[key] === "" ? null : Number(this.state[key])])),
         portion: this.state.portion === "" ? null : Number(this.state.portion),
         kcal: this.state.calories === "" ? null : Number(this.state.calories) }, this.original, photo);
     } catch (error) {
@@ -474,20 +537,25 @@ class Component extends DCLogic {
   }
   renderVals() {
     const s = this.state;
+    const field = ({ key, label }) => ({
+      key, label, value: s[key],
+      change: (event) => {
+        const value = event.target.value;
+        this.cancelRecognition();
+        this.setState({ [key]: value, error: "", recognitionNote: "按你的修改保存。" });
+      }
+    });
     const rows = [
       { key: "portion", label: "总份量（克）" },
       { key: "calories", label: "热量（kcal）" },
       { key: "carb", label: "碳水（克）" },
       { key: "pro", label: "蛋白质（克）" },
       { key: "fat", label: "脂肪（克）" }
-    ].map(({ key, label }) => ({
-      key, label, value: s[key],
-      change: (event) => {
-        const value = event.target.value;
-        this.cancelRecognition();
-        this.setState({ [key]: value, recognitionNote: "按你的修改保存。" });
-      }
-    }));
+    ].map(field);
+    const focusRows = this.focusKeys.map((key) => field({ key, label: Journal.focusNutrients[key] + "（克）" }));
+    const primaryFocus = this.dietFocus.fields[0] ?? this.focusKeys[0];
+    const focusSummary = primaryFocus ? Journal.focusNutrients[primaryFocus] + " " +
+      (s[primaryFocus] === "" ? "未填写" : s[primaryFocus] + " g") : "";
     const estimate = Journal.estimate([s.carb, s.pro, s.fat].map(Number));
     const [carb, pro, fat] = estimate.percentages;
     const selectedDate = Journal.isDate(s.date) ? s.date : this.date;
@@ -498,10 +566,19 @@ class Component extends DCLogic {
     const busy = s.busy || s.recognizing || cameraOpen || this.saving;
     const hasDraft = Boolean(s.name.trim() || s.foods.length || photo || (s.photo === null && this.original?.photoKey));
     const kcal = s.calories !== "" ? s.calories : estimate.kcal ? String(estimate.kcal) : "—";
-    const nutritionSummary = [s.portion === "" ? "" : s.portion + " g", kcal === "—" ? "" : "约 " + kcal + " kcal"].filter(Boolean).join(" · ") || "选填";
+    const nutritionSummary = [s.portion === "" ? "" : s.portion + " g", kcal === "—" ? "" : "约 " + kcal + " kcal"].filter(Boolean).join("，") || "选填";
     return {
       foodRows: s.foods.map((f, index) => ({
         index, name: f.name, kcal: f.kcal, reviewReason: f.reviewReason, box: JSON.stringify(f.box), cutout: JSON.stringify(f.cutout),
+        nutrients: this.servingNutrientKeys.map((key) => ({
+          label: FoodStickers.nutrientLabels[key], name: "food-" + key + "-" + index, value: f.nutrients?.[key] ?? "",
+          change: (event) => {
+            const value = event.target.value;
+            this.changeFoods(s.foods.map((item, i) => i === index
+              ? { ...item, nutrients: { ...item.nutrients, [key]: value } }
+              : item));
+          }
+        })),
         cropLabel: "单独抠出食物 " + (f.name || (index + 1)), removeLabel: "移除食物 " + (f.name || (index + 1)),
         imageHint: photo ? (f.cutout ? "调整抠图" : "点选抠图") : "先添加照片",
         crop: () => this.cropFood(index),
@@ -511,6 +588,12 @@ class Component extends DCLogic {
       })),
       meal: s.meal, setMeal: event => { if (Journal.kinds[event.target.value]) this.setState({meal:event.target.value}); },
       showEntry, showEditor,
+      focusRows, hasFocusRows: focusRows.length > 0,
+      focusName: this.dietFocus.fields.length ? this.dietFocus.label : "",
+      focusFieldNames: this.dietFocus.fields.map((key) => Journal.focusNutrients[key]).join("、"),
+      focusSummary,
+      focusEstimateHint: (this.focusKeys.some((key) => key === "totalSugar" || key === "addedSugar") ? "总糖包含天然糖和添加糖。" : "") +
+        "按实际吃的份量填写，可用营养标签核对。配方或份量看不清时可以留空。",
       startManual: () => {
         if (this.state.busy) return;
         this.setState({ started: true, error: "", cameraError: "", recognitionNote: "" });

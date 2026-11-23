@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-5">
+<link rel="stylesheet" href="./mobile.css?v=20261121-8">
 <title>好好吃饭 我爱吃的</title>
 <script src="./support.js?v=20261117-5"></script>
 <script src="./journal.js?v=20261117-5"></script>
-<script src="./navigation.js?v=20261117-5"></script>
+<script src="./navigation.js?v=20261121-2"></script>
 </head>
 <body>
 <x-dc>
@@ -174,7 +174,7 @@ class Component extends DCLogic {
     const combos = days.filter((day) => day.meals.length > 1).slice(0, 3).map((day) => ({
       name: Journal.shortDate(day.date) + "的饭记",
       count: day.meals.length,
-      parts: day.meals.slice(0, 4).map((meal) => meal.name).join(" · ") + (day.meals.length > 4 ? "…" : ""),
+      parts: day.meals.slice(0, 4).map((meal) => meal.name).join("、") + (day.meals.length > 4 ? "…" : ""),
       href: Journal.link("Day", day.date, { from: "album" }),
       pile: day.meals.slice(0, 3).map((meal, i) => sticker("", palette(i),
         [[6, 24, 42, 42, -10], [26, 16, 42, 42, 8], [14, 4, 42, 42, -3]][i], i, Journal.photoFor(meal)))

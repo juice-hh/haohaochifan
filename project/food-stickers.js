@@ -2,6 +2,7 @@
 (() => {
   const finite = (value) => typeof value === 'number' && Number.isFinite(value);
   const amount = (value) => finite(value) && value >= 0 && value <= 10000 ? value : null;
+  const nutrientLabels = { carb: '碳水', pro: '蛋白质', fat: '脂肪', ...Journal.focusNutrients };
   function box(value) {
     if (!value || !['x','y','width','height'].every(k=>finite(value[k]))) return null;
     const {x,y,width,height}=value;
@@ -15,7 +16,10 @@
   }
   function normalize(items) {
     return Array.isArray(items) ? items.slice(0,16).filter(f=>f&&typeof f.name==='string').map(f=>({
-      name:f.name.slice(0,60), kcal:amount(f.kcal), box:box(f.box), contour:[], cutout:cutout(f.cutout), reviewReason:typeof f.reviewReason==='string'?f.reviewReason.slice(0,180):''
+      name:f.name.slice(0,60), kcal:amount(f.kcal), box:box(f.box), contour:[], cutout:cutout(f.cutout), reviewReason:typeof f.reviewReason==='string'?f.reviewReason.slice(0,180):'',
+      ...(f.nutrients && typeof f.nutrients === 'object' ? {
+        nutrients: Object.fromEntries(Object.keys(nutrientLabels).map(key => [key, amount(f.nutrients[key])]))
+      } : {})
     })) : [];
   }
   function groups(meals,date,via='week') {
@@ -23,11 +27,13 @@
       const photo=Journal.photoFor(meal);
       const foods=normalize(meal.foods);
       return {
-        name:meal.name, kind:Journal.kinds[meal.kind]||'餐食', hasFoods:foods.length>0, missingFoods:!foods.length,
+        id:meal.id, name:meal.name, kind:Journal.kinds[meal.kind]||'餐食', kindKey:meal.kind,
+        hasFoods:foods.length>0, missingFoods:!foods.length,
         editHref:Journal.link('Record',date,{edit:meal.id,from:'day',via}),
         wholeKcal:Number.isFinite(meal.kcal)?'整餐约 '+Math.round(meal.kcal)+' kcal':'整餐热量未填写',
         foods:foods.map(f=>({name:f.name,photo,box:JSON.stringify(f.box),cutout:JSON.stringify(f.cutout),
-          partial:!!f.cutout&&!!f.reviewReason,
+          energy:f.kcal, nutrients:f.nutrients,
+          hasSticker:!!photo&&!!f.cutout, partial:!!f.cutout&&!!f.reviewReason,
           kcal:f.kcal===null?'热量待补充':'约 '+Math.round(f.kcal)+' kcal',
           label:f.name+'，'+(f.kcal===null?'热量待补充':'约 '+Math.round(f.kcal)+' 千卡')}))
       };
@@ -211,5 +217,5 @@
     }
     return result;
   }
-  window.FoodStickers={normalize,groups,selectRegion,segment,cancel,progressText,recognitionPhoto,contactSheet,candidateTiles,mergeMasks,applyMatches};
+  window.FoodStickers={nutrientLabels,normalize,groups,selectRegion,segment,cancel,progressText,recognitionPhoto,contactSheet,candidateTiles,mergeMasks,applyMatches};
 })();

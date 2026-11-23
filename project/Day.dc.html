@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png">
-<link rel="stylesheet" href="./mobile.css?v=20261117-5">
+<link rel="stylesheet" href="./mobile.css?v=20261121-1">
 <link rel="stylesheet" href="./day.css?v=20261118-1">
 <title>好好吃饭 单日详情</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261121-1"></script>
 <script src="./food-stickers.js?v=20261117-5"></script>
 </head>
 <body>
@@ -69,7 +69,7 @@
                 <food-sticker photo="{{food.photo}}" box="{{food.box}}" cutout="{{food.cutout}}" name="{{food.name}}"></food-sticker>
                 <strong>{{food.name}}</strong>
                 <span class="food-kcal-badge">{{food.kcal}}</span>
-                <sc-if value="{{food.partial}}"><small class="food-partial-note">部分已抠 · 可补充</small></sc-if>
+                <sc-if value="{{food.partial}}"><small class="food-partial-note">部分已抠，可补充</small></sc-if>
               </a>
             </sc-for>
           </div>
@@ -79,7 +79,7 @@
             <sc-for list="{{section.mealsWithoutStickers}}" as="meal">
               <div class="day-meal-entry">
                 <a class="meal-row day-entry-link" href="{{meal.editHref}}"><span>{{meal.name}}</span><span aria-hidden="true">›</span></a>
-                <p class="food-missing">{{meal.wholeKcal}} · 尚未生成餐品贴纸</p>
+                <p class="food-missing">{{meal.wholeKcal}}，尚未生成餐品贴纸</p>
               </div>
             </sc-for>
           </div>
@@ -88,12 +88,19 @@
     </sc-for>
   </div>
 
-  <sc-if value="{{hasMacros}}">
+  <sc-if value="{{hasNutrition}}">
     <section class="day-nutrition" aria-label="已记录营养含量">
       <h2>营养小计</h2>
-      <div class="day-macro-values">
+      <sc-if value="{{hasMacros}}"><div class="day-macro-values">
         <sc-for list="{{macros}}" as="macro"><div><span>{{macro.label}}</span><strong>{{macro.amount}}</strong></div></sc-for>
-      </div>
+      </div></sc-if>
+      <sc-if value="{{hasFocusNutrients}}">
+        <div class="day-focus-nutrients" aria-label="饮食关注指标小计">
+          <sc-for list="{{focusNutrients}}" as="item">
+            <div class="day-focus-nutrient"><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
+          </sc-for>
+        </div>
+      </sc-if>
     </section>
   </sc-if>
 
@@ -148,6 +155,7 @@ class Component extends DCLogic {
       amount: entry.macroKnown[index] ? entry.grams[index] + " g" : "未填写"
     }));
     const hasMacros = entry.macroKnown.some(Boolean);
+    const focusNutrients = Journal.dayFocusNutrients(entry.meals);
     const hasEnergy = entry.meals.some((meal) => Number.isFinite(meal.kcal) || Journal.mealMacros(meal).every((amount) => amount !== null)) || entry.kcal > 0;
     const status = Journal.params.get("status");
     const notice = status === "weighed" ? "已记下当天体重"
@@ -174,6 +182,8 @@ class Component extends DCLogic {
       weight: entry.weight?.toFixed(1),
       hasMacros,
       macros,
+      focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
+      hasNutrition: hasMacros || focusNutrients.length > 0,
       hasEnergy,
       missingEnergy: entry.meals.length > 0 && !hasEnergy,
       kcal: entry.kcal

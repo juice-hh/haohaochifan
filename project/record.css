@@ -19,6 +19,11 @@
 .record-disclosure > summary::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid #8C849D; border-bottom: 1.5px solid #8C849D; transform: rotate(45deg); margin: 0 2px 4px 0; flex-shrink: 0; }
 .record-disclosure[open] > summary::after { transform: rotate(225deg); margin-bottom: 0; }
 .record-summary-value { margin-left: auto; text-align: right; color: #6F6A78; font-size: 12px; font-weight: 600; }
+.record-focus-summary { color: #5B48B8; }
+.record-focus-fields { margin: 12px 0; padding-top: 12px; border-top: 1px solid #E4DFF0; }
+.record-focus-fields .goal-note { margin: 4px 0 10px; line-height: 1.5; }
+.record-focus-heading { margin: 0; font-size: 14px; font-weight: 750; }
+.record-entry-mode .record-entry-focus { color: #5B48B8; font-weight: 750; }
 .record-disclosure-body { padding: 0 0 16px; }
 .record-disclosure-body > .goal-note { margin: 6px 0 12px; font-size: 12px; line-height: 1.6; }
 .record-screen .food-editor-heading { margin-bottom: 4px; }
@@ -37,6 +42,10 @@
 .record-food-results h2 { margin: 0; font-size: 16px; }
 .record-food-results .food-editor-heading { margin: 0; }
 .record-food-results .food-editor-row { margin: 0 0 8px; }
+.record-food-nutrition { grid-column: 2 / -1; }
+.record-food-nutrition summary { min-height: 44px; padding-block: 11px; box-sizing: border-box; font-size: 12px; color: #5B48B8; cursor: pointer; }
+.record-food-nutrition .nutrition-fields { padding-bottom: 8px; }
+@media (max-width: 380px) { .record-food-nutrition { grid-column: 1 / -1; } }
 
 .record-screen .meal-photo-card[data-compact="true"] {
   display: grid;
