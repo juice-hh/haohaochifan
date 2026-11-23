@@ -225,9 +225,12 @@ class Component extends DCLogic {
     try { autoRecognize = localStorage.getItem("hhcf-record-mode") !== "manual"; } catch {}
     const [carb, pro, fat] = Journal.mealMacros(this.original).map((value) => value ?? "");
     const name = this.original?.name ?? (Journal.params.get("name") ?? "").slice(0, 60);
+    const presetKind = Journal.params.get("kind");
     this.state = {
       foods: originalFoods.map(f => ({ ...f, kcal: f.kcal ?? "" })),
-      autoRecognize, meal: this.original?.kind ?? "dinner", carb, pro, fat, date: this.date,
+      autoRecognize,
+      meal: this.original?.kind ?? (Object.hasOwn(Journal.kinds, presetKind) ? presetKind : "dinner"),
+      carb, pro, fat, date: this.date,
       name, started: Boolean(this.original || name.trim()),
       photo: null, photoTools: false, busy: false, error: "",
       camera: "closed", cameraError: "", recognizing: false, recognitionNote: "",

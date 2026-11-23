@@ -11,14 +11,16 @@ const Journal = (() => {
   const factors = [4, 4, 9];
   const legacyPrefix = "hhcf-meals-v1:";
   const mealPrefix = "hhcf-meal-v2:";
-  const weightPrefix = "hhcf-weight-v1:";
+  const weightPrefix = "hhcf-weight-v2:";
+  const legacyWeightPrefix = "hhcf-weight-v1:";
   const planPrefix = "hhcf-plan-v1:";
   const planStickers = [
     { id: "workout", icon: "🏋️", label: "锻炼" },
     { id: "walk", icon: "🚶", label: "散步" },
     { id: "cook", icon: "🍳", label: "做饭" }
   ];
-  const weightLimits = { min: 1, max: 5000 };
+  // Store weights in hundredths of a kilogram for exact input and comparisons.
+  const weightLimits = { min: 10, max: 50000 };
   const undoKey = "hhcf-last-meal-deletion";
   const dietFocusKey = "hhcf-diet-focus";
   const dietFocuses = [
@@ -48,45 +50,51 @@ const Journal = (() => {
   const dayName = (date) => "周" + weekdays[weekday(date)];
   const validWeight = (value) =>
     Number.isInteger(value) && value >= weightLimits.min && value <= weightLimits.max;
+  const legacyWeight = (tenths) =>
+    Number.isInteger(tenths) && validWeight(tenths * 10) ? tenths * 10 : null;
+  const formatWeight = (hundredths) => (hundredths / 100).toFixed(2);
+
   function parseWeight(text) {
     const value = text.trim().normalize("NFKC").replace(/[,。]/g, ".");
     if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
-    const tenths = Number(value) * 10;
-    return tenths >= weightLimits.min && tenths <= weightLimits.max ? Math.round(tenths) : null;
+    const [whole, fraction = ""] = value.split(".");
+    const hundredths = Number(whole) * 100 + Number(fraction.slice(0, 2).padEnd(2, "0"));
+    return validWeight(hundredths) && Number(value) <= weightLimits.max / 100 ? hundredths : null;
   }
 
   function savedWeight(date) {
     try {
       const value = Number(localStorage.getItem(weightPrefix + date));
-      return validWeight(value) ? value / 10 : null;
+      return validWeight(value) ? value : legacyWeight(Number(localStorage.getItem(legacyWeightPrefix + date)));
     } catch {
       return null;
     }
   }
   function previousWeight(date) {
     const dates = Object.keys(localStorage)
-      .filter((key) => key.startsWith(weightPrefix))
-      .map((key) => key.slice(weightPrefix.length))
+      .filter((key) => key.startsWith(weightPrefix) || key.startsWith(legacyWeightPrefix))
+      .map((key) => key.slice(key.indexOf(":") + 1))
       .filter((key) => key < date && isDate(key) && savedWeight(key) !== null);
     const previous = dates.sort().at(-1);
-    return previous ? { date: previous, kg: savedWeight(previous) } : null;
+    return previous ? { date: previous, weight: savedWeight(previous) } : null;
   }
 
   function latestWeight() {
-    const kg = savedWeight(today);
-    return kg === null ? previousWeight(today) : { date: today, kg };
+    const weight = savedWeight(today);
+    return weight === null ? previousWeight(today) : { date: today, weight };
   }
 
   function readGoal() {
     const goal = readJSON(localStorage, "hhcf-goal-v1");
+    const weight = goal?.weightHundredths ?? legacyWeight(goal?.weight);
     return {
       habit: typeof goal?.habit === "string" ? goal.habit : "",
-      weight: validWeight(goal?.weight) ? goal.weight : null
+      weight: validWeight(weight) ? weight : null
     };
   }
 
-  function saveGoal(goal) {
-    localStorage.setItem("hhcf-goal-v1", JSON.stringify(goal));
+  function saveGoal({ habit, weight }) {
+    localStorage.setItem("hhcf-goal-v1", JSON.stringify({ habit, weightHundredths: weight }));
   }
 
   function readDietFocus() {
@@ -98,10 +106,10 @@ const Journal = (() => {
     localStorage.setItem(dietFocusKey, JSON.stringify(id));
   }
 
-  function saveWeight(date, tenths) {
+  function saveWeight(date, hundredths) {
     if (!isDate(date) || date > today) throw new Error("请选择今天或过去的日期。");
-    if (!validWeight(tenths)) throw new Error("请输入有效的体重。");
-    localStorage.setItem(weightPrefix + date, String(tenths));
+    if (!validWeight(hundredths)) throw new Error("请输入有效的体重。");
+    localStorage.setItem(weightPrefix + date, String(hundredths));
   }
   function isDate(date) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) return false;
@@ -406,7 +414,8 @@ const Journal = (() => {
     shortDate, dayName, isDate, selected, link, day, estimate,
     getMeal, mealMacros, mealFocusNutrient, dayFocusNutrients, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
     dietFocuses, focusNutrients, readDietFocus, saveDietFocus,
-    savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, readGoal, saveGoal, planStickers, plansOn, togglePlan
+    savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, formatWeight,
+    readGoal, saveGoal, planStickers, plansOn, togglePlan
   };
 })();
 

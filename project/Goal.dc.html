@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="./mobile.css?v=20261121-8">
 <title>好好吃饭 我的目标</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261121-1"></script>
+<script src="./journal.js?v=20261123-1"></script>
 <script src="./navigation.js?v=20261121-2"></script>
 <script src="./interactions.js?v=20261117-5"></script>
 </head>
@@ -76,7 +76,7 @@ class Component extends DCLogic {
     this.goal = Journal.readGoal();
     this.state = {
       habit: this.goal.habit,
-      target: this.goal.weight === null ? "" : (this.goal.weight / 10).toFixed(1),
+      target: this.goal.weight === null ? "" : Journal.formatWeight(this.goal.weight),
       message: "",
       dietFocus: Journal.readDietFocus(),
       focusMessage: ""
@@ -110,7 +110,7 @@ class Component extends DCLogic {
       document.activeElement?.blur?.();
       this.setState({
         habit: goal.habit,
-        target: weight === null ? "" : (weight / 10).toFixed(1),
+        target: weight === null ? "" : Journal.formatWeight(weight),
         message: "目标已保存"
       });
     } catch {
@@ -130,9 +130,9 @@ class Component extends DCLogic {
       focusHint: this.state.dietFocus.hint,
       hasWeight: Boolean(this.latest),
       noWeight: !this.latest,
-      currentWeight: this.latest?.kg.toFixed(1),
+      currentWeight: this.latest ? Journal.formatWeight(this.latest.weight) : "",
       weightDate: this.latest ? Journal.shortDate(this.latest.date) + "记录" : "",
-      savedTarget: this.goal.weight === null ? "" : (this.goal.weight / 10).toFixed(1),
+      savedTarget: this.goal.weight === null ? "" : Journal.formatWeight(this.goal.weight),
       weighHref: Journal.link("Weigh", Journal.today, { returnTo: "Goal" }),
       weighLabel: this.latest ? "更新体重" : "记一笔体重",
       nextField: (event) => { if (event.key === "Enter") { event.preventDefault(); document.getElementById("goal-weight").focus(); } },

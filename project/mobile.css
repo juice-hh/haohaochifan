@@ -858,7 +858,97 @@ food-sticker canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   font-weight: 650;
   white-space: nowrap;
 }
-.week-day-empty { margin: 14px 0 0; font-size: 13px; color: var(--week-muted); }
+journal-meal-slots {
+  display: block;
+}
+
+.meal-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.day-screen journal-meal-slots {
+  border-radius: 20px;
+  background: #FFF;
+  padding: 8px;
+}
+
+.meal-slots li { color: #51465F; }
+
+.meal-slot {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 90px;
+  align-content: center;
+  box-sizing: border-box;
+  padding: 8px 0;
+  border-radius: 12px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.meal-slot-plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 51px;
+  height: 51px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid #EAE2F3;
+  background: #F7F3FB;
+  box-shadow: inset 0 0 0 5px #FDFCFF;
+}
+
+.meal-slot-mark {
+  display: block;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #C5AEF2;
+}
+
+[data-kind="breakfast"] .meal-slot-mark {
+  height: 10px;
+  border-radius: 12px 12px 3px 3px;
+  background: #EDB456;
+}
+
+[data-kind="dinner"] .meal-slot-mark {
+  background: transparent;
+  box-shadow: inset 5px -4px 0 #81ADA0;
+}
+
+.meal-slot-plus {
+  position: absolute;
+  right: -3px;
+  bottom: -1px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #FFF;
+  border-radius: 50%;
+  background: #EDE6FA;
+  color: #5B48B8;
+  font-size: 13px;
+  line-height: 1;
+}
+
+a.meal-slot:is(:active, :focus-visible) {
+  background: #F2EDF9;
+  color: #5B48B8;
+}
+
+span.meal-slot { color: #655D71; }
+span.meal-slot .meal-slot-plate { opacity: .7; }
 
 .week-nutrition-panel {
   position: sticky;

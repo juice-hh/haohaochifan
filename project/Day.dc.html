@@ -7,11 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261121-1">
+<link rel="stylesheet" href="./mobile.css?v=20261123-3">
 <link rel="stylesheet" href="./day.css?v=20261118-1">
 <title>好好吃饭 单日详情</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261121-1"></script>
+<script src="./journal.js?v=20261123-1"></script>
+<script src="./meal-slots.js?v=20261123-1"></script>
 <script src="./food-stickers.js?v=20261117-5"></script>
 </head>
 <body>
@@ -49,44 +50,50 @@
     <p role="alert" style="margin: 0; color: #B63843; font-size: 13px">{{error}}</p>
   </sc-if>
 
-  <div class="day-overview">
-    <span>{{mealCount}}</span>
-    <sc-if value="{{hasEnergy}}"><span>已记约 <strong>{{kcal}}</strong> kcal</span></sc-if>
-    <sc-if value="{{missingEnergy}}"><span>热量待补充</span></sc-if>
-  </div>
+  <sc-if value="{{empty}}">
+    <journal-meal-slots date="{{date}}" via="{{via}}"></journal-meal-slots>
+  </sc-if>
 
-  <div class="daily-food-groups day-timeline" aria-label="当天食物贴纸">
-    <sc-for list="{{mealSections}}" as="section">
-      <section class="day-meal-section">
-        <div class="day-meal-header">
-          <h2>{{section.label}}</h2>
-          <span class="day-meal-count">{{section.status}}</span>
-        </div>
-        <sc-if value="{{section.hasStickers}}">
-          <div class="food-sticker-grid day-sticker-grid">
-            <sc-for list="{{section.stickers}}" as="food">
-              <a class="food-sticker-item day-sticker" href="{{food.editHref}}" aria-label="{{food.label}}">
-                <food-sticker photo="{{food.photo}}" box="{{food.box}}" cutout="{{food.cutout}}" name="{{food.name}}"></food-sticker>
-                <strong>{{food.name}}</strong>
-                <span class="food-kcal-badge">{{food.kcal}}</span>
-                <sc-if value="{{food.partial}}"><small class="food-partial-note">部分已抠，可补充</small></sc-if>
-              </a>
-            </sc-for>
+  <sc-if value="{{hasMeals}}">
+    <div class="day-overview">
+      <span>{{mealCount}}</span>
+      <sc-if value="{{hasEnergy}}"><span>已记约 <strong>{{kcal}}</strong> kcal</span></sc-if>
+      <sc-if value="{{missingEnergy}}"><span>热量待补充</span></sc-if>
+    </div>
+
+    <div class="daily-food-groups day-timeline" aria-label="当天食物贴纸">
+      <sc-for list="{{mealSections}}" as="section">
+        <section class="day-meal-section">
+          <div class="day-meal-header">
+            <h2>{{section.label}}</h2>
+            <span class="day-meal-count">{{section.status}}</span>
           </div>
-        </sc-if>
-        <sc-if value="{{section.hasMealsWithoutStickers}}">
-          <div class="day-entry-list">
-            <sc-for list="{{section.mealsWithoutStickers}}" as="meal">
-              <div class="day-meal-entry">
-                <a class="meal-row day-entry-link" href="{{meal.editHref}}"><span>{{meal.name}}</span><span aria-hidden="true">›</span></a>
-                <p class="food-missing">{{meal.wholeKcal}}，尚未生成餐品贴纸</p>
-              </div>
-            </sc-for>
-          </div>
-        </sc-if>
-      </section>
-    </sc-for>
-  </div>
+          <sc-if value="{{section.hasStickers}}">
+            <div class="food-sticker-grid day-sticker-grid">
+              <sc-for list="{{section.stickers}}" as="food">
+                <a class="food-sticker-item day-sticker" href="{{food.editHref}}" aria-label="{{food.label}}">
+                  <food-sticker photo="{{food.photo}}" box="{{food.box}}" cutout="{{food.cutout}}" name="{{food.name}}"></food-sticker>
+                  <strong>{{food.name}}</strong>
+                  <span class="food-kcal-badge">{{food.kcal}}</span>
+                  <sc-if value="{{food.partial}}"><small class="food-partial-note">部分已抠，可补充</small></sc-if>
+                </a>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{section.hasMealsWithoutStickers}}">
+            <div class="day-entry-list">
+              <sc-for list="{{section.mealsWithoutStickers}}" as="meal">
+                <div class="day-meal-entry">
+                  <a class="meal-row day-entry-link" href="{{meal.editHref}}"><span>{{meal.name}}</span><span aria-hidden="true">›</span></a>
+                  <p class="food-missing">{{meal.wholeKcal}}，尚未生成餐品贴纸</p>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </section>
+      </sc-for>
+    </div>
+  </sc-if>
 
   <sc-if value="{{hasNutrition}}">
     <section class="day-nutrition" aria-label="已记录营养含量">
@@ -161,6 +168,9 @@ class Component extends DCLogic {
     const notice = status === "weighed" ? "已记下当天体重"
       : status === "saved" ? "已记下这一餐" : status === "updated" ? "已保存修改" : status === "restored" ? "已恢复这餐" : "";
     return {
+      date, via: this.from,
+      hasMeals: entry.meals.length > 0,
+      empty: entry.meals.length === 0,
       mealSections,
       isToday: date === Journal.today,
       dayName: Journal.dayName(date),
@@ -179,7 +189,7 @@ class Component extends DCLogic {
       weighAction: entry.weight === null ? "记体重" : "修改体重",
       weightLabel: entry.weight === null ? "记体重" : "当天体重",
       hasWeight: entry.weight !== null,
-      weight: entry.weight?.toFixed(1),
+      weight: entry.weight === null ? "" : Journal.formatWeight(entry.weight),
       hasMacros,
       macros,
       focusNutrients, hasFocusNutrients: focusNutrients.length > 0,

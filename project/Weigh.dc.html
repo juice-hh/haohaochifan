@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="./mobile.css?v=20261117-5">
 <title>好好吃饭 早上称重</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261123-1"></script>
 <script src="./interactions.js?v=20261117-5"></script>
 </head>
 <body>
@@ -92,9 +92,8 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
 const { min: minWeight, max: maxWeight } = Journal.weightLimits;
-const formatWeight = (tenths) => (tenths / 10).toFixed(1);
-
-const { parseWeight } = Journal;
+const { parseWeight, formatWeight } = Journal;
+const adjustment = 10; // 0.1 kg
 
 class Component extends DCLogic {
   constructor(props) {
@@ -105,8 +104,7 @@ class Component extends DCLogic {
     this.returnPage = Journal.params.get("returnTo") === "Goal" ? "Goal" : "Main";
     this.via = Journal.params.get("via") === "album" ? "album" : "week";
     this.previous = Journal.previousWeight(this.date);
-    const initial = Journal.savedWeight(this.date);
-    const w = initial === null ? null : Math.round(initial * 10);
+    const w = Journal.savedWeight(this.date);
     this.state = { w, draft: w === null ? "" : formatWeight(w), error: "" };
     JournalUI.guardNavigation(() => this.state.draft.trim() !== "" ? parseWeight(this.state.draft) === null || parseWeight(this.state.draft) !== w : w !== null);
   }
@@ -155,7 +153,7 @@ class Component extends DCLogic {
     var w = this.state.w;
     var ticks = [];
     for (var i = -12; i <= 12; i++) {
-      var major = (w + i) % 5 === 0;
+      var major = (Math.floor(w / adjustment) + i) % 5 === 0;
       ticks.push({ style: 'width: 3px; flex-shrink: 0; border-radius: 2px; height: ' + (major ? 28 : 14) + 'px; background: ' + (major ? '#C9BFF5' : '#E4DFF5') });
     }
     var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF'];
@@ -167,7 +165,7 @@ class Component extends DCLogic {
     const { draft, error } = this.state;
     const typed = parseWeight(draft);
     const previous = this.previous;
-    const change = previous && typed !== null ? typed - Math.round(previous.kg * 10) : null;
+    const change = previous && typed !== null ? typed - previous.weight : null;
     const dateLabel = Journal.shortDate(this.date);
     const width = Math.max(3.5, Math.min(5.3, draft.length - (/[.,]/.test(draft) ? 0.5 : 0)));
     return {
@@ -178,7 +176,7 @@ class Component extends DCLogic {
       noWeight: typed === null,
       comparisonTitle: previous ? "上次记录" : "体重记录",
       comparisonText: previous
-        ? Journal.shortDate(previous.date) + " " + previous.kg.toFixed(1) + " kg"
+        ? Journal.shortDate(previous.date) + " " + formatWeight(previous.weight) + " kg"
         : "保存后可以在周记里查看",
       saveHint: "体重会记到" + dateLabel + "，同一天再次保存可修正",
       weightWidth: "width: " + width + "ch",
@@ -196,8 +194,8 @@ class Component extends DCLogic {
       pile: pile,
       deltaStr: change === null ? "" : change === 0 ? "持平"
         : (change > 0 ? "↑" : "↓") + formatWeight(Math.abs(change)) + " kg",
-      minus: () => this.adjustWeight(-1),
-      plus: () => this.adjustWeight(1)
+      minus: () => this.adjustWeight(-adjustment),
+      plus: () => this.adjustWeight(adjustment)
     };
   }
 }
