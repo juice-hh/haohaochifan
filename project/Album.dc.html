@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261121-8">
+<link rel="stylesheet" href="./mobile.css?v=20261124-2">
 <title>好好吃饭 饭相册</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261124-1"></script>
 <script src="./navigation.js?v=20261121-2"></script>
 </head>
 <body>
@@ -22,13 +22,10 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
 <div class="screen screen--tabs" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <div style="display: flex; align-items: center; gap: 14px">
-    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">饭相册</h1>
-    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 18px">
-      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
-      <span style="position: relative">{{monthCount}}</span>
-    </div>
-  </div>
+  <header class="page-header">
+    <h1 class="page-title">饭相册</h1>
+    <p class="page-header-note">{{monthCount}}</p>
+  </header>
 
   <div class="album-view-switch app-segmented" role="group" aria-label="饭相册视图">
     <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
@@ -55,7 +52,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         <div class="plan-picker" role="group" aria-label="计划贴纸">
           <sc-for list="{{stickers}}" as="s">
             <button type="button" class="plan-chip" aria-pressed="{{s.active}}" onClick="{{s.pick}}">
-              <span aria-hidden="true">{{s.icon}}</span> {{s.label}}
+              <span class="plan-icon" data-plan="{{s.id}}" aria-hidden="true"></span> {{s.label}}
             </button>
           </sc-for>
         </div>
@@ -77,7 +74,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
                 <span style="{{c.dotStyle}}"></span>
                 <sc-if value="{{showCalendarPlans}}">
                   <span class="plan-markers">
-                    <sc-for list="{{c.plans}}" as="p"><span>{{p.icon}}</span></sc-for>
+                    <sc-for list="{{c.plans}}" as="p"><span class="plan-icon" data-plan="{{p.id}}"></span></sc-for>
                   </span>
                 </sc-if>
               </div>

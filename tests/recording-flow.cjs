@@ -102,7 +102,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
   });
   await check(engine,'compact form, meal type persistence and hidden-field validation',async()=>{
    const f=await fixture(browser),p=f.page;
-   assert.equal(await p.getByLabel('餐别',{exact:true}).inputValue(),'dinner');
+   assert.equal((await p.getByRole('button',{name:'餐别',exact:true}).innerText()).trim(),'晚餐');
    assert.equal(await p.locator('.record-save').isVisible(),false);
    assert.equal(await p.locator('#meal-name').isVisible(),false);
    assert.equal(await p.locator('.record-nutrition').isVisible(),false);
@@ -111,7 +111,8 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    assert.equal(await p.locator('.record-save').getAttribute('aria-disabled'),'true');
    assert.equal(await p.locator('details[open]').count(),0);
    assert.equal(await p.getByRole('button',{name:'手动记录',exact:true}).isVisible(),false);
-   await p.getByLabel('餐别',{exact:true}).selectOption('lunch');
+   await p.getByRole('button',{name:'餐别',exact:true}).click();
+   await p.getByRole('dialog').getByRole('button',{name:'午餐',exact:true}).click();
    await p.getByPlaceholder('给这一餐起个名字').fill('精简流程测试');
    await expand(p,'.record-nutrition');await p.locator('input[name=pro]').fill('-1');
    await p.locator('.record-nutrition > summary').click();await p.locator('.record-save').click();
@@ -123,7 +124,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    const lunch=p.locator('.day-meal-section').filter({has:p.getByRole('heading',{name:'午餐',exact:true})});
    await lunch.locator('.meal-row').filter({hasText:'精简流程测试'}).click();
    await p.waitForFunction(()=>document.querySelector('#meal-name')?.value==='精简流程测试');
-   assert.equal(await p.getByLabel('餐别',{exact:true}).inputValue(),'lunch');
+   assert.equal((await p.getByRole('button',{name:'餐别',exact:true}).innerText()).trim(),'午餐');
    assert.equal(await p.locator('input[name=pro]').inputValue(),'20');
    await expand(p,'.record-settings');await p.getByRole('button',{name:'删除这餐',exact:true}).click();
    await p.getByRole('button',{name:'保留记录',exact:true}).click();
@@ -159,13 +160,13 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    assert(await p.locator('.meal-photo-preview').isVisible());
    await p.getByPlaceholder('给这一餐起个名字').fill('保留照片');await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');return f;
   });
-  await check(engine,'denied camera → native camera fallback → save',async()=>{
+  await check(engine,'denied camera → in-app message → library save',async()=>{
    const f=await fixture(browser);const p=f.page;
    await p.evaluate(()=>{navigator.mediaDevices.getUserMedia=()=>Promise.reject(new DOMException('denied','NotAllowedError'));});
    await p.getByRole('button',{name:'拍照',exact:true}).click();
-   await p.getByLabel('用系统相机拍',{exact:true}).waitFor();
-   assert.equal(await p.getByLabel('用系统相机拍',{exact:true}).getAttribute('capture'),'environment');
-   await p.getByLabel('用系统相机拍',{exact:true}).setInputFiles(photo);await p.locator('.meal-photo-preview').waitFor();
+   await p.getByText('相机未获授权。可以允许相机访问，或从相册选图。').waitFor();
+   assert.equal(await p.locator('input[capture]').count(),0);
+   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);await p.locator('.meal-photo-preview').waitFor();
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');return f;
   });
   await check(engine,'AI failure preserves photo and manual save',async()=>{

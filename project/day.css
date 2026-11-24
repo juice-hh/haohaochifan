@@ -16,11 +16,9 @@ body { margin: 0; }
 
 .day-screen a { color: inherit; text-decoration: none; }
 .day-screen .day-toolbar { background: var(--day-paper); }
-.day-screen .app-icon-button { background: transparent; }
-.day-date-row { display: flex; align-items: end; justify-content: space-between; gap: 8px; padding: 4px 4px 0; }
-.day-date-caption { margin: 0 0 4px; color: var(--day-muted); font-size: 13px; font-weight: 650; }
+.day-date-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.day-date { margin: 0 0 3px; font-size: 19px; line-height: 1.25; font-weight: 750; }
 .day-date-caption span { margin-left: 6px; color: var(--day-action); }
-.day-date-row h1 { margin: 0; font-size: 38px; line-height: 1.15; font-weight: 800; letter-spacing: -.04em; }
 .day-date-controls { display: flex; gap: 2px; }
 .day-date-controls a { display: grid; place-items: center; width: 44px; height: 44px; color: var(--day-muted); font-size: 27px; }
 .day-overview { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 14px; padding: 0 4px 10px; color: var(--day-muted); font-size: 13px; }

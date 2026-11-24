@@ -11,8 +11,19 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.route('**/api/recognize',r=>r.fulfill({json:meal}));
-  await p.route('**/api/match-foods',r=>r.fulfill({json:{matches:foods.map((f,foodIndex)=>({foodIndex,maskIds:[foodIndex+1],status:'matched',reason:'测试对应关系'}))}}));
   await p.goto(base+'/Record.dc.html?date=2026-11-12');
+  await p.evaluate(async () => {
+    const original = FoodStickers.segment;
+    FoodStickers.generate = async (source, foods) => {
+      const points = [[355,315],[535,247],[650,470],[290,615],[580,720],[460,455]];
+      const output=[];
+      for (const [index,[x,y]] of points.entries()) {
+        const [cutout] = await original(source,{points:[{x,y,label:1}]});
+        output.push({...foods[index],cutout});
+      }
+      return output;
+    };
+  });
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
   await p.locator('.food-editor-row').nth(5).waitFor({state:'attached'});
   await p.waitForFunction(()=>document.querySelector('.record-save')?.getAttribute('aria-disabled')!=='true',{},{timeout:90000});
@@ -93,17 +104,19 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.getByRole('button',{name:'手动记录',exact:true}).click();
   await p.getByRole('button',{name:'更换照片',exact:true}).click();
   await p.getByLabel('从相册选',{exact:true}).setInputFiles(photo);
-  await p.waitForFunction(()=>document.querySelectorAll('.food-editor-row').length===0);
+  await p.waitForFunction(()=>document.querySelector('.meal-photo-preview')?.src.startsWith('blob:') &&
+    [...document.querySelectorAll('.food-editor-row food-sticker')].every(sticker=>sticker.getAttribute('cutout')==='null'));
+  assert.equal(await p.locator('.food-editor-row').count(),6);
   await p.locator('.record-save').click();await p.waitForURL('**/Day.dc.html?**');
-  await p.locator('.food-missing').filter({hasText:'尚未生成餐品贴纸'}).waitFor();
-  assert.equal(await p.locator('.food-sticker-item').count(),0);
+  assert.equal(await p.locator('.food-sticker-item canvas').count(),0);
+  assert.equal(await p.locator('.food-sticker-item').count(),6);
   await p.goto(base+'/Main.dc.html?date=2026-11-12');
-  await p.locator('.week-day-record .food-missing').waitFor();
-  assert.equal(await stickers.count(),0);
+  await stickers.nth(5).waitFor();
+  assert.equal(await stickers.locator('canvas').count(),0);
   assert.equal(await p.locator('.week-sticker-tile').count(),0);
   assert.equal(await p.locator('.week-calendar-day[aria-pressed="true"]').count(),1);
   assert.deepEqual(errors,[]);
-  console.log('PASS',engine,'recognition → individual edits → persist → all six stickers → crop → unknown calories → manual item → replacement / legacy fallback');
+  console.log('PASS',engine,'recognition → individual edits → persist → all six stickers → crop → unknown calories → manual item → replacement clears old masks and keeps journal data');
   await browser.close();
  }
  // Exercise endpoint with isolated fake credentials and responses; no external request.
@@ -116,6 +129,8 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
  assert.deepEqual(sent.text.format.schema.properties.foods.items.properties.nutrients.required,['carb','pro','fat']);
  assert.deepEqual(r.body.foods[1].nutrients,{carb:2,pro:null,fat:0});
  responseMeal.foods[0].box.width=1000;r=await request();assert.equal(r.code,502);
+ responseMeal=structuredClone(meal);responseMeal.foods[0].kcal=null;responseMeal.kcal=null;responseMeal.portion=null;
+ r=await request();assert.equal(r.code,200);assert.equal(r.body.kcal,null);assert.equal(r.body.portion,null);assert.equal(r.body.foods[0].kcal,null);
  responseMeal={...meal,foodVisible:false,foods:[]};r=await request();assert.equal(r.code,200);
  responseMeal={...meal,foods:[]};r=await request();assert.equal(r.code,502);
  console.log('PASS endpoint food schema, per-item total, invalid geometry and empty-food validation');

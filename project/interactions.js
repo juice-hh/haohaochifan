@@ -1,64 +1,158 @@
 // Shared phone interactions; data and camera ownership stay with each page.
 (() => {
   let activeSheet = null;
-  function confirmAction({ title, description, confirmLabel, cancelLabel = "继续编辑", destructive = false }) {
-    if (activeSheet) return Promise.resolve(false);
+  function openSheet({ title, description, className = "", render }) {
+    if (activeSheet) return Promise.resolve(null);
     const trigger = document.activeElement;
     trigger?.blur?.();
-    const sheet = document.createElement("dialog");
-    sheet.className = "app-sheet";
+    const overlay = document.createElement("div");
+    overlay.className = "app-sheet-overlay";
+    const sheet = document.createElement("section");
+    sheet.className = "app-sheet " + className;
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
     sheet.setAttribute("aria-labelledby", "app-sheet-title");
-    sheet.setAttribute("aria-describedby", "app-sheet-description");
+    sheet.tabIndex = -1;
     const heading = document.createElement("h2");
     heading.id = "app-sheet-title";
     heading.textContent = title;
-    const detail = document.createElement("p");
-    detail.id = "app-sheet-description";
-    detail.textContent = description;
-    const confirm = document.createElement("button");
-    confirm.type = "button";
-    confirm.className = "app-sheet-confirm" + (destructive ? " app-danger" : "");
-    confirm.textContent = confirmLabel;
-    const cancel = document.createElement("button");
-    cancel.type = "button";
-    cancel.className = "app-sheet-cancel";
-    cancel.textContent = cancelLabel;
-    sheet.append(heading, detail, confirm, cancel);
-    document.body.append(sheet);
-    activeSheet = sheet;
+    sheet.append(heading);
+    if (description) {
+      const detail = document.createElement("p");
+      detail.id = "app-sheet-description";
+      detail.textContent = description;
+      sheet.setAttribute("aria-describedby", detail.id);
+      sheet.append(detail);
+    }
+    const app = document.querySelector("x-dc");
     const oldOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
     return new Promise((resolve) => {
-      let settled = false;
       function finish(result) {
-        if (settled) return;
-        settled = true;
-        sheet.close();
-        sheet.remove();
+        if (activeSheet !== overlay) return;
+        overlay.remove();
         activeSheet = null;
+        if (app) app.inert = false;
         document.documentElement.style.overflow = oldOverflow;
-        if (trigger?.isConnected && !trigger.matches("input, textarea")) trigger.focus({ preventScroll: true });
+        if (trigger?.isConnected && !textEntry(trigger)) trigger.focus({ preventScroll: true });
         resolve(result);
       }
-      confirm.addEventListener("click", () => finish(true));
-      cancel.addEventListener("click", () => finish(false));
-      sheet.addEventListener("cancel", (event) => { event.preventDefault(); finish(false); });
-      sheet.addEventListener("click", (event) => {
-        const box = sheet.getBoundingClientRect();
-        if (event.target === sheet && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) finish(false);
+      const focusTarget = render(sheet, finish);
+      overlay.append(sheet);
+      document.body.append(overlay);
+      activeSheet = overlay;
+      if (app) app.inert = true;
+      document.documentElement.style.overflow = "hidden";
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) finish(null);
       });
-      sheet.showModal();
-      cancel.focus({ preventScroll: true });
+      overlay.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          finish(null);
+        } else if (event.key === "Tab") {
+          const controls = [...sheet.querySelectorAll('button:not(:disabled), [tabindex="0"]')];
+          const [first] = controls, last = controls.at(-1);
+          if (event.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }
+      });
+      (focusTarget || sheet).focus({ preventScroll: true });
     });
   }
-  function guardNavigation(isDirty) {
+
+  function sheetButton(text, className, onClick) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.textContent = text;
+    button.onclick = onClick;
+    return button;
+  }
+
+  function confirmAction({ title, description, confirmLabel, cancelLabel = "继续编辑", destructive = false }) {
+    return openSheet({ title, description, render(sheet, close) {
+      const confirm = sheetButton(confirmLabel, "app-sheet-confirm" + (destructive ? " app-danger" : ""), () => close(true));
+      const cancel = sheetButton(cancelLabel, "app-sheet-cancel", () => close(false));
+      sheet.append(confirm, cancel);
+      return cancel;
+    } });
+  }
+
+  function chooseOption(title, options, selected) {
+    return openSheet({ title, render(sheet, close) {
+      let active;
+      for (const [value, label] of Object.entries(options)) {
+        const button = sheetButton(label, "app-sheet-choice", () => close(value));
+        button.setAttribute("aria-pressed", String(value === selected));
+        if (value === selected) active = button;
+        sheet.append(button);
+      }
+      sheet.append(sheetButton("取消", "app-sheet-cancel", () => close(null)));
+      return active;
+    } });
+  }
+
+  function chooseDate(selected) {
+    let month = selected.slice(0, 7) + "-01";
+    return openSheet({ title: "记录日期", className: "app-date-sheet", render(sheet, close) {
+      const toolbar = document.createElement("div");
+      toolbar.className = "app-date-toolbar";
+      const label = document.createElement("strong");
+      const previous = sheetButton("‹", "", () => changeMonth(-1));
+      const next = sheetButton("›", "", () => changeMonth(1));
+      previous.setAttribute("aria-label", "上个月");
+      next.setAttribute("aria-label", "下个月");
+      toolbar.append(previous, label, next);
+      const weekdays = document.createElement("div");
+      weekdays.className = "app-date-grid";
+      weekdays.setAttribute("aria-hidden", "true");
+      for (const day of "一二三四五六日") {
+        const cell = document.createElement("span");
+        cell.textContent = day;
+        weekdays.append(cell);
+      }
+      const dates = document.createElement("div");
+      dates.className = "app-date-grid";
+      function changeMonth(offset) {
+        month = Journal.addMonths(month, offset);
+        drawDates();
+      }
+      function drawDates() {
+        dates.replaceChildren();
+        label.textContent = Number(month.slice(0, 4)) + "年" + Number(month.slice(5, 7)) + "月";
+        const nextMonth = Journal.addMonths(month, 1);
+        next.disabled = nextMonth > Journal.today;
+        for (let i = 0; i < (Journal.weekday(month) + 6) % 7; i++) dates.append(document.createElement("span"));
+        for (let date = month; date < nextMonth; date = Journal.addDays(date, 1)) {
+          const button = sheetButton(String(Number(date.slice(8))), "", () => close(date));
+          button.setAttribute("aria-label", Journal.shortDate(date));
+          button.setAttribute("aria-pressed", String(date === selected));
+          button.disabled = date > Journal.today;
+          dates.append(button);
+        }
+      }
+      drawDates();
+      sheet.append(toolbar, weekdays, dates, sheetButton("取消", "app-sheet-cancel", () => close(null)));
+      return dates.querySelector('[aria-pressed="true"]');
+    } });
+  }
+
+  function guardNavigation(isDirty, onDiscard) {
     document.addEventListener("click", async (event) => {
       const link = event.target.closest?.("a[href]");
       if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !isDirty()) return;
       const href = link.href;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (await confirmAction({ title: "还没保存，要离开吗？", description: "这次修改还没有保存。你可以继续编辑，或放弃修改后离开。", confirmLabel: "放弃修改并离开", destructive: true })) location.assign(href);
+      if (await confirmAction({ title: "还没保存，要离开吗？", description: "这次修改还没有保存。你可以继续编辑，或放弃修改后离开。", confirmLabel: "放弃修改并离开", destructive: true })) {
+        await onDiscard?.();
+        location.assign(href);
+      }
     }, true);
   }
   function focusField(selector) {
@@ -118,5 +212,5 @@
   document.addEventListener("focusout", () => scheduleViewport());
   window.addEventListener("pageshow", () => scheduleViewport());
   scheduleViewport();
-  window.JournalUI = { confirmAction, guardNavigation, focusField };
+  window.JournalUI = { openSheet, confirmAction, chooseOption, chooseDate, guardNavigation, focusField };
 })();

@@ -13,4 +13,12 @@ const result=await p.evaluate(async()=>{
 process.env.OPENAI_API_KEY='test-only';const handler=require('../api/recognize.js'),{servingPolicy}=require('../lib/sticker-policy.cjs');let sent;
 const foods=result.names.map((name,i)=>({name,kcal:result.kcal[i],box:{x:i*250,y:100,width:200,height:300},contour:[]}));
 global.fetch=async(_url,args)=>{sent=JSON.parse(args.body);return{ok:true,json:async()=>({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({foodVisible:true,name:'鸡蛋、沙拉、牛奶',portion:500,kcal:490,carb:45,pro:30,fat:20,notes:'测试响应',foods})}]}]})}};
-const res={setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this}};await handler({method:'POST',headers:{host:'localhost'},body:{photo:'data:image/jpeg;base64,AAAA'}},res);assert.equal(res.code,200);assert.equal(res.body.foods.length,3);assert.equal(res.body.kcal,490);assert(sent.instructions.includes(servingPolicy));console.log('PASS three serving groups, both eggs in one transparent sticker, group calorie totals and recognition contract');process.exit(0)})().catch(e=>{console.error(e);process.exit(1)});
+const res={setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this}};await handler({method:'POST',headers:{host:'localhost'},body:{photo:'data:image/jpeg;base64,AAAA'}},res);assert.equal(res.code,200);assert.equal(res.body.foods.length,3);assert.equal(res.body.kcal,490);assert(sent.instructions.includes(servingPolicy));const singleBox={x:50,y:50,width:850,height:850};
+const parts=foods.slice(0,2);
+global.fetch=async()=>({ok:true,json:async()=>({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({
+ foodVisible:true,name:'混合沙拉',portion:null,kcal:210,carb:null,pro:15,fat:9,notes:'一碗',singleMixedDishBox:singleBox,foods:parts
+})}]}]})});
+await handler({method:'POST',headers:{host:'localhost'},body:{photo:'data:image/jpeg;base64,AAAA'}},res);
+assert.equal(res.code,200);assert.deepEqual(res.body.foods.map(f=>[f.name,f.kcal,f.regions]),[['混合沙拉',210,[singleBox]]]);
+assert.equal(res.body.foods[0].nutrients.carb,null);
+console.log('PASS three serving groups, both eggs in one transparent sticker, group calorie totals and recognition contract');process.exit(0)})().catch(e=>{console.error(e);process.exit(1)});

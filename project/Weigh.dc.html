@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261117-5">
+<link rel="stylesheet" href="./mobile.css?v=20261124-2">
 <title>好好吃饭 早上称重</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261123-1"></script>
-<script src="./interactions.js?v=20261117-5"></script>
+<script src="./journal.js?v=20261124-1"></script>
+<script src="./interactions.js?v=20261124-1"></script>
 </head>
 <body>
 <x-dc>
@@ -25,22 +25,14 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
 </style>
 </helmet>
 <div class="screen screen--flow" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <div class="app-toolbar">
-    <a class="app-icon-button" href="{{backHref}}" aria-label="关闭" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+  <header class="app-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="关闭">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
     </a>
-    <span class="app-toolbar-title">记录体重</span>
-    <span class="app-toolbar-spacer" aria-hidden="true"></span>
-  </div>
+    <h1 class="page-title">{{title}}</h1>
+  </header>
 
-  <div style="display: flex; align-items: center; gap: 14px">
-    <h1 style="margin: 0; font-size: 44px; font-weight: 900; line-height: 1.1">早上好</h1>
-    <div style="position: relative; background: #ECE8FB; color: #5B48B8; font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 18px">
-      <span style="position: absolute; left: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #ECE8FB; border-radius: 2px; transform: rotate(45deg)"></span>
-      <span style="position: relative">{{headingNote}}</span>
-    </div>
-  </div>
-  <span style="font-size: 16px; font-weight: 600; color: #6F6A78; margin-top: -4px">{{dateLabel}}</span>
+  <p class="page-header-note page-subtitle">{{dateLabel}}</p>
 
   <div style="background: #FFFFFF; border-radius: 32px; padding: 26px 20px 22px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; align-items: center; gap: 18px">
     <label class="weight-field">
@@ -171,7 +163,7 @@ class Component extends DCLogic {
     return {
       draft, error, invalid: Boolean(error),
       dateLabel: dateLabel + " " + Journal.dayName(this.date),
-      headingNote: this.date === Journal.today ? "记一笔体重" : "补记这天的体重",
+      title: this.date === Journal.today ? "记录体重" : "补记体重",
       backHref: this.backHref(),
       noWeight: typed === null,
       comparisonTitle: previous ? "上次记录" : "体重记录",

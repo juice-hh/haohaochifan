@@ -1,30 +1,32 @@
 // Local recognition changes are served here when a local API key is available.
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
-const recognize = require('../api/recognize.js');
+const photoHandlers = {
+ '/api/recognize':require('../api/recognize.js'),
+ '/api/match-foods':require('../api/match-foods.js')
+};
 const root=path.resolve(__dirname,'../project');
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
 mime['.woff'] = 'font/woff';
 http.createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://localhost');
-  if(['/api/recognize','/api/match-foods'].includes(url.pathname)){
+  const photoHandler=photoHandlers[url.pathname];
+  if(photoHandler){
    if(req.method!=='POST'){res.writeHead(405).end();return;}
    if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host){res.writeHead(403).end();return;}
    const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>4000000){res.writeHead(413).end();return;}chunks.push(chunk);}
    const body = Buffer.concat(chunks);
-   if (url.pathname === '/api/recognize') {
+   if (process.env.OPENAI_API_KEY) {
     try { req.body = JSON.parse(body); }
     catch {
       res.writeHead(400, {'Content-Type': 'application/json'}).end(JSON.stringify({error: '识别请求格式有误。'}));
       return;
     }
-    if (process.env.OPENAI_API_KEY || (req.body?.dietFocus != null && req.body.dietFocus !== 'basic')) {
-      await recognize(req, {
-        setHeader: (name, value) => res.setHeader(name, value),
-        status: (code) => ({json: (data) => res.writeHead(code, {'Content-Type': 'application/json'}).end(JSON.stringify(data))})
-      });
-      return;
-    }
+    await photoHandler(req, {
+      setHeader: (name, value) => res.setHeader(name, value),
+      status: (code) => ({json: (data) => res.writeHead(code, {'Content-Type': 'application/json'}).end(JSON.stringify(data))})
+    });
+    return;
    }
    const r=await fetch('https://haohaochifan-six.vercel.app'+url.pathname,{method:'POST',headers:{'Content-Type':'application/json'},body,signal:AbortSignal.timeout(60000)});
    res.writeHead(r.status,{'Content-Type':'application/json','Cache-Control':'no-store'}).end(await r.text());return;

@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261123-3">
-<link rel="stylesheet" href="./day.css?v=20261118-1">
+<link rel="stylesheet" href="./mobile.css?v=20261124-2">
+<link rel="stylesheet" href="./day.css?v=20261124-2">
 <title>好好吃饭 单日详情</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261123-1"></script>
+<script src="./journal.js?v=20261124-1"></script>
 <script src="./meal-slots.js?v=20261123-1"></script>
-<script src="./food-stickers.js?v=20261117-5"></script>
+<script src="./food-stickers.js?v=20261124-1"></script>
 </head>
 <body>
 <x-dc>
@@ -22,14 +22,13 @@
     <a class="app-icon-button" href="{{backHref}}" aria-label="返回{{backLabel}}">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>
     </a>
-    <span class="app-toolbar-title">当天饭记</span>
-    <span class="app-toolbar-spacer" aria-hidden="true"></span>
+    <h1 class="page-title">当天饭记</h1>
   </header>
 
   <div class="day-date-row">
     <div>
-      <p class="day-date-caption">{{dayName}} <sc-if value="{{isToday}}"><span>今天</span></sc-if></p>
-      <h1>{{dateLabel}}</h1>
+      <p class="day-date">{{dateLabel}}</p>
+      <p class="page-header-note day-date-caption">{{dayName}} <sc-if value="{{isToday}}"><span>今天</span></sc-if></p>
     </div>
     <nav class="day-date-controls" aria-label="切换日期">
       <a href="{{previousDay}}" aria-label="前一天">‹</a>

@@ -15,9 +15,9 @@ const Journal = (() => {
   const legacyWeightPrefix = "hhcf-weight-v1:";
   const planPrefix = "hhcf-plan-v1:";
   const planStickers = [
-    { id: "workout", icon: "🏋️", label: "锻炼" },
-    { id: "walk", icon: "🚶", label: "散步" },
-    { id: "cook", icon: "🍳", label: "做饭" }
+    { id: "workout", label: "锻炼" },
+    { id: "walk", label: "散步" },
+    { id: "cook", label: "做饭" }
   ];
   // Store weights in hundredths of a kilogram for exact input and comparisons.
   const weightLimits = { min: 10, max: 50000 };
@@ -412,6 +412,9 @@ const Journal = (() => {
   return {
     params, today, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
     shortDate, dayName, isDate, selected, link, day, estimate,
+    readPhotoDraft: (id) => accessPhotos("readonly", (store) => store.get("draft:" + id)),
+    writePhotoDraft: (id, draft) => accessPhotos("readwrite", (store) => store.put(draft, "draft:" + id)),
+    clearPhotoDraft: (id) => accessPhotos("readwrite", (store) => store.delete("draft:" + id)),
     getMeal, mealMacros, mealFocusNutrient, dayFocusNutrients, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
     dietFocuses, focusNutrients, readDietFocus, saveDietFocus,
     savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, formatWeight,

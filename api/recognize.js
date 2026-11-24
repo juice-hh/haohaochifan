@@ -13,26 +13,28 @@ const dietFocuses = {
 };
 const optionalGrams = { type: ["number", "null"], minimum: 0, maximum: 10000 };
 const gramFields = (keys) => Object.fromEntries(keys.map(key => [key, optionalGrams]));
+const validAmount = value => value === null || (Number.isFinite(value) && value >= 0 && value <= 10000);
 const macroKeys = ["carb", "pro", "fat"];
 const regionSchema={type:"object",additionalProperties:false,required:["x","y","width","height"],properties:Object.fromEntries(["x","y","width","height"].map(key=>[key,{type:"number",minimum:0,maximum:1000}]))};
 const validRegion=b=>b&&["x","y","width","height"].every(k=>Number.isFinite(b[k]))&&b.x>=0&&b.y>=0&&b.width>0&&b.height>0&&b.x+b.width<=1000.01&&b.y+b.height<=1000.01;
 const schema = {
   type: "object",
   additionalProperties: false,
-  required: ["foodVisible", "name", "portion", "kcal", "carb", "pro", "fat", "notes", "foods"],
+  required: ["foodVisible", "name", "portion", "kcal", "carb", "pro", "fat", "notes", "singleMixedDishBox", "foods"],
   properties: {
     foodVisible: { type: "boolean" },
     name: { type: "string" },
-    portion: { type: "number" },
-    kcal: { type: "number" },
-    carb: { type: "number" },
-    pro: { type: "number" },
-    fat: { type: "number" },
+    portion: optionalGrams,
+    kcal: optionalGrams,
+    carb: optionalGrams,
+    pro: optionalGrams,
+    fat: optionalGrams,
     notes: { type: "string" },
+    singleMixedDishBox: { ...regionSchema, type: ["object", "null"] },
     foods: { type: "array", maxItems: 16, items: {
       type: "object", additionalProperties: false, required: ["name", "kcal", "box", "contour", "regions"],
       properties: {
-        name: { type: "string" }, kcal: { type: "number", minimum: 0, maximum: 10000 },
+        name: { type: "string" }, kcal: optionalGrams,
         box: { type: "object", additionalProperties: false, required: ["x", "y", "width", "height"],
           properties: Object.fromEntries(["x", "y", "width", "height"].map(key => [key, { type: "number", minimum: 0, maximum: 1000 }])) },
         regions:{type:"array",minItems:1,maxItems:8,items:regionSchema},
@@ -94,7 +96,8 @@ module.exports = async function handler(req, res) {
       },
       signal: AbortSignal.timeout(45000),
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: "gpt-5.4",
+        reasoning: { effort: "low" },
         store: false,
         max_output_tokens: 6500,
         instructions: focus.instructions ? recognitionInstructions + "\n\n" + focus.instructions +
@@ -127,11 +130,11 @@ module.exports = async function handler(req, res) {
     if (typeof meal.foodVisible !== "boolean" || typeof meal.name !== "string" ||
         typeof meal.notes !== "string" ||
         !["portion", "kcal", "carb", "pro", "fat"].every((key) =>
-          Number.isFinite(meal[key]) && meal[key] >= 0 && meal[key] <= 10000)) {
+          validAmount(meal[key]))) {
       throw new Error("Invalid estimate");
     }
     if (!Array.isArray(meal.foods) || meal.foods.length > 16 || meal.foods.some(food =>
-      !food || typeof food.name !== "string" || !food.name.trim() || !Number.isFinite(food.kcal) || food.kcal < 0 || food.kcal > 10000 ||
+      !food || typeof food.name !== "string" || !food.name.trim() || !validAmount(food.kcal) ||
       !food.box || !["x", "y", "width", "height"].every(key => Number.isFinite(food.box[key])) ||
       food.box.x < 0 || food.box.y < 0 || food.box.width <= 0 || food.box.height <= 0 ||
       food.box.x + food.box.width > 1000.01 || food.box.y + food.box.height > 1000.01 ||
@@ -152,14 +155,30 @@ module.exports = async function handler(req, res) {
       if (typeof nutrients.totalSugar === "number" && nutrients.addedSugar > nutrients.totalSugar) nutrients.addedSugar = null;
       return { ...food, nutrients, regions:food.regions||[food.box], name: food.name.trim().slice(0, 60) };
     });
-    if (meal.foods.length) meal.kcal = Math.round(meal.foods.reduce((sum, food) => sum + food.kcal, 0));
-    if (meal.kcal > 10000) throw new Error("Invalid calorie total");
     for (const key of focus.fields) {
       const value = meal[key];
-      const maximum = key === "fiber" ? 10000 : meal.carb;
+      const maximum = key === "fiber" ? 10000 : (meal.carb ?? 10000);
       meal[key] = meal.foodVisible && Number.isFinite(value) && value >= 0 && value <= maximum ? value : null;
     }
     if (typeof meal.totalSugar === "number" && meal.addedSugar > meal.totalSugar) meal.addedSugar = null;
+    if (meal.foodVisible && meal.foods.length > 1 && validRegion(meal.singleMixedDishBox) && meal.name.trim()) {
+      const box = meal.singleMixedDishBox;
+      const centersInside = meal.foods.every(({box: part}) => {
+        const x = part.x + part.width / 2, y = part.y + part.height / 2;
+        return x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
+      });
+      if (centersInside) {
+        // The model identified a single mixed serving but returned ingredient rows.
+        // Use the whole meal estimate to avoid counting a dish and its ingredients twice.
+        meal.foods = [{ name: meal.name.trim().slice(0, 60), kcal: meal.kcal, box, regions: [box], contour: [],
+          nutrients: Object.fromEntries(foodKeys.map(key => [key, validAmount(meal[key]) ? meal[key] : null])) }];
+      }
+    }
+    delete meal.singleMixedDishBox;
+    if (meal.foods.length && meal.foods.every(food => food.kcal !== null)) {
+      meal.kcal = Math.round(meal.foods.reduce((sum, food) => sum + food.kcal, 0));
+    }
+    if (meal.kcal > 10000) throw new Error("Invalid calorie total");
     meal.name = meal.name.slice(0, 60);
     meal.notes = meal.notes.slice(0, 500);
     return res.status(200).json(meal);

@@ -1,9 +1,9 @@
 .record-screen { gap: 10px !important; }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .record-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px; }
-.record-meta input,.record-meta select { min-height: 44px; min-width: 0; max-width: 100%; border: 0; background: transparent; color: #6F6A78; font: inherit; font-size: 15px; font-weight: 650; }
+.record-meta button { min-height: 44px; min-width: 0; max-width: 100%; border: 0; background: transparent; color: #6F6A78; font: inherit; font-size: 15px; font-weight: 650; }
 .record-date { min-width: 0; }
-.record-kind select { color: #5B48B8; padding: 0 8px; }
+.record-date { padding: 0 9px; }
+.record-meta .record-kind { display: inline-flex; align-items: center; gap: 7px; color: #5B48B8; padding: 0 8px; }
 .record-screen .meal-photo-card { padding: 10px; gap: 6px; border-radius: 26px; box-shadow: none; }
 .record-screen .meal-photo-preview { height: clamp(180px,29vh,246px); max-height: 246px; border-radius: 18px; object-fit: contain; }
 .photo-edit-row { width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }

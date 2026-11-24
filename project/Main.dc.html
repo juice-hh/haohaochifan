@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261123-3">
+<link rel="stylesheet" href="./mobile.css?v=20261124-2">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261123-1"></script>
+<script src="./journal.js?v=20261124-1"></script>
 <script src="./meal-slots.js?v=20261123-1"></script>
 <script src="./navigation.js?v=20261121-2"></script>
-<script src="./food-stickers.js?v=20261122-2"></script>
+<script src="./food-stickers.js?v=20261124-1"></script>
 </head>
 <body>
 <x-dc>
@@ -24,16 +24,16 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
 <div class="screen screen--tabs screen--week">
-  <header class="week-header">
-    <h1>{{weekTitle}}</h1>
+  <header class="page-header week-header">
+    <h1 class="page-title">{{weekTitle}}</h1>
     <div class="week-header-actions">
-      <a class="app-icon-button" href="{{planHref}}" aria-label="贴计划" title="贴计划"
+      <a class="app-icon-button" href="{{planHref}}" aria-label="贴计划"
          onPointerDown="{{pressHeaderAction}}" onPointerUp="{{releaseHeaderAction}}"
          onPointerCancel="{{releaseHeaderAction}}" onPointerLeave="{{releaseHeaderAction}}">
         <img class="week-action-idle" src="./icons/week-plan-clipboard.png?v=3" width="26" height="26" alt="" draggable="false">
         <img class="week-action-active" src="./icons/week-plan-clipboard-active.png" width="26" height="26" alt="" draggable="false">
       </a>
-      <a class="app-icon-button" href="{{weighHref}}" aria-label="称重" title="称重"
+      <a class="app-icon-button" href="{{weighHref}}" aria-label="称重"
          onPointerDown="{{pressHeaderAction}}" onPointerUp="{{releaseHeaderAction}}"
          onPointerCancel="{{releaseHeaderAction}}" onPointerLeave="{{releaseHeaderAction}}">
         <img class="week-action-idle" src="./icons/week-weigh-scale.png?v=3" width="26" height="26" alt="" draggable="false">
@@ -75,7 +75,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
             <span class="week-date">{{d.date}}</span>
             <sc-if value="{{showWeekPlans}}">
               <span class="plan-markers" aria-hidden="true">
-                <sc-for list="{{d.plans}}" as="p"><span>{{p.icon}}</span></sc-for>
+                <sc-for list="{{d.plans}}" as="p"><span class="plan-icon" data-plan="{{p.id}}"></span></sc-for>
               </span>
             </sc-if>
           </span>
@@ -103,7 +103,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     <sc-if value="{{selectedHasPlans}}">
       <div class="selected-plans">
         <sc-for list="{{selectedPlans}}" as="p">
-          <span><span aria-hidden="true">{{p.icon}}</span> {{p.label}}</span>
+          <span><span class="plan-icon" data-plan="{{p.id}}" aria-hidden="true"></span> {{p.label}}</span>
         </sc-for>
       </div>
     </sc-if>

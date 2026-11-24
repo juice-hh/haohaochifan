@@ -19,15 +19,21 @@ export function cleanMask(input,width,height,points=[]){
  const result=new Uint8Array(n);let area=0,removed=0;for(let i=0;i<n;i++){if(keep.has(labels[i])){result[i]=1;area++;}else if(input[i])removed++;}
  // Fill only small fully enclosed holes. Open gaps between food pieces stay transparent.
  const excluded=new Set(points.filter(p=>p.label===0).map(p=>Math.max(0,Math.min(height-1,Math.round(p.y/1000*height)))*width+Math.max(0,Math.min(width-1,Math.round(p.x/1000*width)))));
- const visited=new Uint8Array(n),maxHole=Math.min(256,Math.max(8,area*.015));let filled=0;
+ const visited=new Uint8Array(n),maxHole=Math.min(256,Math.max(8,area*.015));let filled=0,largestHole=0;
  for(let i=0;i<n;i++)if(!result[i]&&!visited[i]){
   let head=0,tail=1,touches=false,explicitlyExcluded=false;queue[0]=i;visited[i]=1;
   while(head<tail){const p=queue[head++],x=p%width,y=Math.floor(p/width);if(excluded.has(p))explicitlyExcluded=true;if(!x||!y||x===width-1||y===height-1)touches=true;
-   for(const q of [x>0?p-1:-1,x<width-1?p+1:-1,y>0?p-width:-1,y<height-1?p+width:-1])if(q>=0&&!result[q]&&!visited[q]){visited[q]=1;queue[tail++]=q;}
+   let q=p-1;if(x>0&&!result[q]&&!visited[q]){visited[q]=1;queue[tail++]=q;}
+   q=p+1;if(x<width-1&&!result[q]&&!visited[q]){visited[q]=1;queue[tail++]=q;}
+   q=p-width;if(y>0&&!result[q]&&!visited[q]){visited[q]=1;queue[tail++]=q;}
+   q=p+width;if(y<height-1&&!result[q]&&!visited[q]){visited[q]=1;queue[tail++]=q;}
   }
-  if(!touches&&!explicitlyExcluded&&tail<=maxHole){for(let j=0;j<tail;j++)result[queue[j]]=1;filled+=tail;}
+  if(!touches&&!explicitlyExcluded){
+   if(tail<=maxHole){for(let j=0;j<tail;j++)result[queue[j]]=1;filled+=tail;}
+   else largestHole=Math.max(largestHole,tail);
+  }
  }
- return {values:result,removed,filled,components:keep.size,area:area+filled};
+ return {values:result,removed,filled,largestHole,components:keep.size,area:area+filled};
 }
 export function signature(values,width,height){const out=new Uint8Array(1600);for(let y=0;y<40;y++)for(let x=0;x<40;x++)out[y*40+x]=values[Math.min(height-1,Math.floor((y+.5)*height/40))*width+Math.min(width-1,Math.floor((x+.5)*width/40))];return out;}
 export function overlap(a,b){let intersection=0,union=0;for(let i=0;i<a.length;i++){if(a[i]&&b[i])intersection++;if(a[i]||b[i])union++;}return union?intersection/union:0;}
