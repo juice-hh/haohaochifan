@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F7F5FC">
+<meta name="theme-color" content="#F3F2EF">
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261125-4">
+<link rel="stylesheet" href="./mobile.css?v=20261126-4">
 <title>好好吃饭 饭相册</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261125"></script>
@@ -23,7 +23,7 @@ body{margin:0}
 a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
 </style>
 </helmet>
-<div class="screen screen--tabs" style="background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
+<div class="screen screen--tabs" style="background: #F3F2EF; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
   <header class="page-header">
     <h1 class="page-title">饭相册</h1>
     <p class="page-header-note">{{monthCount}}</p>
@@ -38,11 +38,11 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
   <sc-if value="{{isCal}}" hint-placeholder-val="{{true}}">
     <div style="background: #FFFFFF; border-radius: 32px; padding: 16px 12px 14px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 8px">
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px">
-        <button class="app-step-button" aria-label="上个月" onClick="{{previousMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+        <button class="app-step-button" aria-label="上个月" onClick="{{previousMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F3F2EF; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
         </button>
         <span style="font-size: 18px; font-weight: 900">{{monthLabel}}</span>
-        <button class="app-step-button" aria-label="下个月" onClick="{{nextMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F7F5FC; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
+        <button class="app-step-button" aria-label="下个月" onClick="{{nextMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F3F2EF; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
         </button>
       </div>

@@ -27,8 +27,8 @@
 .record-screen :is(summary,select,input,button):focus-visible { outline: 2px solid #7A66E0; outline-offset: 3px; }
 @media (max-height: 700px) { .record-screen .meal-photo-preview { height: 180px; } }
 
-.record-screen { background: #fafaf6 !important; }
-.record-screen .app-toolbar,.record-screen .record-actions { background: #fafaf6; }
+.record-screen { background: #F3F2EF !important; }
+.record-screen .app-toolbar,.record-screen .record-actions { background: #F3F2EF; }
 .record-screen .record-save { border-radius: 14px !important; background: #50418f !important; box-shadow: none !important; }
 .record-screen .record-food-results { gap: 8px; padding: 0 4px; border-radius: 0; background: transparent; border-top: 1px solid #e5e1e7; }
 .record-food-results h2 { margin: 0; font-size: 16px; }
@@ -122,3 +122,18 @@
 .cutout-guide path { stroke: #fff; fill: #7651d340; stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 
 @media (max-height: 535px) { .capture-viewfinder { min-height: 125px; height: max(125px, 37svh); } }
+
+/* Theme: summary as a dark highlight card, purple stays the action colour */
+.record-meal-summary { padding: 20px; border-radius: 28px; background: #2B2A29; color: #FFFFFF; }
+.record-meal-summary h2 { color: #FFFFFF; font-size: 15px; }
+.record-meal-summary .sticker-nutrition-line strong { color: #FFD84A; font-size: 30px; font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; }
+.record-meal-summary .recognition-macro-legend span { color: #D9D4CD; }
+.record-meal-summary .recognition-macro-legend strong { color: #FFFFFF; }
+.record-meal-summary .nutrition-focus-cards > div { background: rgba(255, 255, 255, 0.1); color: #D9D4CD; border-radius: 999px; padding: 4px 10px; }
+.record-meal-summary .nutrition-focus-cards strong { color: #FFFFFF; }
+.food-result .sticker-nutrition-line strong { font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; font-size: 20px; }
+.nutrition-focus-cards > div { background: #FFF6DC; color: #7A5A12; border-radius: 999px; padding: 3px 9px; }
+.nutrition-focus-cards strong { color: #5C4310; }
+.food-result { border: 0; }
+.record-screen .record-save { background: #7A66E0 !important; }
+.record-delete { border-radius: 999px; }

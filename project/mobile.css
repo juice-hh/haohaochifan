@@ -31,7 +31,7 @@ x-dc {
   --week-rule: #E1DBED;
   display: flex;
   flex-direction: column;
-  background: #F7F5FC;
+  background: #F3F2EF;
   color: #2A2633;
   font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
 }
@@ -243,7 +243,7 @@ x-dc {
   width: 100%;
   max-height: 320px;
   border-radius: 20px;
-  background: #F7F5FC;
+  background: #F3F2EF;
   object-fit: contain;
 }
 
@@ -365,7 +365,7 @@ x-dc {
   padding-inline: 12px;
   border: 1px solid #E4DFF5;
   border-radius: 14px;
-  background: #F7F5FC;
+  background: #F3F2EF;
   color: #2A2633;
   font: inherit;
   font-size: 16px;
@@ -417,7 +417,7 @@ x-dc {
   gap: 8px;
   margin-top: auto;
   padding: 12px 0 max(12px, env(safe-area-inset-bottom));
-  background: #F7F5FC;
+  background: #F3F2EF;
 }
 
 .record-save[aria-disabled="true"] {
@@ -430,7 +430,7 @@ x-dc {
   margin: 0;
   padding: 10px 12px;
   border-radius: 14px;
-  background: #F7F5FC;
+  background: #F3F2EF;
   color: #5B48B8;
   font-size: 13px;
   line-height: 1.5;
@@ -456,7 +456,7 @@ journal-nav {
   box-sizing: border-box;
   width: min(100%, 390px);
   padding: 8px max(16px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background: linear-gradient(transparent, #F7F5FC 42%);
+  background: linear-gradient(transparent, #F3F2EF 42%);
 }
 
 .journal-dock { display: flex; align-items: center; gap: 10px; }
@@ -576,7 +576,7 @@ html[data-keyboard-open] .screen--tabs journal-nav { visibility: hidden; pointer
   z-index: 25;
   margin: calc(-1 * (var(--top-spacing) + env(safe-area-inset-top))) calc(-1 * var(--screen-right)) 0 calc(-1 * var(--screen-left));
   padding: calc(var(--top-spacing) + env(safe-area-inset-top)) var(--screen-right) 4px var(--screen-left);
-  background: #F7F5FC;
+  background: #F3F2EF;
 }
 .app-toolbar .app-icon-button {
   flex: none;
@@ -595,7 +595,7 @@ html[data-keyboard-open] .screen--tabs journal-nav { visibility: hidden; pointer
 .meal-photo-actions > :is(button, label) { flex: 1; min-height: 52px; font-size: 15px; }
 .goal-save { min-height: 54px !important; background: #7A66E0; font-size: 16px; }
 .weight-input-hint { color: #6F6A78; font-size: 12px; margin-top: -8px; }
-.app-sheet { box-sizing: border-box; width: min(calc(100% - 24px), 366px); max-height: calc(100dvh - 48px); overflow: auto; margin: auto auto max(12px, env(safe-area-inset-bottom)); padding: 24px 20px 16px; border: 0; border-radius: 30px; background: #F7F5FC; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; box-shadow: 0 12px 40px #2A263333; }
+.app-sheet { box-sizing: border-box; width: min(calc(100% - 24px), 366px); max-height: calc(100dvh - 48px); overflow: auto; margin: auto auto max(12px, env(safe-area-inset-bottom)); padding: 24px 20px 16px; border: 0; border-radius: 30px; background: #F3F2EF; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; box-shadow: 0 12px 40px #2A263333; }
 .app-sheet-overlay { position: fixed; inset: 0; z-index: 100; display: grid; align-items: end; background: rgba(42,38,51,.32); }
 .app-sheet { overscroll-behavior: contain; }
 .app-sheet :is(button, [role="button"]) { touch-action: manipulation; }
@@ -1217,7 +1217,7 @@ span.meal-slot .meal-slot-plate { opacity: .7; }
 /* Journal browsing, capture entry points and shared nutrition graphics */
 .journal-dock .journal-camera { border: 0; cursor: pointer; }
 .journal-dock button:focus-visible { outline: 2px solid #5b48b8; outline-offset: 3px; }
-journal-nav[page="Day"] { background: linear-gradient(transparent, #fafaf6 42%); }
+journal-nav[page="Day"] { background: linear-gradient(transparent, #F3F2EF 42%); }
 journal-nav[page="Day"] .journal-dock { justify-content: flex-end; }
 .app-sheet-overlay:has(.journal-record-menu) { justify-content: center; grid-template-columns: minmax(0, 328px); align-items: end; padding: 0 16px; }
 .app-sheet.journal-record-menu {
@@ -1424,3 +1424,86 @@ button.meal-slot:is(:active, :focus-visible) { background: #f2edf9; color: #5b48
 .movement-card > .movement-heading,.movement-card > .movement-progress,.movement-card > .focus-chart,.movement-card > .movement-form,.goal-weight-trend { align-self: stretch; }
 .goal-weight-trend { height: 64px; overflow: visible; }
 .goal-weight-trend circle { fill: #fff; stroke: #8067d5; stroke-width: 2.5; }
+
+/* ---------- Theme: warm grey canvas, roomy white cards, big rounded numbers ----------
+   Layout language borrowed from 不务正业; purple stays as the brand accent. */
+:root {
+  --hh-bg: #F3F2EF;
+  --hh-card: #FFFFFF;
+  --hh-ink: #2A2622;
+  --hh-muted: #8F8A84;
+  --hh-line: #ECE9E3;
+  --hh-purple: #7A66E0;
+  --hh-purple-deep: #5B48B8;
+  --hh-purple-soft: #EEEAFD;
+  --hh-yellow: #FFD84A;
+  --hh-cream: #FFF6DC;
+  --hh-dark: #2B2A29;
+  --hh-shadow: 0 10px 30px rgba(60, 45, 30, 0.06);
+  --hh-num: ui-rounded, "SF Pro Rounded", "Nunito", "PingFang SC", system-ui, sans-serif;
+}
+html, body { background: var(--hh-bg); }
+.screen--week { --week-muted: var(--hh-muted); --week-rule: var(--hh-line); background: var(--hh-bg); color: var(--hh-ink); }
+
+/* Titles */
+.page-title { font-size: 30px; letter-spacing: .5px; }
+.week-day-header h2 { font-size: 22px; }
+
+/* Cards */
+.goal-card, .focus-trend, .week-day-record, .day-meal-card, .day-nutrition, .meal-photo-card,
+.record-meal-name, .food-result, .record-disclosure, .capture-panel .app-segmented {
+  border-radius: 32px;
+  background: var(--hh-card);
+  box-shadow: var(--hh-shadow);
+}
+.week-day-record { margin-top: 18px; padding: 20px 18px 18px; }
+.focus-trend { padding: 20px 18px 14px; margin-top: 14px; }
+.goal-card { padding: 22px; }
+
+/* Calendar: each day is a soft pill, today ringed like 不务正业 */
+.week-calendar-day { border-radius: 999px; }
+.week-calendar-day[aria-pressed="true"] { background: #FFFFFF; box-shadow: var(--hh-shadow); color: var(--hh-purple-deep); }
+.week-calendar-day[aria-current="date"]:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 2px var(--hh-purple); }
+.week-calendar-day[aria-pressed="true"] .week-weekday { background: var(--hh-purple); }
+.week-weekday { font-size: 12px; }
+.week-date { font-family: var(--hh-num); font-size: 16px; }
+
+/* Big numbers */
+.week-nutrients { margin-top: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 14px; }
+.week-nutrients .week-energy { grid-column: 1 / -1; }
+.week-nutrient strong, .week-energy strong { font-weight: 800; }
+.week-nutrient.week-energy strong { font-family: var(--hh-num); font-size: 48px; line-height: 1; color: var(--hh-purple); letter-spacing: -1px; }
+.week-energy small { font-size: 13px; font-weight: 700; color: var(--hh-ink); }
+.week-nutrient strong { font-family: var(--hh-num); font-size: 20px; }
+.week-macro-bar { height: 10px; gap: 3px; border-radius: 999px; margin-top: 14px; }
+.week-macro-bar span { border-radius: 999px; }
+.goal-current { font-family: var(--hh-num); }
+
+/* Focus nutrients become cream capsules */
+.screen .day-focus-nutrient { border-radius: 999px; background: var(--hh-cream); color: #7A5A12; padding: 9px 16px; }
+.screen .day-focus-nutrient strong { color: #5C4310; font-family: var(--hh-num); }
+
+/* Sticker board */
+.week-board { border: 0; border-radius: 26px; background: #F8F7F4; }
+.week-board-switch button[aria-pressed="true"] { color: #FFFFFF; }
+.week-board-switch button[aria-pressed="true"] svg { background: var(--hh-dark); border-radius: 999px; }
+
+/* Weekly focus chart: rounded columns */
+.focus-chart-bar { width: min(12px, 40%); border-radius: 999px; }
+.focus-chart button[aria-pressed="true"] { background: var(--hh-purple-soft); }
+
+/* Segmented controls and primary buttons */
+.app-segmented { background: #FFFFFF; box-shadow: var(--hh-shadow); }
+.app-segmented button[aria-pressed="true"] { background: var(--hh-dark); color: #FFFFFF; }
+.goal-save, .record-save { border-radius: 999px !important; }
+
+/* Bottom dock: dark capsule tab bar + purple camera, like the reference action bar */
+journal-nav { background: linear-gradient(transparent, var(--hh-bg) 42%); }
+.journal-dock nav { background: var(--hh-dark); border: 0; box-shadow: 0 12px 30px rgba(43, 42, 41, 0.28); }
+.journal-dock nav a { color: #B9B4AD; }
+.journal-dock nav a { --nav-icon-body: #6E6A65; --nav-icon-cutout: var(--hh-dark); --nav-icon-detail: #D9D4CD; }
+.journal-dock nav svg { filter: none; }
+.journal-dock nav a[aria-current="page"] { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; }
+.journal-dock nav a:is([aria-current="page"], :active, :focus-visible) { --nav-icon-body: #B7A8FF; --nav-icon-cutout: var(--hh-dark); }
+.week-header .settings-link { --nav-icon-body: #CFCAC3; --nav-icon-cutout: var(--hh-bg); --nav-icon-detail: #8F8A84; }
+.journal-dock .journal-camera { box-shadow: 0 0 0 5px var(--hh-bg), 0 12px 26px rgba(122, 102, 224, 0.4); }

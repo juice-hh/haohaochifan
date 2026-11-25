@@ -66,3 +66,20 @@ body { margin: 0; }
 .day-meal-body > div a { display: inline-flex; align-items: center; min-height: 44px; color: var(--day-action); font-size: 12px; font-weight: 750; }
 .day-meal-body button { background: transparent; border: 0; padding: 0 6px; min-height: 44px; font: inherit; font-size: 12px; font-weight: 750; color: #a42b3d; cursor: pointer; }
 .day-weight-note { margin: 2px 4px; color: var(--day-muted); font-size: 13px; }
+
+/* Theme: warm canvas, each meal is its own white card */
+.day-screen { --day-paper: #F3F2EF; --day-ink: #2A2622; --day-muted: #8F8A84; --day-rule: transparent; --day-action: #5B48B8; gap: 14px; }
+.day-date { font-size: 24px; }
+.day-timeline { display: grid; gap: 12px; border: 0; }
+.day-meal-section { padding: 6px 16px 10px; border: 0; border-radius: 28px; background: #FFFFFF; box-shadow: 0 10px 30px rgba(60, 45, 30, 0.06); }
+.day-meal-section:not(:has(.day-meal-card)) { padding-block: 0; background: transparent; box-shadow: none; }
+.day-meal-header h2 { font-size: 17px; }
+.day-meal-card { padding: 0; margin: 0 0 10px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.day-meal-card img { border-radius: 20px; }
+.day-meal-body strong { font-size: 16px; }
+.day-meal-body > div a { padding: 0 14px; min-height: 36px; border-radius: 999px; background: #EEEAFD; }
+.day-meal-body button { min-height: 36px; padding: 0 14px; border-radius: 999px; background: #FBE9E7; }
+.day-nutrition { padding: 20px 18px 16px; }
+.day-macro-values div { border-left: 0; padding: 12px; border-radius: 18px; background: #F8F7F4; }
+.day-macro-values strong { font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; }
+.day-overview strong { font-size: 18px; color: #7A66E0; }
