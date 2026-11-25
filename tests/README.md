@@ -33,3 +33,5 @@ NODE_PATH='../好好吃饭原型/node_modules' node tests/food-stickers.cjs
 额外边界回归：`NODE_PATH='../好好吃饭原型/node_modules' node tests/cutout-edge.cjs`。验证旧方框/多边形不会作为完成贴纸渲染、抠图中取消后可重试、真实遮罩包含透明区域，以及保存刷新后仍保留。
 
 照片处理专项使用 `NODE_PATH='../好好吃饭原型/node_modules' node tests/mobile-photo-reliability.cjs`。在 Chromium 和 WebKit 中验证本周顶部触摸入口、计划图标、日期弹层、处理途中重载后的照片草稿，以及选图后自动生成并保存透明贴纸。识别结果由测试提供，像素分割使用真实图片和本地模型。
+
+透明贴纸手动选择专项使用 `NODE_PATH='../好好吃饭原型/node_modules' node tests/cutout-selection.cjs`。在 Chromium 和 WebKit 中对真实沙拉照片操作多点、框选和圈画，核对整碗大小、透明背景与白边。识别接口在该专项中保持关闭。

@@ -40,6 +40,13 @@
     <circle cx="12" cy="12.9" r="3.65" fill="var(--nav-icon-cutout)"/>
     <circle cx="17.45" cy="9.43" r="1.08" fill="var(--nav-icon-orange)"/>
   `;
+  const dumbbell = `
+    <rect x="6" y="10.1" width="12" height="3.8" rx="1.9"/>
+    <rect x="3" y="7.6" width="3.8" height="8.8" rx="1.9"/>
+    <rect x="6.1" y="5.1" width="4.6" height="13.8" rx="2.15"/>
+    <rect x="13.3" y="5.1" width="4.6" height="13.8" rx="2.15"/>
+    <rect x="17.2" y="7.6" width="3.8" height="8.8" rx="1.9"/>
+  `;
   const icon = (paths) =>
     '<svg width="26" height="26" viewBox="0 0 24 24" fill="var(--nav-icon-body)" aria-hidden="true">' + paths + '</svg>';
 
@@ -47,14 +54,71 @@
     static get observedAttributes() { return ["date"]; }
     connectedCallback() { this.render(); }
     attributeChangedCallback() { if (this.isConnected) this.render(); }
+
     render() {
       const active = this.getAttribute("page");
       const value = this.getAttribute("date");
       const date = Journal.isDate(value) ? value : Journal.selected();
-      const recordDate = date > Journal.today ? Journal.today : date;
-      this.innerHTML = '<div class="journal-dock"><nav aria-label="主导航">' + items.map((item) =>
+      const onlyRecord = active === "Day";
+      const tabs = onlyRecord ? "" : '<nav aria-label="主导航">' + items.map((item) =>
         '<a href="' + Journal.link(item.page, date) + '"' + (active === item.page ? ' aria-current="page"' : '') + '>' + icon(item.icon) + '<span>' + item.label + '</span></a>'
-      ).join("") + '</nav><a class="journal-camera" aria-label="拍一餐" href="' + Journal.link("Record", recordDate, { returnTo: items.some((item) => item.page === active) ? active : "Main" }) + '">' + icon(camera) + '</a></div>';
+      ).join("") + '</nav>';
+      this.innerHTML = '<div class="journal-dock">' + tabs + '<button type="button" class="journal-camera" aria-label="记录" aria-haspopup="dialog" aria-expanded="false">' + icon(camera) + '</button></div>';
+      this.querySelector("button").onclick = () => this.open();
+    }
+
+    open(kind) {
+      const button = this.querySelector("button");
+      if (!button || button.getAttribute("aria-expanded") === "true") return;
+      const date = Journal.isDate(this.getAttribute("date")) ? this.getAttribute("date") : Journal.selected();
+      const recordDate = date > Journal.today ? Journal.today : date;
+      const active = this.getAttribute("page");
+      const isDay = active === "Day";
+      const via = this.getAttribute("via") === "album" ? "album" : "week";
+      const back = isDay ? { from: "day", via } : { returnTo: active };
+      const entries = [
+        ["camera", kind ? "记" + Journal.kinds[kind] : "记一餐", Journal.link("Record", recordDate, { ...back, ...(kind ? { kind } : {}) })],
+        ["scale", "记体重", Journal.link("Weigh", recordDate, back)],
+        ["plan", "贴计划", Journal.link("Album", date, { plan: "1" })],
+        ["move", "记运动", Journal.link("Goal", recordDate) + "#movement"]
+      ];
+      button.setAttribute("aria-expanded", "true");
+      JournalUI.openSheet({
+        title: "添加记录", className: "journal-record-menu",
+        description: date > Journal.today ? "餐食和体重将记在今天，计划贴在所选日期。" : Journal.shortDate(date),
+        render(sheet, close) {
+          const actions = document.createElement("div");
+          actions.className = "journal-menu-actions";
+          for (const [type, label, href] of entries) {
+            const link = document.createElement("a");
+            link.className = "journal-menu-action";
+            link.href = href;
+            link.onclick = (event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              close(link.href);
+            };
+            const mark = document.createElement("span");
+            mark.className = "journal-menu-mark";
+            mark.setAttribute("aria-hidden", "true");
+            if (type === "camera") mark.innerHTML = icon(camera);
+            else if (type === "move") mark.innerHTML = icon(dumbbell);
+            else {
+              const image = document.createElement("img");
+              image.src = "./icons/week-" + (type === "scale" ? "weigh-scale" : "plan-clipboard") + ".png";
+              image.alt = "";
+              mark.append(image);
+            }
+            const name = document.createElement("span");
+            name.textContent = label;
+            link.append(mark, name);
+            actions.append(link);
+          }
+          sheet.append(actions);
+          return actions.firstElementChild;
+        }
+      }).then(href => { if (href) return JournalUI.navigate(href); })
+        .finally(() => button.setAttribute("aria-expanded", "false"));
     }
   }
   customElements.define("journal-nav", JournalNav);

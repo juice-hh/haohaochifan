@@ -31,11 +31,22 @@
         hasFoods:foods.length>0, missingFoods:!foods.length,
         editHref:Journal.link('Record',date,{edit:meal.id,from:'day',via}),
         wholeKcal:Number.isFinite(meal.kcal)?'整餐约 '+Math.round(meal.kcal)+' kcal':'整餐热量未填写',
-        foods:foods.map(f=>({name:f.name,photo,box:JSON.stringify(f.box),cutout:JSON.stringify(f.cutout),
-          energy:f.kcal, nutrients:f.nutrients,
-          hasSticker:!!photo&&!!f.cutout, partial:!!f.cutout&&!!f.reviewReason,
-          kcal:f.kcal===null?'热量待补充':'约 '+Math.round(f.kcal)+' kcal',
-          label:f.name+'，'+(f.kcal===null?'热量待补充':'约 '+Math.round(f.kcal)+' 千卡')}))
+        foods:foods.map(f=>{
+          const sameServing = foods.length === 1 && f.kcal !== null && Number.isFinite(meal.kcal) &&
+            Math.round(f.kcal) === Math.round(meal.kcal);
+          const stored = f.nutrients ?? {};
+          let nutrients = f.nutrients;
+          if (sameServing) {
+            const legacy = { ...meal.focusNutrients };
+            ["carb","pro","fat"].forEach((key, i) => { legacy[key] = Journal.mealMacros(meal)[i]; });
+            nutrients = Object.fromEntries(Object.keys(nutrientLabels).map(key => [key, stored[key] ?? legacy[key]]));
+          }
+          const kcal = f.kcal===null?'热量待补充':'约 '+ Math.round(f.kcal)+' kcal';
+          return {name:f.name,photo,box:JSON.stringify(f.box),cutout:JSON.stringify(f.cutout),
+            energy:f.kcal, nutrients,
+            hasSticker:!!photo&&!!f.cutout, partial:!!f.cutout&&!!f.reviewReason,
+            kcal, label:f.name+'，'+(f.kcal===null?kcal:'约 '+ Math.round(f.kcal)+' 千卡')};
+        })
       };
     });
   }
@@ -106,7 +117,7 @@
         lc.globalCompositeOperation='destination-in';lc.drawImage(matte,0,0);
         const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
         canvas.setAttribute('aria-label',this.getAttribute('name')||'食物');canvas.setAttribute('role','img');
-        const ctx=canvas.getContext('2d'),border=1.1*density;
+        const ctx=canvas.getContext('2d'),border=Math.min(4.5,logicalSize*.045)*density;
         for(let i=0;i<24;i++){const angle=i*Math.PI/12;ctx.drawImage(layer,Math.cos(angle)*border,Math.sin(angle)*border);}
         ctx.globalCompositeOperation='source-in';ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
         ctx.globalCompositeOperation='source-over';ctx.drawImage(layer,0,0);
@@ -124,7 +135,7 @@
   }
   function segment(photo,options={},progress=()=>{}){
     if(!worker){
-      worker=new Worker(new URL('./segmentation-worker.js?v=20261124-1',document.baseURI),{type:'module'});
+      worker=new Worker(new URL('./segmentation-worker.js?v=20261125',document.baseURI),{type:'module'});
       worker.onmessage=({data})=>{
         const job=pending.get(data.id);if(!job)return;
         if(data.type==='progress'){job.progress(data.stage,data);return;}
@@ -142,40 +153,204 @@
   }
   const progressText=stage=>stage==='loading'?'首次使用正在加载抠图工具…':stage==='encoding'?'正在分析照片边缘…':'正在分离食物与背景…';
   function selectRegion(photo,food={}){
-    let processing = false;
+    let processing = false, selectionTimer;
     return JournalUI.openSheet({title:'调整贴纸',className:'food-crop-sheet',render(dialog,done){
-      dialog.insertAdjacentHTML('beforeend','<p>按整份餐品点选。同组有两个鸡蛋时，可分别点中；沙拉保留整碗，饮料保留整瓶。多选了其他餐品或桌面时，切换「排除」。</p><div class="cutout-modes"><button type="button" data-mode="1" aria-pressed="true">＋ 保留食物</button><button type="button" data-mode="0" aria-pressed="false">− 排除背景</button><button type="button" class="cutout-undo">撤销点选</button></div><div class="food-crop-stage" role="button" tabindex="0" aria-label="点选照片中的食物"><img alt="完整餐食照片" draggable="false"><div class="cutout-points"></div></div><p class="cutout-status" role="status">点一下食物，生成透明背景贴纸。抠图在本机完成。</p><div class="cutout-result"><food-sticker></food-sticker><button type="button" class="cutout-next">换一种轮廓</button></div><button type="button" class="app-sheet-confirm" disabled>使用这张贴纸</button><button type="button" class="app-sheet-cancel">取消</button>');
-      const stage=dialog.querySelector('.food-crop-stage'),status=dialog.querySelector('.cutout-status'),preview=dialog.querySelector('food-sticker'),confirm=dialog.querySelector('.app-sheet-confirm'),next=dialog.querySelector('.cutout-next');
-      dialog.querySelector('img').src=photo;preview.setAttribute('photo',photo);preview.setAttribute('name',food.name||'食物');
-      let points=[],mode=1,candidates=cutout(food.cutout)?[food.cutout]:[],selected=0,request=0,busy=false;
-      function display(){preview.setAttribute('cutout',JSON.stringify(candidates[selected]||null));confirm.disabled=busy||!candidates.length;next.disabled=busy||candidates.length<2;}
-      function marks(){const container=dialog.querySelector('.cutout-points');container.replaceChildren();for(const p of points){const dot=document.createElement('span');dot.className=p.label?'keep':'exclude';dot.textContent=p.label?'+':'−';dot.style.left=p.x/10+'%';dot.style.top=p.y/10+'%';container.append(dot);}}
-      async function run(){
-        const current=++request;processing=busy=true;display();
-        try{
-          const result=await segment(photo,{points},stage=>{if(dialog.isConnected&&current===request)status.textContent=progressText(stage)});
-          if(!dialog.isConnected||current!==request)return;
-          candidates=result;selected=0;status.textContent='请核对边缘。可继续点选补充食物或排除背景。';
-        }catch(error){if(dialog.isConnected&&current===request)status.textContent='暂时没能抠出食物，请重新点选。仍可取消后保存饭记。';}
-        finally{if(dialog.isConnected&&current===request){processing=busy=false;display();}}
-      }
-      let down;
-      stage.onpointerdown=e=>{down={x:e.clientX,y:e.clientY};};
-      stage.onpointerup=e=>{
-        if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>12)return;down=null;
-        if(busy){status.textContent='正在抠图，请稍候再点选。';return;}
-        if(mode===0&&!points.some(p=>p.label===1)){status.textContent='请先用「保留食物」点选食物。';return;}
-        if(points.length>=20){status.textContent='点选已满，可以撤销后重新调整。';return;}
-        const b=stage.getBoundingClientRect();points.push({x:Math.max(0,Math.min(1000,(e.clientX-b.left)/b.width*1000)),y:Math.max(0,Math.min(1000,(e.clientY-b.top)/b.height*1000)),label:mode});marks();run();
+      dialog.insertAdjacentHTML("beforeend", `<div class="cutout-tools" role="group" aria-label="选择工具">
+        <button type="button" data-tool="point" aria-pressed="true">点选</button>
+        <button type="button" data-tool="box" aria-pressed="false">框选</button>
+        <button type="button" data-tool="lasso" aria-pressed="false">圈画</button>
+      </div><div class="cutout-modes">
+        <button type="button" data-mode="1" aria-pressed="true">＋ 保留食物</button>
+        <button type="button" data-mode="0" aria-pressed="false">− 排除背景</button>
+        <button type="button" class="cutout-undo">撤销</button>
+      </div>
+      <div class="food-crop-stage" role="button" tabindex="0" aria-label="点选照片中的食物" data-tool="point">
+        <img alt="完整餐食照片" draggable="false">
+        <svg class="cutout-guide" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><path></path></svg>
+        <div class="cutout-points"></div>
+      </div>
+      <p class="cutout-status" role="status">可点整份餐品的不同位置，或切换框选、圈画。</p>
+      <div class="cutout-result"><food-sticker></food-sticker><button type="button" class="cutout-next">换一种轮廓</button></div>
+      <button type="button" class="app-sheet-confirm" disabled>使用这张贴纸</button><button type="button" class="app-sheet-cancel">取消</button>`);
+      const stage = dialog.querySelector(".food-crop-stage");
+      const status = dialog.querySelector(".cutout-status");
+      const preview = dialog.querySelector("food-sticker");
+      const confirm = dialog.querySelector(".app-sheet-confirm");
+      const next = dialog.querySelector(".cutout-next");
+      const path = dialog.querySelector(".cutout-guide path");
+      const undo = dialog.querySelector(".cutout-undo");
+      const pointControls = [...dialog.querySelectorAll("[data-mode]")];
+      dialog.querySelector("img").src = photo;
+      preview.setAttribute("photo", photo);
+      preview.setAttribute("name", food.name || "食物");
+
+      const original = cutout(food.cutout);
+      let points = [], region = null, tool = "point", mode = 1;
+      let candidates = original ? [original] : [], selected = 0, request = 0, busy = false;
+      let drag = null;
+      const history = [];
+      const help = {
+        point: "点整份餐品的不同位置，同组的两块食物可分别点。",
+        box: "拖出矩形，把整份餐品框进去。",
+        lasso: "沿整份餐品外围画一圈，松手生成贴纸。"
       };
-      stage.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&!busy&&points.length<20){e.preventDefault();points.push({x:500,y:500,label:1});marks();run();}};
-      dialog.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{mode=Number(button.dataset.mode);dialog.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));});
-      dialog.querySelector('.cutout-undo').onclick=()=>{if(busy||!points.length)return;points.pop();marks();if(points.some(p=>p.label===1))run();else{candidates=[];display();status.textContent='点一下要保留的食物。';}};
+
+      function display() {
+        preview.setAttribute("cutout", JSON.stringify(candidates[selected] ?? null));
+        confirm.disabled = busy || !candidates.length;
+        next.disabled = busy || candidates.length < 2;
+        undo.disabled = !history.length;
+      }
+      function borderPath(mode, positions) {
+        if (!positions.length) return "";
+        const first = positions[0];
+        const last = positions.at(-1);
+        if (mode === "box") return `M${first.x} ${first.y} H${last.x} V${last.y} H${first.x} Z`;
+        return "M" + positions.map(({x,y}) => x + " " + y).join(" L") + " Z";
+      }
+      function marks() {
+        path.setAttribute("d", drag && tool !== "point" ? borderPath(tool, drag.positions) :
+          region ? borderPath(region.tool, region.positions) : "");
+        const container = dialog.querySelector(".cutout-points");
+        container.replaceChildren();
+        for (const point of points) {
+          const dot = document.createElement("span");
+          dot.className = point.label ? "keep" : "exclude";
+          dot.textContent = point.label ? "+" : "−";
+          dot.style.left = point.x / 10 + "%";
+          dot.style.top = point.y / 10 + "%";
+          container.append(dot);
+        }
+      }
+      async function run() {
+        const current = ++request;
+        processing = busy = true;
+        status.textContent = "正在按选区生成贴纸…";
+        display();
+        try {
+          const result = await segment(photo, {
+            points, box: region?.box ?? (!points.some(point => !point.label) ? box(food.box) : null),
+            guided: Boolean(region), polygon: region?.tool === "lasso" ? region.positions : null
+          }, step => { if (dialog.isConnected && current === request) status.textContent = progressText(step); });
+          if (!dialog.isConnected || current !== request) return;
+          candidates = result.filter(candidate => cutout(candidate));
+          selected = 0;
+          status.textContent = candidates.length ? "核对预览，或继续补点、换轮廓。" : "未找到完整贴纸，请扩大选区或换一种选择方式。";
+        } catch {
+          if (dialog.isConnected && current === request) {
+            candidates = [];
+            status.textContent = "暂时没能抠出食物，可补点或重新框选、圈画。";
+          }
+        } finally {
+          if (dialog.isConnected && current === request) {
+            processing = busy = false;
+            display();
+          }
+        }
+      }
+      function apply(nextPoints, nextRegion) {
+        history.push({points, region, candidates, selected});
+        points = nextPoints;
+        region = nextRegion;
+        marks();
+        clearTimeout(selectionTimer);
+        request++;
+        processing = busy = true;
+        display();
+        status.textContent = "正在按选区生成贴纸…";
+        selectionTimer = setTimeout(run, 230);
+      }
+      function position(event) {
+        const frame = stage.getBoundingClientRect();
+        const scale = (coordinate, offset, size) => Math.max(0, Math.min(1000, (coordinate - offset) / size * 1000));
+        return {x: scale(event.clientX, frame.left, frame.width), y: scale(event.clientY, frame.top, frame.height)};
+      }
+      function pickPoint(point) {
+        if (!mode && !region && !points.some(p => p.label === 1)) {
+          status.textContent = "先点选、框选或圈画要保留的食物。";
+          return;
+        }
+        if (points.length >= 20) {
+          status.textContent = "选点已满，可撤销或重新框选。";
+          return;
+        }
+        apply([...points, {...point, label:mode}], region);
+      }
+      stage.onpointerdown = (event) => {
+        if (!event.isPrimary || event.button !== 0) return;
+        drag = {id:event.pointerId, positions:[position(event)], x:event.clientX, y:event.clientY};
+        stage.setPointerCapture(event.pointerId);
+      };
+      stage.onpointermove = (event) => {
+        if (drag?.id !== event.pointerId || tool === "point") return;
+        const point = position(event);
+        if (tool === "box") drag.positions[1] = point;
+        else {
+          const previous = drag.positions.at(-1);
+          if (Math.hypot(previous.x - point.x, previous.y - point.y) >= 12) drag.positions.push(point);
+        }
+        marks();
+      };
+      stage.onpointercancel = () => { drag = null; marks(); };
+      stage.onpointerup = (event) => {
+        if (drag?.id !== event.pointerId) return;
+        const {positions, x, y} = drag;
+        drag = null;
+        const point = position(event);
+        if (tool === "point") {
+          if (Math.hypot(event.clientX - x, event.clientY - y) <= 12) pickPoint(point);
+          return;
+        }
+        if (tool === "box") positions[1] = point;
+        else positions.push(point);
+        const xs = positions.map(p => p.x), ys = positions.map(p => p.y);
+        const left = Math.min(...xs), top = Math.min(...ys);
+        const width = Math.max(...xs) - left, height = Math.max(...ys) - top;
+        if (width < 25 || height < 25 || (tool === "lasso" && positions.length < 4)) {
+          marks();
+          status.textContent = help[tool];
+          return;
+        }
+        apply([], {tool, positions, box:{x:left, y:top, width, height}});
+      };
+      stage.onkeydown = (event) => {
+        if ((event.key === "Enter" || event.key === " ") && tool === "point") {
+          event.preventDefault();
+          pickPoint({x:500, y:500});
+        }
+      };
+      dialog.querySelectorAll("[data-tool]").forEach(button => button.onclick = () => {
+        tool = button.dataset.tool;
+        stage.dataset.tool = tool;
+        stage.setAttribute("aria-label", help[tool]);
+        dialog.querySelectorAll("[data-tool]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+        for (const control of pointControls) control.hidden = tool !== "point";
+        status.textContent = help[tool];
+      });
+      pointControls.forEach(button => button.onclick = () => {
+        mode = Number(button.dataset.mode);
+        pointControls.forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+      });
+      undo.onclick = () => {
+        if (!history.length) return;
+        request++;
+        clearTimeout(selectionTimer);
+        if (busy) cancel();
+        processing = busy = false;
+        ({points, region, candidates, selected} = history.pop());
+        if (points.length || region) run();
+        else {
+          candidates = original ? [original] : [];
+          display();
+          status.textContent = help[tool];
+        }
+        marks();
+      };
       next.onclick=()=>{selected=(selected+1)%candidates.length;display();};
       confirm.onclick=()=>{if(!confirm.disabled)done(candidates[selected]);};
       dialog.querySelector('.app-sheet-cancel').onclick=()=>done(null);
       display();
-    }}).finally(()=>{if(processing)cancel();});
+    }}).finally(()=>{clearTimeout(selectionTimer);if(processing)cancel();});
   }
   async function loadImage(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});}
   async function recognitionPhoto(photo){
@@ -260,7 +435,8 @@
         const mask = await mergeMasks(pieces);
         if (!mask || (food.cutout && pieces.length < servings[foodIndex]?.regions.length)) return food;
         return { ...food, cutout:mask,
-          reviewReason: pieces.length < servings[foodIndex]?.regions.length ? '贴纸已生成部分内容。' : '' };
+          reviewReason: pieces.length < servings[foodIndex]?.regions.length || pieces.some(piece => piece.fragmentary)
+            ? '贴纸已生成部分内容，可以手动补充。' : '' };
       }));
       signal.throwIfAborted();
       onMasks(result);

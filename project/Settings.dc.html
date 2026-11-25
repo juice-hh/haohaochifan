@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F5FC">
+<link rel="stylesheet" href="./mobile.css?v=20261125-4">
+<title>好好吃饭 设置</title>
+<script src="./support.js?v=20261125"></script>
+<script src="./journal.js?v=20261125"></script>
+</head>
+<body style="margin:0">
+<x-dc>
+<main class="screen screen--flow settings-screen">
+  <header class="app-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="返回">‹</a>
+    <h1 class="page-title">设置</h1>
+  </header>
+  <section class="goal-card">
+    <h2>照片识别</h2>
+    <div class="app-segmented" role="group" aria-label="记录方式">
+      <button type="button" aria-pressed="{{auto}}" onClick="{{enable}}">AI 辅助</button>
+      <button type="button" aria-pressed="{{manual}}" onClick="{{disable}}">手动记录</button>
+    </div>
+    <p class="goal-note">{{modeHint}}</p>
+  </section>
+  <section class="goal-card">
+    <h2>饮食关注</h2>
+    <div class="settings-focus" role="group" aria-label="饮食关注">
+      <sc-for list="{{focuses}}" as="focus">
+        <button type="button" aria-pressed="{{focus.active}}" onClick="{{focus.choose}}">
+          <span class="settings-focus-mark" data-focus="{{focus.id}}" aria-hidden="true">{{focus.mark}}</span>
+          <span><strong>{{focus.label}}</strong><small>{{focus.detail}}</small></span>
+        </button>
+      </sc-for>
+    </div>
+  </section>
+  <p class="goal-note" role="status">{{status}}</p>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    let auto = true;
+    try { auto = localStorage.getItem("hhcf-record-mode") !== "manual"; } catch {}
+    this.state = { auto, focus: Journal.readDietFocus().id, status: "" };
+  }
+
+  save(update, values) {
+    try {
+      update();
+      this.setState({ ...values, status: "设置已保存" });
+    } catch {
+      this.setState({ status: "暂时无法保存设置，请检查浏览器存储。" });
+    }
+  }
+
+  renderVals() {
+    const { auto, focus, status } = this.state;
+    const page = Journal.params.get("returnTo") === "Goal" ? "Goal" : "Main";
+    const setMode = (enabled) => this.save(() => localStorage.setItem("hhcf-record-mode", enabled ? "ai" : "manual"), {auto: enabled});
+    return {
+      auto, manual: !auto, status, backHref: Journal.link(page, Journal.selected()),
+      enable: () => setMode(true), disable: () => setMode(false),
+      modeHint: auto ? "拍照或选图后会发送给 OpenAI 估算营养。" : "照片保存在当前设备。需要时可在编辑页开启单次识别。",
+      focuses: Journal.dietFocuses.map((item, index) => ({
+        ...item, mark: ["基", "糖", "纤"][index], active: item.id === focus,
+        detail: item.fields.length ? item.fields.map(key => Journal.focusNutrients[key]).join("、") : "热量、碳水、蛋白质和脂肪",
+        choose: () => this.save(() => Journal.saveDietFocus(item.id), {focus: item.id})
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

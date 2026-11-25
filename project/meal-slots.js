@@ -15,23 +15,20 @@
       if (!Journal.isDate(date)) return;
 
       const canRecord = date <= Journal.today;
-      const via = this.getAttribute("via");
-      const fromDay = via === "week" || via === "album";
       this.innerHTML = `<ul class="meal-slots">${meals.map((kind) => {
         const label = Journal.kinds[kind];
         const contents = `
-          <span class="meal-slot-plate" aria-hidden="true">
-            <span class="meal-slot-mark"></span>
+          <span class="meal-slot-plate" aria-hidden="true"><span class="meal-slot-mark"></span>
             ${canRecord ? '<span class="meal-slot-plus">+</span>' : ""}
-          </span>
-          <span>${label}</span>
-        `;
-        const route = Journal.link("Record", date, fromDay ? { kind, from: "day", via } : { kind });
+          </span><span>${label}</span>`;
         const slot = canRecord
-          ? `<a class="meal-slot" href="${route}" aria-label="记${label}">${contents}</a>`
+          ? `<button type="button" class="meal-slot" data-meal="${kind}" aria-label="记${label}">${contents}</button>`
           : `<span class="meal-slot">${contents}</span>`;
         return `<li data-kind="${kind}">${slot}</li>`;
       }).join("")}</ul>`;
+      this.querySelectorAll("button[data-meal]").forEach((button) => {
+        button.onclick = () => document.querySelector("journal-nav")?.open(button.dataset.meal);
+      });
     }
   }
 

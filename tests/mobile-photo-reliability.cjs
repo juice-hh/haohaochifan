@@ -22,6 +22,7 @@ const meal = {
       page.on('crash', () => errors.push('page crashed'));
       page.on('dialog', dialog => { errors.push('native dialog: ' + dialog.type()); dialog.dismiss(); });
       await page.goto(base + '/Main.dc.html');
+      await page.getByRole('button', { name: '记录', exact: true }).tap();
       await page.getByRole('link', { name: '贴计划', exact: true }).tap({ position: { x: 5, y: 5 } });
       await page.waitForURL('**/Album.dc.html?**');
       await page.getByRole('button', { name: '锻炼', exact: true }).waitFor();
@@ -30,7 +31,8 @@ const meal = {
       assert.equal(await page.locator('.calendar-cell[data-selected="true"] .plan-icon[data-plan=walk]').count(), 1);
       assert.equal(/\p{Extended_Pictographic}/u.test(await page.locator('.plan-picker').innerText()), false);
       await page.goto(base + '/Main.dc.html');
-      await page.getByRole('link', { name: '称重', exact: true }).tap();
+      await page.getByRole('button', { name: '记录', exact: true }).tap();
+      await page.getByRole('link', { name: '记体重', exact: true }).tap();
       await page.waitForURL('**/Weigh.dc.html?**');
 
       const record = base + '/Record.dc.html?date=2026-11-12';
@@ -51,7 +53,7 @@ const meal = {
         FoodStickers.generate = () => new Promise(() => {});
       });
       const chooser = page.waitForEvent('filechooser');
-      await page.getByRole('button', { name: '从相册选', exact: true }).tap();
+      await page.getByRole('button', { name: '相册', exact: true }).tap();
       await (await chooser).setFiles(photo);
       await page.getByRole('button', { name: '停止生成贴纸', exact: true }).waitFor();
       assert.equal(await page.evaluate(async () => (await Journal.readPhotoDraft(history.state.photoDraft))?.fields.foods.length), 1);
@@ -60,15 +62,15 @@ const meal = {
       await page.locator('.meal-photo-preview').waitFor();
       assert.match(await page.locator('.record-date').innerText(), /11月11日/);
       await page.getByRole('button', { name: '重试生成贴纸', exact: true }).tap();
-      await page.locator('.food-editor-row food-sticker canvas').waitFor({ timeout: 45000 });
+      await page.locator('.food-result food-sticker canvas').waitFor({ timeout: 45000 });
       assert.equal(matchingCalls, 0);
       assert.equal(await page.locator('[name=food-kcal-0]').inputValue(), '');
 
       // Open a fresh journal entry so its empty state cannot include the recovered draft.
       await page.goto(base + '/Record.dc.html?date=2026-11-13');
-      await page.getByRole('button', { name: '从相册选', exact: true }).waitFor();
+      await page.getByRole('button', { name: '相册', exact: true }).waitFor();
       await page.getByLabel('从相册选', { exact: true }).setInputFiles(photo);
-      const sticker = page.locator('.food-editor-row food-sticker[cutout^="{"]');
+      const sticker = page.locator('.food-result food-sticker[cutout^="{"]');
       await sticker.locator('canvas').waitFor({ timeout: 45000 });
       assert.equal(matchingCalls, 0);
       const mask = JSON.parse(await sticker.getAttribute('cutout')).mask;

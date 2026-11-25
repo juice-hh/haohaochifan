@@ -50,7 +50,7 @@
           event.preventDefault();
           finish(null);
         } else if (event.key === "Tab") {
-          const controls = [...sheet.querySelectorAll('button:not(:disabled), [tabindex="0"]')];
+          const controls = [...sheet.querySelectorAll('a[href], button:not(:disabled), [tabindex="0"]')];
           const [first] = controls, last = controls.at(-1);
           if (event.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
             event.preventDefault();
@@ -142,17 +142,25 @@
     } });
   }
 
+  let navigationGuard;
+  async function navigate(href) {
+    if (!navigationGuard || await navigationGuard()) location.assign(href);
+  }
+
   function guardNavigation(isDirty, onDiscard) {
-    document.addEventListener("click", async (event) => {
+    navigationGuard = async () => {
+      if (!isDirty()) return true;
+      const discard = await confirmAction({ title: "还没保存，要离开吗？", description: "这次修改还没有保存。你可以继续编辑，或放弃修改后离开。", confirmLabel: "放弃修改并离开", destructive: true });
+      if (discard) await onDiscard?.();
+      return discard;
+    };
+    document.addEventListener("click", (event) => {
       const link = event.target.closest?.("a[href]");
-      if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !isDirty()) return;
-      const href = link.href;
+      if (!link || link.matches(".journal-menu-action") || event.defaultPrevented || event.button !== 0 ||
+          event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !isDirty()) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (await confirmAction({ title: "还没保存，要离开吗？", description: "这次修改还没有保存。你可以继续编辑，或放弃修改后离开。", confirmLabel: "放弃修改并离开", destructive: true })) {
-        await onDiscard?.();
-        location.assign(href);
-      }
+      navigate(link.href);
     }, true);
   }
   function focusField(selector) {
@@ -165,7 +173,7 @@
     field?.scrollIntoView({ block: "center", behavior: "smooth" });
   }
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.defaultPrevented && event.target.matches('input[enterkeyhint="done"]') && !event.target.form) {
+    if (event.key === "Enter" && !event.isComposing && event.keyCode !== 229 && !event.defaultPrevented && event.target.matches('input[enterkeyhint="done"]') && !event.target.form) {
       event.preventDefault();
       event.target.blur();
     }
@@ -212,5 +220,5 @@
   document.addEventListener("focusout", () => scheduleViewport());
   window.addEventListener("pageshow", () => scheduleViewport());
   scheduleViewport();
-  window.JournalUI = { openSheet, confirmAction, chooseOption, chooseDate, guardNavigation, focusField };
+  window.JournalUI = { openSheet, navigate, confirmAction, chooseOption, chooseDate, guardNavigation, focusField };
 })();

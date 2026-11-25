@@ -89,12 +89,25 @@ const Journal = (() => {
     const weight = goal?.weightHundredths ?? legacyWeight(goal?.weight);
     return {
       habit: typeof goal?.habit === "string" ? goal.habit : "",
-      weight: validWeight(weight) ? weight : null
+      weight: validWeight(weight) ? weight : null,
+      movement: Number.isInteger(goal?.movement) && goal.movement >= 1 && goal.movement <= 10080 ? goal.movement : null
     };
   }
 
-  function saveGoal({ habit, weight }) {
-    localStorage.setItem("hhcf-goal-v1", JSON.stringify({ habit, weightHundredths: weight }));
+  function saveGoal({ habit, weight, movement }) {
+    localStorage.setItem("hhcf-goal-v1", JSON.stringify({ habit, weightHundredths: weight, movement }));
+  }
+
+  function movementOn(date) {
+    const minutes = readJSON(localStorage, "hhcf-movement-v1:" + date);
+    return Number.isInteger(minutes) && minutes >= 0 && minutes <= 1440 ? minutes : null;
+  }
+
+  function saveMovement(date, minutes) {
+    if (!isDate(date) || date > today || !Number.isInteger(minutes) || minutes < 0 || minutes > 1440) {
+      throw new Error("请填写 0 到 1440 之间的运动分钟数。");
+    }
+    localStorage.setItem("hhcf-movement-v1:" + date, JSON.stringify(minutes));
   }
 
   function readDietFocus() {
@@ -387,7 +400,7 @@ const Journal = (() => {
       if (!amounts.length && !activeFields.includes(key)) return [];
       const total = Math.round(amounts.reduce((sum, amount) => sum + amount, 0) * 10) / 10;
       return [{
-        label,
+        key, label, value: amounts.length ? total : null,
         amount: amounts.length ? total + " g" : "未记录",
         coverage: amounts.length && amounts.length < meals.length ? amounts.length + "/" + meals.length + " 餐有记录" : ""
       }];
@@ -418,7 +431,7 @@ const Journal = (() => {
     getMeal, mealMacros, mealFocusNutrient, dayFocusNutrients, photoFor, saveMeal, deleteMeal, pendingUndo, undoDelete, recentMealDays,
     dietFocuses, focusNutrients, readDietFocus, saveDietFocus,
     savedWeight, previousWeight, latestWeight, saveWeight, weightLimits, parseWeight, formatWeight,
-    readGoal, saveGoal, planStickers, plansOn, togglePlan
+    readGoal, saveGoal, movementOn, saveMovement, planStickers, plansOn, togglePlan
   };
 })();
 

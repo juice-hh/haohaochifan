@@ -7,11 +7,13 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261124-2">
+<link rel="stylesheet" href="./mobile.css?v=20261125-4">
 <title>好好吃饭 饭相册</title>
-<script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261124-1"></script>
-<script src="./navigation.js?v=20261121-2"></script>
+<script src="./support.js?v=20261125"></script>
+<script src="./journal.js?v=20261125"></script>
+<script src="./interactions.js?v=20261125"></script>
+<script src="./food-stickers.js?v=20261125-4"></script>
+<script src="./navigation.js?v=20261125-3"></script>
 </head>
 <body>
 <x-dc>
@@ -46,7 +48,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
       </div>
       <div class="calendar-plan-toolbar">
         <span>{{calendarHint}}</span>
-        <button type="button" class="plan-action" data-active="{{planning}}" onClick="{{switchPlanning}}">{{planAction}}</button>
+        <sc-if value="{{planning}}"><button type="button" class="plan-action" data-active="true" onClick="{{switchPlanning}}">完成</button></sc-if>
       </div>
       <sc-if value="{{planning}}">
         <div class="plan-picker" role="group" aria-label="计划贴纸">
@@ -94,8 +96,18 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
   </sc-if>
 
   <sc-if value="{{isFood}}" hint-placeholder-val="{{false}}">
-    <span style="font-size: 13px; font-weight: 700; color: #6F6A78; margin-top: -4px">同一种吃的叠在一起，越常吃越厚</span>
-    <sc-if value="{{emptyMonth}}"><p style="font-size: 14px; color: #6F6A78">这个月还没有记录。</p></sc-if>
+    <div class="album-filters" aria-label="食物分类">
+      <div class="app-segmented" role="group" aria-label="分类方式">
+        <sc-for list="{{foodFilterModes}}" as="mode"><button type="button" aria-pressed="{{mode.active}}" onClick="{{mode.pick}}">{{mode.label}}</button></sc-for>
+      </div>
+      <sc-if value="{{filterOptions.length}}">
+        <div class="album-filter-options" role="group" aria-label="筛选食物">
+          <sc-for list="{{filterOptions}}" as="option"><button type="button" aria-pressed="{{option.active}}" onClick="{{option.pick}}">{{option.label}}</button></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{filterNote}}"><p>{{filterNote}}</p></sc-if>
+    </div>
+    <sc-if value="{{foodEmpty}}"><p class="goal-note">当前分类没有记录。</p></sc-if>
     <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
       <sc-for list="{{foods}}" as="f" hint-placeholder-count="6">
         <a href="{{f.href}}" style="background: #FFFFFF; border-radius: 28px; padding: 14px 14px 12px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 6px">
@@ -126,7 +138,7 @@ class Component extends DCLogic {
       month: Journal.monthStart(this.date),
       planning: Journal.params.get("plan") === "1",
       sticker: Journal.planStickers[0].id,
-      planStatus: ""
+      planStatus: "", foodFilter: "all", foodCategory: "all"
     };
   }
 
@@ -183,12 +195,26 @@ class Component extends DCLogic {
     for (const [i, entry] of days.entries()) {
       const n = entry.meals.length;
       for (const meal of entry.meals) {
-        const group = groups.get(meal.name) ?? { name: meal.name, count: 0, c: groups.size };
-        group.count++;
-        group.date = entry.date;
-        const photo = Journal.photoFor(meal);
-        if (photo) group.photo = photo;
-        groups.set(meal.name, group);
+        const servings = FoodStickers.normalize(meal.foods);
+        const [carb, pro, fat] = Journal.mealMacros(meal);
+        const items = servings.length ? servings : [{ name: meal.name, nutrients: {carb, pro, fat} }];
+        for (const item of items) {
+          const name = item.name.replace(/(?:[（(]?(?:\d+(?:\.\d+)?|[一二两三四五六七八九十]+)\s*(?:克|碗|个|只|盒|份|杯|盘|瓶|片|块|颗|根)[）)]?)$/u, "").replace(/^[一二两三四五六七八九十]+(?:碗|个|只|盒|份|杯|盘|瓶|片|块|颗|根)/u, "").trim() || item.name;
+          const group = groups.get(name) ?? { name, count: 0, c: groups.size, nutrients: new Set(), types: new Set() };
+          group.count++;
+          group.date = entry.date;
+          const photo = Journal.photoFor(meal);
+          if (photo) group.photo = photo;
+          group.editHref = Journal.link("Day", entry.date, {from: "album"});
+          const energy = ["carb", "pro", "fat"].map((key, j) => Number(item.nutrients?.[key] ?? 0) * [4, 4, 9][j]);
+          const maximum = Math.max(...energy);
+          if (maximum > 0) energy.forEach((amount, j) => { if (maximum === amount) group.nutrients.add(["碳水", "蛋白质", "脂肪"][j]); });
+          const ingredients = name.match(/土豆|马铃薯|青椒|彩椒|玉米|红薯|紫薯|鸡腿|鸡肉|鸡蛋|蒸蛋|牛肉|猪肉|鱼|虾|豆腐|豆浆|牛奶|奶酪|米饭|稀饭|面条|面包|卷心菜|白菜|番茄|西红柿|黄瓜|胡萝卜|番薯|西兰花|生菜|菠菜|芹菜|茄子|芸豆|苹果|香蕉|橙子|猕猴桃|橘子|莓|水果|沙拉/gu) ?? [];
+          for (const ingredient of ingredients) group.types.add(({马铃薯:"土豆", 彩椒:"青椒", 紫薯:"红薯", 蒸蛋:"鸡蛋", 西红柿:"番茄", 鸡腿:"鸡肉"})[ingredient] ?? ingredient);
+          if (!ingredients.length) group.types.add(name);
+          if (/青椒|彩椒|卷心菜|白菜|番茄|西红柿|黄瓜|胡萝卜|西兰花|生菜|菠菜|芹菜|茄子|苹果|香蕉|橙子|猕猴桃|橘子|莓|水果/u.test(name)) group.nutrients.add("维生素");
+          groups.set(name, group);
+        }
       }
       const tiles = entry.meals.slice(-3).map((meal, j) => {
         const photo = Journal.photoFor(meal);
@@ -215,7 +241,18 @@ class Component extends DCLogic {
         dotStyle: 'width: 5px; height: 5px; border-radius: 3px; background: ' + (n ? '#A996F2' : 'transparent')
       });
     }
-    const list = [...groups.values()].sort((a, b) => b.count - a.count || b.date.localeCompare(a.date));
+    const {foodFilter, foodCategory} = this.state;
+    const foodFilterModes = [["all", "全部"], ["nutrition", "按营养素"], ["type", "按食物种类"]].map(([id, label]) => ({
+      label, active: foodFilter === id, pick: () => this.setState({foodFilter: id, foodCategory: "all"})
+    }));
+    const categories = foodFilter === "nutrition" ? ["碳水", "蛋白质", "维生素", "脂肪"]
+      : foodFilter === "type" ? [...new Set([...groups.values()].flatMap(group => [...group.types]))].sort((a,b) => a.localeCompare(b, "zh-CN"))
+      : [];
+    const filterOptions = categories.length ? ["all", ...categories].map(key => ({
+      label: key === "all" ? "全部食物" : key, active: foodCategory === key, pick: () => this.setState({foodCategory: key})
+    })) : [];
+    const list = [...groups.values()].filter(group => foodCategory === "all" || (foodFilter === "nutrition" ? group.nutrients : group.types).has(foodCategory))
+      .sort((a, b) => b.count - a.count || b.date.localeCompare(a.date));
     var foods = list.map(function (f) {
       var k = Math.min(f.count, 4);
       var layers = [];
@@ -228,7 +265,7 @@ class Component extends DCLogic {
       }
       return {
         name: f.name, count: f.count, layers,
-        href: Journal.link("Day", f.date, { from: "album" }),
+        href: f.editHref,
         meta: "最近记录于" + Journal.shortDate(f.date)
       };
     });
@@ -237,10 +274,11 @@ class Component extends DCLogic {
     const count = days.reduce((sum, day) => sum + day.meals.length, 0);
     return {
       navDate: this.date,
-      views, cells, foods, planning, stickers,
+      views, cells, foods, planning, stickers, foodFilterModes, filterOptions,
+      foodEmpty: !foods.length,
+      filterNote: foodFilter === "nutrition" ? "按已记录的主要供能营养素分类；维生素按名称中可辨识的蔬果归类。" : "",
       showCalendarPlans: planning || cells.some((cell) => cell.plans?.length),
       calendarHint: planning ? "点日期贴上，再点一次取消" : "点日期查看饭记",
-      planAction: planning ? "完成" : "＋ 贴计划",
       planStatus: this.state.planStatus,
       switchPlanning: () => this.switchPlanning(),
       isCal: this.state.view === "cal", isFood: this.state.view === "food",

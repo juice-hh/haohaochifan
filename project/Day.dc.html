@@ -7,13 +7,15 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261124-2">
-<link rel="stylesheet" href="./day.css?v=20261124-2">
+<link rel="stylesheet" href="./mobile.css?v=20261125-4">
+<link rel="stylesheet" href="./day.css?v=20261125">
 <title>好好吃饭 单日详情</title>
-<script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261124-1"></script>
-<script src="./meal-slots.js?v=20261123-1"></script>
-<script src="./food-stickers.js?v=20261124-1"></script>
+<script src="./support.js?v=20261125"></script>
+<script src="./journal.js?v=20261125"></script>
+<script src="./meal-slots.js?v=20261125"></script>
+<script src="./interactions.js?v=20261125"></script>
+<script src="./navigation.js?v=20261125-3"></script>
+<script src="./food-stickers.js?v=20261125-4"></script>
 </head>
 <body>
 <x-dc>
@@ -60,35 +62,24 @@
       <sc-if value="{{missingEnergy}}"><span>热量待补充</span></sc-if>
     </div>
 
-    <div class="daily-food-groups day-timeline" aria-label="当天食物贴纸">
+    <div class="day-timeline" aria-label="按餐查看原照和记录">
       <sc-for list="{{mealSections}}" as="section">
         <section class="day-meal-section">
           <div class="day-meal-header">
-            <h2>{{section.label}}</h2>
-            <span class="day-meal-count">{{section.status}}</span>
+            <h2>{{section.label}}</h2><span class="day-meal-count">{{section.status}}</span>
           </div>
-          <sc-if value="{{section.hasStickers}}">
-            <div class="food-sticker-grid day-sticker-grid">
-              <sc-for list="{{section.stickers}}" as="food">
-                <a class="food-sticker-item day-sticker" href="{{food.editHref}}" aria-label="{{food.label}}">
-                  <food-sticker photo="{{food.photo}}" box="{{food.box}}" cutout="{{food.cutout}}" name="{{food.name}}"></food-sticker>
-                  <strong>{{food.name}}</strong>
-                  <span class="food-kcal-badge">{{food.kcal}}</span>
-                  <sc-if value="{{food.partial}}"><small class="food-partial-note">部分已抠，可补充</small></sc-if>
-                </a>
-              </sc-for>
-            </div>
-          </sc-if>
-          <sc-if value="{{section.hasMealsWithoutStickers}}">
-            <div class="day-entry-list">
-              <sc-for list="{{section.mealsWithoutStickers}}" as="meal">
-                <div class="day-meal-entry">
-                  <a class="meal-row day-entry-link" href="{{meal.editHref}}"><span>{{meal.name}}</span><span aria-hidden="true">›</span></a>
-                  <p class="food-missing">{{meal.wholeKcal}}，尚未生成餐品贴纸</p>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
+          <sc-for list="{{section.records}}" as="meal">
+            <article class="day-meal-card">
+              <sc-if value="{{meal.photo}}">
+                <a href="{{meal.editHref}}" aria-label="查看{{meal.name}}"><img src="{{meal.photo}}" alt="这餐的原照片" draggable="false"></a>
+              </sc-if>
+              <div class="day-meal-body">
+                <strong>{{meal.name}}</strong><small>{{meal.wholeKcal}}</small>
+                <sc-if value="{{meal.dishDetails}}"><p>{{meal.dishDetails}}</p></sc-if>
+                <div><a href="{{meal.editHref}}">编辑这餐</a><button type="button" onClick="{{meal.remove}}" aria-label="{{meal.deleteLabel}}">删除</button></div>
+              </div>
+            </article>
+          </sc-for>
         </section>
       </sc-for>
     </div>
@@ -110,12 +101,8 @@
     </section>
   </sc-if>
 
-  <sc-if value="{{canRecord}}">
-    <div class="record-actions day-actions day-dock">
-      <a class="day-weigh" href="{{weighHref}}" aria-label="{{weighAction}}"><span>{{weightLabel}}</span><sc-if value="{{hasWeight}}"><strong>{{weight}} kg</strong></sc-if></a>
-      <a class="day-add" href="{{recordHref}}"><span aria-hidden="true">＋</span>记一餐</a>
-    </div>
-  </sc-if>
+  <sc-if value="{{hasWeight}}"><p class="day-weight-note">当天体重 <strong>{{weight}} kg</strong></p></sc-if>
+  <journal-nav page="Day" date="{{date}}" via="{{via}}"></journal-nav>
 </main>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
@@ -140,21 +127,34 @@ class Component extends DCLogic {
     }
   }
 
+  async removeMeal(meal) {
+    if (!await JournalUI.confirmAction({ title: "删除这餐记录？", description: "删除后可在当天饭记撤销。", confirmLabel: "删除这餐", cancelLabel: "保留记录", destructive: true })) return;
+    try {
+      const undo = Journal.deleteMeal(meal);
+      location.replace(Journal.link("Day", this.date, { from: this.from, undo }));
+    } catch {
+      this.setState({ error: "暂时没能删除这餐，请重试。" });
+    }
+  }
+
   renderVals() {
     const date = this.date;
     const entry = Journal.day(date);
     const fromAlbum = this.from === "album";
     const makeDayLink = (selected) => Journal.link("Day", selected, { from: this.from });
     const groupedMeals = FoodStickers.groups(entry.meals, date, this.from);
-    const summarize = (label, records) => {
-      const stickers = records.flatMap((meal) => meal.foods.map((food) => ({ ...food, editHref: meal.editHref })));
-      const mealsWithoutStickers = records.filter((meal) => meal.missingFoods);
-      const status = records.length ? records.length + " 笔" : date > Journal.today ? "尚未到这一天" : "未记录";
-      return { label, status, stickers, hasStickers: stickers.length > 0, mealsWithoutStickers, hasMealsWithoutStickers: mealsWithoutStickers.length > 0 };
-    };
+    const groupViews = groupedMeals.map((group, index) => ({
+      ...group, photo: Journal.photoFor(entry.meals[index]),
+      dishDetails: group.foods.length > 1 ? group.foods.map(food => food.name).join("、") : "",
+      deleteLabel: "删除" + group.name,
+      remove: () => this.removeMeal(entry.meals[index])
+    }));
+    const summarize = (label, records) => ({
+      label, records, status: records.length ? records.length + " 笔" : date > Journal.today ? "尚未到这一天" : "未记录"
+    });
     const mealSections = Object.entries(Journal.kinds).map(([kind, label]) =>
-      summarize(label, groupedMeals.filter((_, index) => entry.meals[index].kind === kind)));
-    const otherMeals = groupedMeals.filter((_, index) => !Object.hasOwn(Journal.kinds, entry.meals[index].kind));
+      summarize(label, groupViews.filter(group => group.kindKey === kind)));
+    const otherMeals = groupViews.filter(group => !Object.hasOwn(Journal.kinds, group.kindKey));
     if (otherMeals.length) mealSections.push(summarize("其他", otherMeals));
     const macros = ["碳水", "蛋白质", "脂肪"].map((label, index) => ({
       label,
@@ -180,13 +180,8 @@ class Component extends DCLogic {
       undo: Journal.pendingUndo(this.undoToken, date),
       restoreMeal: () => this.restoreMeal(),
       mealCount: entry.meals.length + " 餐已记录",
-      canRecord: date <= Journal.today,
       backLabel: fromAlbum ? "饭相册" : "周记",
       backHref: Journal.link(fromAlbum ? "Album" : "Main", date),
-      recordHref: Journal.link("Record", date, { from: "day", via: this.from }),
-      weighHref: Journal.link("Weigh", date, { from: "day", via: this.from }),
-      weighAction: entry.weight === null ? "记体重" : "修改体重",
-      weightLabel: entry.weight === null ? "记体重" : "当天体重",
       hasWeight: entry.weight !== null,
       weight: entry.weight === null ? "" : Journal.formatWeight(entry.weight),
       hasMacros,

@@ -71,6 +71,13 @@
     }
 
     const updates = [bindChildren(node)];
+    const isTextInput = node instanceof HTMLInputElement && ["text", "search", "tel", "url", "email"].includes(node.type)
+      || node instanceof HTMLTextAreaElement;
+    let composing = false;
+    if (isTextInput) {
+      node.addEventListener("compositionstart", () => { composing = true; });
+      node.addEventListener("compositionend", () => { composing = false; });
+    }
     for (const { name, value: template } of Array.from(node.attributes)) {
       if (!template.includes("{{")) continue;
 
@@ -80,13 +87,19 @@
           : name.slice(2);
         let handler;
         node.removeAttribute(name);
-        node.addEventListener(eventName, (event) => handler?.(event));
+        node.addEventListener(eventName, (event) => {
+          if (eventName === "input" && (composing || event.isComposing)) return;
+          handler?.(event);
+        });
+        if (eventName === "input" && isTextInput) {
+          node.addEventListener("compositionend", (event) => handler?.(event));
+        }
         updates.push((scope) => { handler = readBinding(scope, template); });
       } else {
         updates.push((scope) => {
           const value = interpolate(scope, template);
-          if (name === "value" && (node instanceof HTMLInputElement || node instanceof HTMLSelectElement)) {
-            if (node.value !== value) node.value = value;
+          if (name === "value" && (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement || node instanceof HTMLSelectElement)) {
+            if (!composing && !node.validity?.badInput && node.value !== value) node.value = value;
           } else if (name === "href" && !value) {
             node.removeAttribute(name);
           } else if (node.getAttribute(name) !== value) {

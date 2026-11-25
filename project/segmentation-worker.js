@@ -24,7 +24,7 @@ function boxOverlap(a, b) {
   return shared / (area(a) + area(b) - shared);
 }
 
-async function run({id, photo, box, points, mode, hints=[], servings=[]}) {
+async function run({id, photo, box, points, guided, polygon, mode, hints=[], servings=[]}) {
   const report = (stage, detail={}) => postMessage({id,type:'progress',stage,...detail});
   try {
     if (!runtime) report('loading');
@@ -41,6 +41,24 @@ async function run({id, photo, box, points, mode, hints=[], servings=[]}) {
     }
     const [height,width] = inputs.reshaped_input_sizes[0];
     const pixelCount = image.width * image.height;
+    function insidePolygon(x, y) {
+      if (!polygon?.length) return true;
+      let inside = false;
+      for (let i = 0, last = polygon.length - 1; i < polygon.length; last = i++) {
+        const a = polygon[i], b = polygon[last];
+        if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+      }
+      return inside;
+    }
+    function interiorPrompts(logits, region) {
+      const anchors = [];
+      for (const ry of [.2,.4,.6,.8]) for (const rx of [.2,.4,.6,.8]) {
+        const x = region.x + region.width * rx, y = region.y + region.height * ry;
+        const index = Math.floor(y / 1000 * image.height) * image.width + Math.floor(x / 1000 * image.width);
+        if (logits[index] > 0 && insidePolygon(x,y)) anchors.push({x,y,label:1});
+      }
+      return anchors;
+    }
     async function decode(prompts, region) {
       const coords = prompts.map(p => [p.x/1000*width,p.y/1000*height]);
       const labels = prompts.map(p => BigInt(p.label));
@@ -58,7 +76,9 @@ async function run({id, photo, box, points, mode, hints=[], servings=[]}) {
         const score = outputs.iou_scores.data[i];
         if (!Number.isFinite(score) || (mode && score < .72)) continue;
         const logits = masks[0].data.subarray(i*pixelCount,(i+1)*pixelCount);
-        const cleaned = cleanMask(Uint8Array.from(logits,v=>v>0?1:0),image.width,image.height,prompts);
+        const hasPositive = prompts.some(point => point.label === 1);
+        const anchors = !hasPositive && region ? interiorPrompts(logits, region) : [];
+        const cleaned = cleanMask(Uint8Array.from(logits,v=>v>0?1:0),image.width,image.height,[...prompts, ...anchors]);
         if (!cleaned || cleaned.area < Math.max(24,pixelCount*.0008) || cleaned.area > pixelCount*.9) continue;
         const alpha = maskAlpha(logits,cleaned.values,image.width,image.height,prompts);
         let left=image.width,top=image.height,right=0,bottom=0;
@@ -70,7 +90,8 @@ async function run({id, photo, box, points, mode, hints=[], servings=[]}) {
         const bounds={x:left/image.width*1000,y:top/image.height*1000,width:(right-left+1)/image.width*1000,height:(bottom-top+1)/image.height*1000};
         const touchesEdge=left===0||top===0||right===image.width-1||bottom===image.height-1;
         if(mode==='propose'&&!region&&touchesEdge&&(bounds.width>700||bounds.height>700))continue;
-        candidates.push({alpha,score,box:bounds,holeRatio:cleaned.largestHole/cleaned.area,signature:signature(cleaned.values,image.width,image.height),
+        const fillRatio = cleaned.area / ((right-left+1)*(bottom-top+1));
+        candidates.push({alpha,score,box:bounds,fillRatio,holeRatio:cleaned.largestHole/cleaned.area,signature:signature(cleaned.values,image.width,image.height),
           cleanup:{removed:cleaned.removed,filled:cleaned.filled,components:cleaned.components}});
       }
       return candidates.sort((a,b)=>b.score-a.score);
@@ -100,7 +121,11 @@ async function run({id, photo, box, points, mode, hints=[], servings=[]}) {
           const inner = [middle, {...middle,x:middle.x+region.width*.14}, {...middle,x:middle.x-region.width*.14}];
           candidate = pick(await decode(inner,region)) || pick(await decode(point));
         }
-        if (candidate) candidates.push({...candidate,foodIndex,regionIndex});
+        if (candidate) {
+          // A thin mask inside a plate-sized hint may capture only part of the serving.
+          const fragmentary = area(region) > 160000 && candidate.fillRatio < .46;
+          candidates.push({...candidate,foodIndex,regionIndex,fragmentary});
+        }
       }
     } else if (mode==='propose') {
       const distinct = hints.filter((hint,index,all)=>all.findIndex(other=>boxOverlap(hint,other)>.92)===index).slice(0,8);
@@ -121,10 +146,74 @@ async function run({id, photo, box, points, mode, hints=[], servings=[]}) {
       }
       candidates.sort((a,b)=>a.box.y-b.box.y||a.box.x-b.box.x);
     } else {
-      const prompts=points?.length?points:box?[center(box)]:[];
-      if(!prompts.length)throw new Error('请先选择食物。');
+      const prompts = points ?? [];
+      const positives = prompts.filter(point => point.label === 1);
+      if (!positives.length && !box) throw new Error('请先选择食物。');
       report('segmenting');
-      candidates=await decode(prompts);
+      const guidePoint = box && [center(box), {...center(box), x:box.x + box.width * .35}, {...center(box), x:box.x + box.width * .65}]
+        .find(point => insidePolygon(point.x, point.y));
+      const regionPrompts = guided && guidePoint && !positives.length ? [guidePoint, ...prompts] : prompts;
+      const regionMasks = box ? await decode(regionPrompts, box) : [];
+      const pointMasks = !guided && positives.length ? await decode(prompts) : [];
+      const negatives = prompts.filter(point => !point.label);
+      const excludedCoverage = candidate => {
+        if (!negatives.length) return 0;
+        let filled = 0;
+        for (const point of negatives) for (const dy of [-18, 0, 18]) for (const dx of [-18, 0, 18]) {
+          const x = Math.min(image.width - 1, Math.max(0, Math.floor((point.x + dx) / 1000 * image.width)));
+          const y = Math.min(image.height - 1, Math.max(0, Math.floor((point.y + dy) / 1000 * image.height)));
+          if (candidate.alpha[y * image.width + x] > 127) filled++;
+        }
+        return filled / (9 * negatives.length);
+      };
+      const sortPointMasks = (items) => {
+        const viable = items.filter(c => c.score >= .65 && c.holeRatio < .20 && area(c.box) < 480000);
+        const rank = c => area(c.box) / 1e6 - .45 * excludedCoverage(c);
+        return viable.sort((a,b) => rank(b) - rank(a));
+      };
+      const combined = [...regionMasks, ...pointMasks];
+      if (guided && box) {
+        const insideGuide = candidate => {
+          let overlapPixels = 0, maskPixels = 0;
+          candidate.signature.forEach((filled, index) => {
+            if (!filled) return;
+            const x = (index % 40 + .5) * 25, y = (Math.floor(index / 40) + .5) * 25;
+            maskPixels++;
+            if (x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height && insidePolygon(x, y)) overlapPixels++;
+          });
+          return maskPixels ? overlapPixels / maskPixels : 0;
+        };
+        const rank = c => .50 * insideGuide(c) + .35 * boxOverlap(c.box, box) + .15 * c.score - .35 * excludedCoverage(c);
+        const suitable = c => insideGuide(c) >= .65;
+        const guidedCandidates = combined.filter(suitable);
+        if (guidePoint && !guidedCandidates.some(candidate => boxOverlap(candidate.box, box) >= .42)) {
+          guidedCandidates.push(...(await decode(regionPrompts)).filter(suitable));
+        }
+        candidates = guidedCandidates.sort((a,b) => rank(b)-rank(a));
+      } else if (box && regionMasks.length) {
+        const rank = c => .60 * boxOverlap(c.box, box) + .40 * c.score - .35 * excludedCoverage(c);
+        candidates = combined.sort((a,b) => rank(b) - rank(a));
+      } else {
+        candidates = [...sortPointMasks(combined), ...combined];
+      }
+      if (!guided && positives.length > 1 && positives.length <= 8 &&
+          (!candidates.length || area(candidates[0].box) > 550000)) {
+        const parts = [];
+        for (const point of positives) {
+          const part = sortPointMasks(await decode([point, ...negatives]))[0];
+          if (part) parts.push(part);
+        }
+        if (parts.length === positives.length) {
+          const alpha = new Uint8Array(pixelCount);
+          for (const part of parts) for (let i = 0; i < pixelCount; i++) alpha[i] = Math.max(alpha[i], part.alpha[i]);
+          const [left, top] = [Math.min(...parts.map(p => p.box.x)), Math.min(...parts.map(p => p.box.y))];
+          const right = Math.max(...parts.map(p => p.box.x + p.box.width));
+          const bottom = Math.max(...parts.map(p => p.box.y + p.box.height));
+          candidates.unshift({alpha, box:{x:left, y:top, width:right-left, height:bottom-top}, score:Math.min(...parts.map(p => p.score)),
+            signature:signature(Uint8Array.from(alpha,v=>v>127?1:0),image.width,image.height)});
+        }
+      }
+      candidates = candidates.filter((item,i,all) => !all.slice(0,i).some(other => overlap(other.signature,item.signature) > .91)).slice(0,4);
     }
     if(!candidates.length&&!mode)throw new Error('没有找到选中的食物。');
     const canvas = new OffscreenCanvas(image.width,image.height);

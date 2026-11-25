@@ -28,6 +28,8 @@ body { margin: 0; }
 .day-meal-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 51px; padding: 0 4px; }
 .day-meal-header h2,.day-nutrition h2 { margin: 0; font-size: 16px; }
 .day-meal-count { font-size: 13px; color: var(--day-muted); }
+.day-nutrition h2 { margin: 0; font-size: 16px; }
+.day-meal-count { font-size: 13px; color: var(--day-muted); }
 .day-sticker-grid { padding: 0 4px 10px; }
 .day-sticker { gap: 3px; padding: 5px 2px; border-radius: 10px; }
 .day-sticker food-sticker { max-width: 102px; }
@@ -45,8 +47,22 @@ body { margin: 0; }
 .day-macro-values div { display: grid; gap: 3px; padding-left: 9px; border-left: 2px solid #d7c7eb; font-size: 12px; color: var(--day-muted); }
 .day-macro-values strong { font-size: 14px; color: var(--day-ink); }
 
-.day-screen .day-dock { display: grid; grid-template-columns: minmax(86px,1fr) minmax(0,2fr); align-items: center; gap: 12px; padding-top: 9px; border-top: 1px solid var(--day-rule); background: var(--day-paper); }
-.day-dock a { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; font-size: 14px; font-weight: 750; }
-.day-dock .day-weigh { flex-direction: column; color: var(--day-action); }
-.day-dock .day-add { gap: 5px; color: #fff; background: var(--day-action); font-size: 15px; }
-.day-add span { font-size: 18px; }
+.day-screen { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
+.day-meal-card {
+  display: flex;
+  gap: 10px;
+  padding: 9px;
+  margin: 0 0 8px;
+  background: #fff;
+  border: 1px solid #ebe5ec;
+  border-radius: 14px;
+}
+.day-meal-card > a { align-self: flex-start; flex: 0 0 clamp(60px, 24vw, 92px); }
+.day-meal-card img { display: block; width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover; }
+.day-meal-body { min-width: 0; overflow-wrap: anywhere; flex: 1; display: grid; align-content: start; gap: 4px; }
+.day-meal-body strong { font-size: 14px; }
+.day-meal-body small,.day-meal-body p { margin: 0; color: var(--day-muted); font-size: 12px; }
+.day-meal-body > div { display: flex; align-items: center; gap: 14px; }
+.day-meal-body > div a { display: inline-flex; align-items: center; min-height: 44px; color: var(--day-action); font-size: 12px; font-weight: 750; }
+.day-meal-body button { background: transparent; border: 0; padding: 0 6px; min-height: 44px; font: inherit; font-size: 12px; font-weight: 750; color: #a42b3d; cursor: pointer; }
+.day-weight-note { margin: 2px 4px; color: var(--day-muted); font-size: 13px; }

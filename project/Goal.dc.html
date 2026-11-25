@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261124-2">
+<link rel="stylesheet" href="./mobile.css?v=20261125-4">
 <title>好好吃饭 我的目标</title>
-<script src="./support.js?v=20261117-5"></script>
-<script src="./journal.js?v=20261124-1"></script>
-<script src="./navigation.js?v=20261121-2"></script>
-<script src="./interactions.js?v=20261124-1"></script>
+<script src="./support.js?v=20261125"></script>
+<script src="./journal.js?v=20261125"></script>
+<script src="./navigation.js?v=20261125-3"></script>
+<script src="./interactions.js?v=20261125"></script>
 </head>
 <body>
 <x-dc>
@@ -28,28 +28,42 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
   </header>
   <p class="page-header-note page-subtitle">好好吃饭，才能好好生活。</p>
 
-  <section class="goal-card" aria-labelledby="diet-focus-heading">
-    <h2 id="diet-focus-heading">饮食关注</h2>
-    <div class="diet-focus-picker app-segmented" role="group" aria-label="饮食关注">
-      <sc-for list="{{focusOptions}}" as="option">
-        <button type="button" aria-pressed="{{option.selected}}" onClick="{{option.choose}}">{{option.label}}</button>
-      </sc-for>
-    </div>
-    <p class="goal-note diet-focus-hint">{{focusHint}}</p>
-    <sc-if value="{{focusMessage}}"><p class="goal-note" role="status">{{focusMessage}}</p></sc-if>
+  <section class="goal-card goal-focus-card" aria-labelledby="diet-focus-heading">
+    <div><h2 id="diet-focus-heading">饮食关注</h2><strong>{{focusLabel}}</strong></div>
+    <p class="goal-note">{{focusHint}}</p>
+    <a class="app-text-button" href="{{settingsHref}}">调整饮食关注 ›</a>
   </section>
 
-  <section class="goal-card">
-    <h2>最近一次体重</h2>
+  <section class="goal-card" aria-labelledby="goal-weight-heading">
+    <h2 id="goal-weight-heading">体重变化</h2>
     <sc-if value="{{hasWeight}}">
       <p class="goal-current">{{currentWeight}} <small>kg</small></p>
       <span class="goal-note">{{weightDate}}</span>
+      <sc-if value="{{hasWeightChart}}"><svg class="goal-weight-trend" viewBox="0 0 280 64" width="100%" height="64" role="img" aria-label="近四周体重趋势">
+        <polyline points="{{weightLine}}" fill="none" stroke="#8067d5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        <sc-for list="{{weightPoints}}" as="p"><circle cx="{{p.x}}" cy="{{p.y}}" r="3.5"></circle></sc-for>
+      </svg></sc-if>
     </sc-if>
-    <sc-if value="{{noWeight}}">
-      <p class="goal-note">还没有体重记录。你也可以只设生活习惯目标。</p>
-    </sc-if>
-    <a class="plan-action" href="{{weighHref}}">{{weighLabel}}</a>
-    <sc-if value="{{savedTarget}}"><p class="goal-note">你的目标体重 {{savedTarget}} kg</p></sc-if>
+    <sc-if value="{{noWeight}}"><p class="goal-note">还没有体重记录。</p></sc-if>
+    <sc-if value="{{savedTarget}}"><p class="goal-note">目标 {{savedTarget}} kg <sc-if value="{{weightDistance}}"> / {{weightDistance}}</sc-if></p></sc-if>
+  </section>
+
+  <section class="goal-card movement-card" id="movement">
+    <div class="movement-heading"><h2>{{movementTitle}}</h2><strong>{{movementSummary}}</strong></div>
+    <sc-if value="{{movementProgress}}"><div class="movement-progress" role="progressbar" aria-label="本周运动目标" aria-valuemin="0" aria-valuemax="{{movementProgress.target}}" aria-valuenow="{{movementProgress.current}}"><span style="{{movementProgress.style}}"></span></div></sc-if>
+    <div class="focus-chart movement-chart">
+      <sc-for list="{{movementDays}}" as="day">
+        <button type="button" aria-pressed="{{day.selected}}" aria-label="{{day.label}}" onClick="{{day.pick}}">
+          <span class="focus-chart-track" aria-hidden="true"><span class="focus-chart-bar" data-known="{{day.known}}" style="{{day.style}}"></span></span>
+          <span>{{day.name}}</span>
+        </button>
+      </sc-for>
+    </div>
+    <form onSubmit="{{saveMovement}}" class="movement-form">
+      <label for="movement-minutes">{{movementDateLabel}}运动分钟</label>
+      <div><input id="movement-minutes" enterkeyhint="done" type="number" min="0" max="1440" step="1" inputmode="numeric" value="{{minutes}}" onInput="{{setMinutes}}" placeholder="未记录"><button type="submit" class="plan-action" aria-disabled="{{futureMovement}}">保存运动</button></div>
+      <p class="goal-note" role="status">{{movementMessage}}</p>
+    </form>
   </section>
 
   <form class="goal-card" onSubmit="{{save}}">
@@ -61,6 +75,10 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
     <label class="goal-field">
       <span>目标体重（kg，选填）</span>
       <input id="goal-weight" enterkeyhint="done" type="text" inputmode="decimal" maxlength="7" placeholder="填写你自己的目标" value="{{target}}" onInput="{{setTarget}}">
+    </label>
+    <label class="goal-field">
+      <span>每周运动目标（分钟，选填）</span>
+      <input id="movement-target" enterkeyhint="done" type="number" inputmode="numeric" min="1" max="10080" step="1" placeholder="比如 90" value="{{movementTarget}}" onInput="{{setMovementTarget}}">
     </label>
     <button type="submit" class="plan-action goal-save">{{saveLabel}}</button>
     <p class="goal-note" role="status">{{message}}</p>
@@ -74,23 +92,38 @@ class Component extends DCLogic {
     super(props);
     this.latest = Journal.latestWeight();
     this.goal = Journal.readGoal();
+    const date = Journal.selected();
+    const movementDate = date > Journal.today ? Journal.today : date;
+    this.week = Journal.weekStart(movementDate);
     this.state = {
       habit: this.goal.habit,
       target: this.goal.weight === null ? "" : Journal.formatWeight(this.goal.weight),
       message: "",
-      dietFocus: Journal.readDietFocus(),
-      focusMessage: ""
+      movementTarget: this.goal.movement ?? "",
+      movementDate,
+      minutes: Journal.movementOn(movementDate) ?? "",
+      movementMessage: ""
     };
-    JournalUI.guardNavigation(() => this.state.habit.trim() !== this.goal.habit || (this.state.target.trim() ? Journal.parseWeight(this.state.target) === null || Journal.parseWeight(this.state.target) !== this.goal.weight : this.goal.weight !== null));
+    JournalUI.guardNavigation(() =>
+      this.state.habit.trim() !== this.goal.habit ||
+      (this.state.target.trim() ? Journal.parseWeight(this.state.target) !== this.goal.weight || this.goal.weight === null : this.goal.weight !== null) ||
+      String(this.state.movementTarget) !== String(this.goal.movement ?? "") ||
+      String(this.state.minutes) !== String(Journal.movementOn(this.state.movementDate) ?? ""));
   }
 
-  chooseFocus(focus) {
-    if (this.state.dietFocus.id === focus.id) return;
+  saveMovement(event) {
+    event.preventDefault();
+    const { minutes, movementDate } = this.state;
+    if (movementDate > Journal.today) return;
+    if (minutes === "") {
+      this.setState({ movementMessage: "请输入运动分钟数，休息日可填 0。" });
+      return;
+    }
     try {
-      Journal.saveDietFocus(focus.id);
-      this.setState({ dietFocus: focus, focusMessage: "已更新，记餐时生效。" });
-    } catch {
-      this.setState({ focusMessage: "饮食关注没有保存，请检查浏览器是否允许保存网站数据。" });
+      Journal.saveMovement(movementDate, Number(minutes));
+      this.setState({ movementMessage: "运动已记录" });
+    } catch (error) {
+      this.setState({ movementMessage: error.message });
     }
   }
 
@@ -103,7 +136,13 @@ class Component extends DCLogic {
       JournalUI.focusField("#goal-weight");
       return;
     }
-    const goal = { habit: this.state.habit.trim(), weight };
+    const movement = this.state.movementTarget === "" ? null : Number(this.state.movementTarget);
+    if (movement !== null && (!Number.isInteger(movement) || movement < 1 || movement > 10080)) {
+      this.setState({ message: "请输入有效的每周运动分钟数。" });
+      JournalUI.focusField("#movement-target");
+      return;
+    }
+    const goal = { habit: this.state.habit.trim(), weight, movement };
     try {
       Journal.saveGoal(goal);
       this.goal = goal;
@@ -119,23 +158,58 @@ class Component extends DCLogic {
   }
 
   renderVals() {
+    const focus = Journal.readDietFocus();
+    const movementDays = Array.from({length: 7}, (_, i) => {
+      const date = Journal.addDays(this.week, i);
+      return { date, minutes: Journal.movementOn(date) };
+    });
+    const maxMinutes = Math.max(1, ...movementDays.map(day => day.minutes ?? 0));
+    const total = movementDays.reduce((sum, day) => sum + (day.minutes ?? 0), 0);
+    const target = this.goal.movement;
+    const weights = Array.from({length: 28}, (_, i) => {
+      const weight = Journal.savedWeight(Journal.addDays(Journal.today, i - 27));
+      return weight === null ? [] : [{i, weight}];
+    }).flat();
+    const low = Math.min(...weights.map(item => item.weight));
+    const span = Math.max(70, Math.max(...weights.map(item => item.weight)) - low);
+    // Spread recorded days across the width so a few recent weighings stay readable.
+    const first = weights[0]?.i ?? 0, days = Math.max(6, 27 - first);
+    const weightPoints = weights.map(item => ({
+      x: Math.round(8 + (item.i - (27 - days)) / days * 264),
+      y: Math.round(56 - (item.weight - low) / span * 48)
+    }));
     return {
       navDate: Journal.selected(),
       ...this.state,
-      focusOptions: Journal.dietFocuses.map((focus) => ({
-        label: focus.label,
-        selected: focus.id === this.state.dietFocus.id,
-        choose: () => this.chooseFocus(focus)
+      focusLabel: focus.label, focusHint: focus.hint,
+      settingsHref: Journal.link("Settings", Journal.selected(), {returnTo: "Goal"}),
+      movementDays: movementDays.map(({date, minutes}) => ({
+        selected: date === this.state.movementDate, name: Journal.dayName(date).slice(1), known: minutes !== null,
+        style: "--chart-color:#8769d8;--bar-height:" + (minutes ?? 0) / maxMinutes * 100 + "%",
+        label: Journal.shortDate(date) + "，" + (minutes === null ? "未记录" : minutes + " 分钟"),
+        pick: async () => {
+          if (String(this.state.minutes) !== String(Journal.movementOn(this.state.movementDate) ?? "") &&
+              !await JournalUI.confirmAction({ title: "放弃未保存的运动记录？", confirmLabel: "放弃" })) return;
+          this.setState({ movementDate: date, minutes: minutes ?? "", movementMessage: "" });
+        }
       })),
-      focusHint: this.state.dietFocus.hint,
+      movementTitle: this.week === Journal.weekStart(Journal.today) ? "本周运动" : Journal.shortDate(this.week) + "这周的运动",
+      movementSummary: total + (target ? " / " + target : "") + " 分钟",
+      movementProgress: target ? { target, current: Math.min(total, target), style: "width:" + Math.min(100, total / target * 100) + "%" } : null,
+      movementDateLabel: Journal.shortDate(this.state.movementDate),
+      futureMovement: this.state.movementDate > Journal.today,
+      setMinutes: (event) => this.setState({ minutes: event.target.value, movementMessage: "" }),
+      setMovementTarget: (event) => this.setState({ movementTarget: event.target.value, message: "" }),
+      saveMovement: (event) => this.saveMovement(event),
+      hasWeightChart: weights.length > 1,
+      weightPoints, weightLine: weightPoints.map(p => p.x + "," + p.y).join(" "),
+      weightDistance: this.latest && this.goal.weight !== null ? "相差 " + Journal.formatWeight(Math.abs(this.latest.weight - this.goal.weight)) + " kg" : "",
       hasWeight: Boolean(this.latest),
       noWeight: !this.latest,
       currentWeight: this.latest ? Journal.formatWeight(this.latest.weight) : "",
       weightDate: this.latest ? Journal.shortDate(this.latest.date) + "记录" : "",
       savedTarget: this.goal.weight === null ? "" : Journal.formatWeight(this.goal.weight),
-      weighHref: Journal.link("Weigh", Journal.today, { returnTo: "Goal" }),
-      weighLabel: this.latest ? "更新体重" : "记一笔体重",
-      nextField: (event) => { if (event.key === "Enter") { event.preventDefault(); document.getElementById("goal-weight").focus(); } },
+      nextField: (event) => { if (event.key === "Enter" && !event.isComposing && event.keyCode !== 229) { event.preventDefault(); document.getElementById("goal-weight").focus(); } },
       saveLabel: this.state.message === "目标已保存" ? "已保存" : "保存目标",
       setHabit: (event) => this.setState({ habit: event.target.value, message: "" }),
       setTarget: (event) => this.setState({ target: event.target.value, message: "" }),
