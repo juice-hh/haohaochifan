@@ -7,16 +7,18 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-12">
+<link rel="stylesheet" href="./mobile.css?v=20261127-6">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261126-1"></script>
+<script src="./journal.js?v=20261127-3"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
 <script src="./navigation.js?v=20261125-3"></script>
-<script src="./nutrition-visual.js?v=20261126-2"></script>
-<script src="./app-icons.js?v=20261126-1"></script>
-<script src="./food-stickers.js?v=20261126-1"></script>
+<script src="./nutrition-visual.js?v=20261127-1"></script>
+<script src="./app-icons.js?v=20261127-1"></script>
+<script src="./food-stickers.js?v=20261127-1"></script>
+<script src="./insights.js?v=20261127-1"></script>
+<script src="./record-sheets.js?v=20261127-1"></script>
 </head>
 <body>
 <x-dc>
@@ -52,18 +54,21 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
       </svg>
     </a>
   </header>
+  <sc-if value="{{weekLead}}"><p class="week-lead">{{weekLead.before}}<strong>{{weekLead.strong}}</strong>{{weekLead.after}}</p></sc-if>
 
   <section class="week-calendar week-strip" aria-label="七天餐食与体重">
     <div class="week-calendar-grid">
       <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
-        <button type="button" class="week-calendar-day" onClick="{{d.pick}}" aria-label="{{d.aria}}" aria-pressed="{{d.on}}" aria-current="{{d.current}}">
-          <span class="week-weekday">{{d.wd}}</span>
-          <span class="week-date">{{d.date}}</span>
+        <button type="button" class="week-calendar-day" data-state="{{d.state}}" data-future="{{d.future}}" onClick="{{d.pick}}" aria-label="{{d.aria}}" aria-pressed="{{d.on}}" aria-current="{{d.current}}">
+          <span class="week-state-icon" aria-hidden="true"><sc-if value="{{d.stateIcon}}"><hh-icon name="{{d.stateIcon}}" size="16"></hh-icon></sc-if></span>
           <span class="week-thumb" data-has-photo="{{d.hasPhoto}}" aria-hidden="true">
             <sc-if value="{{d.photo}}"><img class="week-original-photo" src="{{d.photo}}" alt="" draggable="false"></sc-if>
             <sc-if value="{{d.countLabel}}"><span class="week-thumb-count">{{d.countLabel}}</span></sc-if>
           </span>
+          <span class="week-day-marks" aria-hidden="true"><sc-for list="{{d.marks}}" as="m"><span data-mark="{{m}}"><hh-icon name="{{m}}" size="11"></hh-icon></span></sc-for></span>
           <span class="week-weight-change" data-trend="{{d.trend}}" aria-hidden="true">{{d.changeLabel}}</span>
+          <span class="week-weekday">{{d.wd}}</span>
+          <span class="week-date">{{d.date}}</span>
           <sc-if value="{{showWeekPlans}}">
             <span class="plan-markers" aria-hidden="true">
               <sc-for list="{{d.plans}}" as="p"><span class="plan-icon" data-plan="{{p.id}}"></span></sc-for>
@@ -72,11 +77,20 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         </button>
       </sc-for>
     </div>
+    <sc-if value="{{periodBand}}"><p class="week-period-band" style="{{periodBand.style}}"><hh-icon name="period" size="12"></hh-icon>{{periodBand.label}}</p></sc-if>
   </section>
+
+  <sc-if value="{{reviewCard}}">
+    <a class="review-entry" href="{{reviewCard.href}}">
+      <span class="review-entry-icon"><hh-icon name="period" size="24"></hh-icon></span>
+      <span><strong>这次经期的复盘好了</strong><small>{{reviewCard.note}}</small></span>
+      <hh-icon name="right" size="18"></hh-icon>
+    </a>
+  </sc-if>
 
   <section class="week-day-record" aria-labelledby="week-day-heading">
     <header class="week-day-header">
-      <h2 id="week-day-heading">{{sel.title}}</h2>
+      <h2 id="week-day-heading">{{sel.title}}<sc-if value="{{sel.periodPill}}"><a class="period-pill" href="{{periodHref}}"><hh-icon name="period" size="12"></hh-icon>{{sel.periodPill}}</a></sc-if></h2>
       <a class="app-text-button week-day-date-link" href="{{detailHref}}" aria-label="{{sel.dateLabel}}的记录">
         <time datetime="{{navDate}}">{{sel.dateLabel}}</time>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
@@ -89,7 +103,25 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         </sc-for>
       </div>
     </sc-if>
+    <sc-if value="{{stateRow}}">
+      <div class="state-row" data-state="{{stateRow.current}}">
+        <span class="state-row-badge" aria-hidden="true"><hh-icon name="{{stateRow.icon}}" size="22"></hh-icon></span>
+        <span class="state-row-text"><strong>{{stateRow.title}}</strong><small>{{stateRow.note}}</small></span>
+        <span class="state-row-options" role="group" aria-label="今天的感觉">
+          <sc-for list="{{stateRow.options}}" as="o">
+            <button type="button" aria-pressed="{{o.on}}" aria-label="{{o.label}}" title="{{o.label}}" onClick="{{o.pick}}"><hh-icon name="{{o.id}}" size="15"></hh-icon></button>
+          </sc-for>
+        </span>
+      </div>
+    </sc-if>
     <sc-if value="{{sel.empty}}">
+      <sc-if value="{{dayChips}}">
+        <div class="day-chips day-chips--empty">
+          <sc-for list="{{dayChips}}" as="c">
+            <a class="day-chip" href="{{c.href}}" onClick="{{c.open}}" data-kind="{{c.kind}}"><span class="day-chip-icon"><hh-icon name="{{c.icon}}" size="14"></hh-icon></span><span><strong>{{c.value}}<small>{{c.unit}}</small></strong><em data-tone="{{c.tone}}">{{c.note}}</em></span></a>
+          </sc-for>
+        </div>
+      </sc-if>
       <div class="home-energy home-energy--empty">
         <sc-if value="{{emptyGoal}}">
           <svg class="energy-ring" width="72" height="72" viewBox="0 0 76 76" role="img" aria-label="{{emptyGoal.aria}}">
@@ -111,10 +143,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     <sc-if value="{{sel.hasMeals}}">
       <section class="week-nutrition-panel" data-food="{{foodSelected}}" aria-labelledby="week-nutrition-heading">
         <header class="week-nutrition-header">
-          <h3 id="week-nutrition-heading" aria-live="polite">{{nutrition.title}}</h3>
-          <sc-if value="{{selectedFood}}">
-            <button class="week-total-button" type="button" onClick="{{clearFood}}">看全天</button>
-          </sc-if>
+          <h3 id="week-nutrition-heading">{{nutrition.title}}</h3>
         </header>
         <dl class="week-nutrients week-energy-row" aria-label="热量">
           <div class="week-nutrient week-energy">
@@ -138,6 +167,13 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
             </sc-if>
           </div>
         </dl>
+        <sc-if value="{{dayChips}}">
+          <div class="day-chips">
+            <sc-for list="{{dayChips}}" as="c">
+              <a class="day-chip" href="{{c.href}}" onClick="{{c.open}}" data-kind="{{c.kind}}"><span class="day-chip-icon"><hh-icon name="{{c.icon}}" size="14"></hh-icon></span><span><strong>{{c.value}}<small>{{c.unit}}</small></strong><em data-tone="{{c.tone}}">{{c.note}}</em></span></a>
+            </sc-for>
+          </div>
+        </sc-if>
         <div class="nutrition-summary" data-open="{{nutritionOpen}}">
           <dl class="week-nutrients week-macros" aria-label="三大营养素">
             <sc-for list="{{nutrition.macros}}" as="m">
@@ -164,12 +200,6 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
             <hh-icon name="right" size="16"></hh-icon>
           </button>
         </div>
-        <sc-if value="{{selectedFood}}">
-          <footer class="week-nutrition-footer">
-            <sc-if value="{{nutrition.hasMissing}}"><span>— 表示未记录</span></sc-if>
-            <a class="app-text-button" href="{{selectedFood.editHref}}" aria-label="编辑{{selectedFood.name}}所在的餐食">编辑这餐</a>
-          </footer>
-        </sc-if>
       </section>
       <section class="week-board" data-view="{{boardView}}" aria-label="餐品贴纸">
         <div class="week-board-switch" role="group" aria-label="贴纸视图">
@@ -199,14 +229,11 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
             <sc-if value="{{g.hasStickers}}">
               <div class="week-board-stickers">
                 <sc-for list="{{g.stickers}}" as="f">
-                  <button type="button" class="week-board-sticker" style="{{f.style}}" onClick="{{f.pick}}" aria-pressed="{{f.active}}" aria-label="{{f.label}}">
-                    <span class="sticker-nutrition-line">
-                      <span>{{f.visual.kcal}}</span><span class="nutrition-ring" role="img" aria-label="{{f.visual.ringLabel}}" style="{{f.visual.ring}}"></span>
-                      <sc-if value="{{f.visual.focus}}"><small class="sticker-focus" aria-hidden="true"><sc-for list="{{f.visual.focusChips}}" as="c"><span><hh-icon name="{{c.key}}" size="13"></hh-icon>{{c.value}}</span></sc-for></small></sc-if>
-                    </span>
-                    <span class="week-board-art" aria-hidden="true"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker></span>
+                  <button type="button" class="week-board-sticker" style="{{f.style}}" onClick="{{f.pick}}" aria-pressed="{{f.active}}" data-dim="{{f.dim}}" aria-label="{{f.label}}">
+                    <span class="week-board-art" aria-hidden="true"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><sc-for list="{{f.marks}}" as="mk"><span class="sticker-focus-mark" data-mark="{{mk.key}}"><hh-icon name="{{mk.key}}" size="14"></hh-icon></span></sc-for></span>
                     <span class="week-board-caption">
                       <strong>{{f.name}}</strong>
+                      <sc-if value="{{f.kcalText}}"><small class="sticker-kcal">{{f.kcalText}}</small></sc-if>
                       <sc-if value="{{f.partial}}"><small>部分已抠</small></sc-if>
                     </span>
                   </button>
@@ -218,9 +245,88 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
             </sc-for>
           </section>
         </sc-for>
+        <sc-if value="{{boardFeelings}}">
+          <div class="board-feelings" aria-label="每餐感受">
+            <sc-for list="{{boardFeelings}}" as="b"><button type="button" class="feeling-bubble" data-tone="{{b.tone}}" onClick="{{b.open}}">{{b.text}}</button></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{markLegend}}">
+          <p class="mark-legend"><sc-for list="{{markLegend}}" as="l"><span><hh-icon name="{{l.key}}" size="13"></hh-icon>{{l.label}}</span></sc-for></p>
+        </sc-if>
+        <sc-if value="{{dish}}">
+          <section class="dish-card" aria-labelledby="dish-card-title" aria-live="polite">
+            <header>
+              <h3 id="dish-card-title">{{dish.name}}</h3>
+              <strong>{{dish.kcal}}<sc-if value="{{dish.hasEnergy}}"><small> kcal</small></sc-if></strong>
+              <button type="button" class="dish-card-close" onClick="{{clearFood}}" aria-label="收起{{dish.name}}的营养"><hh-icon name="close" size="16"></hh-icon></button>
+            </header>
+            <dl class="dish-card-macros">
+              <sc-for list="{{dish.macros}}" as="m">
+                <div style="{{m.color}}"><dt>{{m.label}}</dt><dd>{{m.value}}</dd></div>
+              </sc-for>
+            </dl>
+            <footer>
+              <sc-for list="{{dish.focus}}" as="item">
+                <span class="dish-card-focus" data-key="{{item.key}}"><hh-icon name="{{item.key}}" size="14"></hh-icon>{{item.label}} {{item.value}}</span>
+              </sc-for>
+              <a class="app-text-button" href="{{dish.editHref}}" aria-label="编辑{{dish.name}}所在的餐食">编辑这餐</a>
+            </footer>
+            <sc-if value="{{dish.tip}}"><p class="dish-card-tip">{{dish.tip.lead}}<strong>{{dish.tip.strong}}</strong>{{dish.tip.after}}</p></sc-if>
+          </section>
+        </sc-if>
       </section>
     </sc-if>
   </section>
+
+  <sc-if value="{{findings}}">
+    <section class="findings" aria-labelledby="findings-heading">
+      <header class="section-head"><h2 id="findings-heading">这周的发现</h2><sc-if value="{{findingsHint}}"><small>{{findingsHint}}</small></sc-if></header>
+      <div class="findings-rail">
+        <sc-for list="{{findings}}" as="f">
+          <article class="finding" data-tone="{{f.tone}}">
+            <div class="finding-eq" aria-hidden="true">
+              <sc-for list="{{f.parts}}" as="p"><span class="finding-part" data-kind="{{p.kind}}"><sc-if value="{{p.icon}}"><hh-icon name="{{p.icon}}" size="{{p.size}}"></hh-icon></sc-if>{{p.text}}</span></sc-for>
+            </div>
+            <p>{{f.text}}</p>
+            <sc-if value="{{f.dates}}"><div class="finding-dates"><sc-for list="{{f.dates}}" as="d"><span>{{d}}</span></sc-for></div></sc-if>
+          </article>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{moveWeek}}">
+    <section class="move-week" aria-labelledby="move-week-heading">
+      <header class="section-head"><h2 id="move-week-heading">这周动了动</h2><button type="button" class="app-text-button" onClick="{{addExercise}}">记一次运动</button></header>
+      <div class="move-week-grid">
+        <div class="move-card" data-type="aerobic">
+          <span class="move-card-k"><hh-icon name="walk" size="14"></hh-icon>有氧</span>
+          <strong>{{moveWeek.aerobic}}<small>分钟</small></strong>
+          <span class="move-bars" aria-hidden="true"><sc-for list="{{moveWeek.bars}}" as="b"><i style="{{b}}"></i></sc-for></span>
+        </div>
+        <div class="move-card" data-type="strength">
+          <span class="move-card-k"><hh-icon name="dumbbell" size="14"></hh-icon>力量</span>
+          <strong>{{moveWeek.strength}}<small>/ 2 次</small></strong>
+          <span class="move-checks" aria-hidden="true"><sc-for list="{{moveWeek.checks}}" as="c"><i data-on="{{c}}"><hh-icon name="check" size="16"></hh-icon></i></sc-for></span>
+          <em data-done="{{moveWeek.strengthDone}}">{{moveWeek.strengthNote}}</em>
+        </div>
+      </div>
+      <p class="move-walks"><hh-icon name="walk" size="16"></hh-icon><strong>饭后走走 {{moveWeek.walkCount}} 次</strong><span aria-hidden="true"><sc-for list="{{moveWeek.walks}}" as="w"><i data-on="{{w}}"></i></sc-for></span></p>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{sugarWeek}}">
+    <section class="sugar-week" aria-labelledby="sugar-week-heading">
+      <header class="section-head"><h2 id="sugar-week-heading">控糖</h2></header>
+      <sc-for list="{{sugarWeek.rows}}" as="r">
+        <div class="sugar-row">
+          <span class="sugar-row-k"><hh-icon name="{{r.icon}}" size="14"></hh-icon>{{r.label}}</span>
+          <span class="sugar-days" aria-hidden="true"><sc-for list="{{r.days}}" as="d"><i data-on="{{d}}"><sc-if value="{{d}}"><hh-icon name="{{r.icon}}" size="12"></hh-icon></sc-if></i></sc-for></span>
+          <span class="sugar-row-v">{{r.value}}<sc-if value="{{r.change}}"><small data-good="{{r.good}}">{{r.change}}</small></sc-if></span>
+        </div>
+      </sc-for>
+    </section>
+  </sc-if>
 
   <sc-if value="{{focusTrend}}">
     <section class="focus-trend" data-open="{{trendOpen}}" aria-label="{{focusTrend.title}}">
@@ -277,6 +383,16 @@ class Component extends DCLogic {
     this.setState({ date, savedMessage: "", foodKey: null });
   }
 
+  refresh(changes = {}) {
+    this.setState(changes);
+  }
+
+  async openSheet(kind, value) {
+    const done = await (kind === "exercise" ? RecordSheets.exercise(this.state.date)
+      : kind === "feelings" ? RecordSheets.feelings(value) : RecordSheets.note(this.state.date));
+    if (done) this.refresh();
+  }
+
   moveWeek(direction) {
     const date = Journal.addDays(this.state.date, direction * 7);
     this.select(date);
@@ -290,8 +406,12 @@ class Component extends DCLogic {
       for (const character of food.key) hash = (Math.imul(hash, 31) + character.charCodeAt(0)) >>> 0;
       const rotation = (index % 2 ? 1 : -1) * (2 + (hash % 5));
       const visual = NutritionVisual.serving(food.energy, food.nutrients);
+      const marks = NutritionVisual.focusMarks(food);
       return {
-        ...food, active, visual, label: [food.label, visual.ringLabel, visual.focus].filter(Boolean).join("，"),
+        ...food, active, visual, marks,
+        dim: this.state.foodKey && !active ? "true" : "false",
+        kcalText: NutritionVisual.known(food.energy) ? visual.kcal : "",
+        label: [food.label, ...marks.map((mark) => mark.label)].join("，"),
         style: `--board-tilt:${rotation}deg`,
         pick: () => this.setState({ foodKey: active ? null : food.key })
       };
@@ -324,7 +444,14 @@ class Component extends DCLogic {
       if (d.w !== null) previousWeight = d.w;
       const photos = d.entry.meals.map(meal => Journal.photoFor(meal)).filter(Boolean);
       const trend = delta === null ? "none" : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+      const state = Journal.stateOn(d.date);
+      const move = Journal.movementSummary(d.date);
+      const sugar = Journal.dayFocusNutrients(d.entry.meals).find((item) => item.key === "addedSugar")?.value ?? null;
+      const marks = [];
+      if (move.total > 0) marks.push(move.strengthCount ? "dumbbell" : "walk");
+      if (Journal.readDietFocus().id === "sugar" && (sugar ?? 0) >= 25) marks.push("sugar");
       return {
+        state: state ?? "none", stateIcon: state ?? "", future: d.date > Journal.today ? "true" : "false", marks,
         wd: d.wd, date: Number(d.date.slice(8)), on, plans: d.plans,
         photo: photos.at(-1) ?? "", hasPhoto: photos.length > 0,
         countLabel: d.n > 1 ? String(d.n) : "",
@@ -336,6 +463,8 @@ class Component extends DCLogic {
           + (d.w === null ? '' : '，体重 ' + Journal.formatWeight(d.w) + ' 公斤')
           + (delta === null ? '' : delta === 0 ? '，持平' : '，' + (delta > 0 ? '上升 ' : '下降 ') + Journal.formatWeight(Math.abs(delta)) + ' 公斤')
           + (d.plans.length ? '，计划：' + d.plans.map(({ label }) => label).join('、') : '')
+          + (state ? '，感觉' + Journal.states.find((item) => item.id === state).label : '')
+          + (move.total ? '，运动 ' + move.total + ' 分钟' : '')
       };
     });
 
@@ -360,22 +489,30 @@ class Component extends DCLogic {
 
     const dayHasEnergy = entry.kcal > 0 || entry.meals.some((meal) =>
       Number.isFinite(meal.kcal) || Journal.mealMacros(meal).every((amount) => amount !== null));
-    let kcal = dayHasEnergy ? entry.kcal : null;
-    let macroValues = entry.grams.map((value, i) => entry.macroKnown[i] ? value : null);
-    let percentages = entry.percentages;
-    let focusNutrients = Journal.dayFocusNutrients(entry.meals);
+    const kcal = dayHasEnergy ? entry.kcal : null;
+    const macroValues = entry.grams.map((value, i) => entry.macroKnown[i] ? value : null);
+    const percentages = entry.percentages;
+    const focusNutrients = Journal.dayFocusNutrients(entry.meals);
+    // A tapped dish opens its own card under the board; the day totals above stay as they are.
+    let dish = null;
     if (selectedFood) {
-      const { nutrients, energy } = selectedFood;
-      kcal = energy;
-      macroValues = ["carb", "pro", "fat"].map(key => nutrients?.[key] ?? null);
-      percentages = macroValues.every(value => value !== null) ? Journal.estimate(macroValues).percentages : [0, 0, 0];
-      focusNutrients = Journal.dayFocusNutrients([{ focusNutrients: nutrients }]);
+      const summary = NutritionVisual.summary(selectedFood.energy,
+        ["carb", "pro", "fat"].map((key) => selectedFood.nutrients?.[key]),
+        Journal.readDietFocus().fields.map((key) => ({ key, label: Journal.focusNutrients[key], value: selectedFood.nutrients?.[key] })));
+      const sugarFocus = Journal.readDietFocus().id === "sugar";
+      dish = {
+        tip: sugarFocus && selectedFood.refinedCarb ? { lead: "这份升血糖会快一些。", strong: "先吃菜和肉，再吃主食", after: "，或者主食换成半份，饭后走 15 分钟，下午会更稳。" } : null,
+        name: selectedFood.name, editHref: selectedFood.editHref,
+        hasEnergy: NutritionVisual.known(selectedFood.energy),
+        kcal: NutritionVisual.known(selectedFood.energy) ? Number(selectedFood.energy).toLocaleString("en-US") : "—",
+        macros: summary.macros, focus: summary.focus
+      };
     }
     const hasSupply = percentages.some((value) => value > 0);
     // A daily target gives the big number a reference point. Only the whole-day view uses it.
     const kcalTarget = Journal.readGoal().kcal;
     let energyGoal = null;
-    if (kcalTarget && !selectedFood && kcal !== null) {
+    if (kcalTarget && kcal !== null) {
       const ratio = kcal / kcalTarget;
       const circumference = 2 * Math.PI * 31;
       const left = kcalTarget - kcal;
@@ -434,14 +571,108 @@ class Component extends DCLogic {
           label: Journal.shortDate(day.date) + "，" + bars.map(bar => bar.label).join("，") };
       })
     } : null;
+    // ---- Record book ----
+    const canRecord = selected <= Journal.today;
+    const stateId = Journal.stateOn(selected);
+    const stateInfo = Journal.states.find((item) => item.id === stateId);
+    const stateRow = canRecord ? {
+      current: stateId ?? "none", icon: stateId ?? "light",
+      title: stateInfo ? stateInfo.label : current.today ? "今天感觉怎么样" : "这天感觉怎么样",
+      note: stateInfo ? (current.today ? "今天的感觉" : "这天的感觉") : "点一下就好",
+      options: Journal.states.map((item) => ({ ...item, on: item.id === stateId ? "true" : "false",
+        pick: () => { try { Journal.saveState(selected, item.id === stateId ? null : item.id); } catch {} this.refresh(); } }))
+    } : null;
+    const move = Journal.movementSummary(selected);
+    const weightEntry = Journal.day(selected).weight;
+    const prevWeight = weightEntry === null ? null : Journal.previousWeight(selected)?.weight ?? null;
+    const dayChips = canRecord ? [
+      { kind: "move", icon: move.strengthCount ? "dumbbell" : "walk", value: move.total ? String(move.total) : "记", unit: move.total ? "分" : "",
+        note: move.total ? (move.strengthCount ? "含力量" : "运动") : "运动", tone: "plain", href: "#exercise",
+        open: (event) => { event.preventDefault(); this.openSheet("exercise"); } },
+      { kind: "weight", icon: "weight", value: weightEntry === null ? "记" : Journal.formatWeight(weightEntry), unit: "",
+        note: weightEntry === null ? "体重" : prevWeight === null ? "体重" : (weightEntry <= prevWeight ? "−" : "+") + Journal.formatWeight(Math.abs(weightEntry - prevWeight)),
+        tone: weightEntry !== null && prevWeight !== null && weightEntry < prevWeight ? "good" : "plain",
+        href: Journal.link("Weigh", selected, { returnTo: "Main" }), open: null }
+    ] : null;
+    const boardFeelings = entry.meals.map((meal) => {
+      const ids = Journal.feelingsFor(meal.id);
+      const kind = Journal.kinds[Journal.kindKeyOf(meal)] ?? "这餐";
+      const labels = ids.map((id) => Journal.mealFeelings.find((item) => item.id === id).label);
+      const tone = ids.some((id) => Journal.mealFeelings.find((item) => item.id === id).tone === "warn") ? "warn" : ids.length ? "good" : "add";
+      return { tone, text: labels.length ? kind + " " + labels.join(" ") : "+ " + kind + "感受", open: () => this.openSheet("feelings", meal) };
+    });
+    const usedMarks = records.flatMap((record) => record.foods).flatMap((food) => NutritionVisual.focusMarks(food));
+    const markLegend = [...new Map(usedMarks.map((mark) => [mark.key, mark])).values()];
+
+    const weekFindings = Insights.week(week);
+    const partIcon = (name) => ({ kind: name === "plus" || name === "right" ? "op" : "icon",
+      icon: name === "plus" || name === "right" ? "" : name, text: name === "plus" ? "+" : name === "right" ? "→" : "", size: "30" });
+    const findings = weekFindings.length ? weekFindings.map((item) => ({
+      tone: item.tone, text: item.text, parts: item.icons.map(partIcon),
+      dates: item.dates.length <= 4 ? item.dates.map((date) => Journal.dayName(date)) : null
+    })) : null;
+    const movement = Insights.movement(week);
+    const maxBar = Math.max(30, ...movement.bars);
+    const moveWeek = movement.any ? {
+      aerobic: movement.aerobic, strength: movement.strength,
+      bars: movement.bars.map((value) => value ? "height:" + Math.max(12, Math.round(value / maxBar * 100)) + "%" : ""),
+      checks: [movement.strength >= 1 ? "true" : "false", movement.strength >= 2 ? "true" : "false"],
+      strengthDone: movement.strength >= 2 ? "true" : "false",
+      strengthNote: movement.strength >= 2 ? "这周做够了" : movement.strength === 1 ? "再来 1 次就够了" : "试试深蹲 10 分钟",
+      walks: movement.walks.map(String), walkCount: movement.walks.filter(Boolean).length
+    } : null;
+    const sugarFocus = Journal.readDietFocus().id === "sugar";
+    const sugarData = sugarFocus ? Insights.sugarWeek(week) : null;
+    const pct = (now, before) => before ? Math.round((now - before) / before * 100) : null;
+    const sugarChange = sugarData && sugarData.sugarAvg !== null && sugarData.sugarAvgBefore ? pct(sugarData.sugarAvg, sugarData.sugarAvgBefore) : null;
+    const refinedChange = sugarData ? sugarData.refinedTotal - sugarData.refinedBefore : 0;
+    const sugarWeek = sugarData && (sugarData.sugarAvg !== null || sugarData.refinedTotal) ? { rows: [
+      { icon: "sugar", label: "添加糖", days: sugarData.sugarDays.map(String),
+        value: sugarData.sugarAvg === null ? "未记录" : Math.round(sugarData.sugarAvg) + " g/天",
+        change: sugarChange === null || sugarChange === 0 ? "" : (sugarChange < 0 ? "少 " : "多 ") + Math.abs(sugarChange) + "%", good: String(sugarChange < 0) },
+      { icon: "grain", label: "精制碳水", days: sugarData.refinedDays.map(String), value: sugarData.refinedTotal + " 份",
+        change: sugarData.refinedBefore && refinedChange ? (refinedChange < 0 ? "少 " : "多 ") + Math.abs(refinedChange) + " 份" : "", good: String(refinedChange < 0) }
+    ] } : null;
+
+    const goodDays = raw.filter((day) => ["light", "spirit"].includes(Journal.stateOn(day.date))).length;
+    const lastWeekGood = Array.from({ length: 7 }, (_, i) => Journal.addDays(week, i - 7)).filter((date) => ["light", "spirit"].includes(Journal.stateOn(date))).length;
+    const weekLead = goodDays ? { before: "这周有 ", strong: goodDays + " 天轻盈或精神", after: goodDays > lastWeekGood && lastWeekGood ? "，比上周多 " + (goodDays - lastWeekGood) + " 天" : "" } : null;
+
+    // Period band, pill and the review card.
+    let periodBand = null, reviewCard = null, periodPill = "";
+    if (Journal.periodEnabled()) {
+      const weekDates = raw.map((day) => day.date);
+      const run = Journal.periods().find((item) => item.days.some((date) => weekDates.includes(date)) || (!item.ended && item.start <= lastDay));
+      if (run) {
+        const shown = weekDates.filter((date) => date >= run.start && date <= (run.ended ? run.end : Journal.today));
+        if (shown.length) {
+          const first = weekDates.indexOf(shown[0]) + 1, last = weekDates.indexOf(shown.at(-1)) + 2;
+          // Short runs still need room for the label, so the band never narrows below four days.
+          const span = Math.max(4, last - first), from = Math.max(1, Math.min(first, 8 - span));
+          periodBand = { style: "grid-column:" + from + " / " + (from + span),
+            label: run.ended ? "经期 " + Journal.shortDate(run.start) + "起 " + run.length + " 天 已结束"
+              : "经期 第 " + (run.days.indexOf(shown.at(-1)) + 1 || run.length) + " 天" };
+        }
+        const day = run.days.indexOf(selected);
+        if (day >= 0 && Journal.periodOn(selected)) periodPill = "经期第 " + (day + 1) + " 天";
+        if (run.ended && run.end >= week && run.end <= lastDay) {
+          reviewCard = { href: Journal.link("Period", run.start, { review: "1" }), note: Insights.review(run).headline + "，看看身体提醒了什么" };
+        }
+      }
+    }
+
     return {
-      navDate: selected,
-      boardSections, boardView, selectedFood,
+      navDate: selected, stateRow, dayChips, boardFeelings: boardFeelings.length ? boardFeelings : null,
+      markLegend: markLegend.length ? markLegend : null,
+      findings, findingsHint: findings && findings.length > 1 ? "左右滑" : "", moveWeek, sugarWeek, weekLead,
+      periodBand, reviewCard, addExercise: () => this.openSheet("exercise"),
+      periodHref: Journal.link("Period", Journal.today, { returnTo: "Main" }),
+      boardSections, boardView, selectedFood, dish,
       allView: boardView === "all", mealsView: boardView === "meals",
       showAll: () => this.setState({ boardView: "all" }),
       showMeals: () => this.setState({ boardView: "meals" }),
       clearFood: () => this.setState({ foodKey: null }),
-      foodSelected: selectedFood ? "true" : "false",
+      foodSelected: "false",
       nutritionOpen: this.state.nutritionOpen ? "true" : "false",
       nutritionToggleLabel: this.state.nutritionOpen ? "收起营养详情" : "展开营养详情",
       toggleNutrition: () => this.setState({ nutritionOpen: !this.state.nutritionOpen }),
@@ -449,14 +680,14 @@ class Component extends DCLogic {
       toggleTrend: () => this.setState({ trendOpen: !this.state.trendOpen }),
       emptyGoal: kcalTarget ? { caption: "/" + kcalTarget, aria: "每日热量目标 " + kcalTarget + " 千卡，已吃 0%" } : null,
       nutrition: {
-        title: selectedFood?.name ?? "全天营养",
-        energyLabel: selectedFood ? "热量" : "已记热量",
+        title: "全天营养",
+        energyLabel: "已记热量",
         hasEnergy: kcal !== null, hasSupply, macros,
         hasMissing: kcal === null || macroValues.includes(null),
         kcal: kcal === null ? "—" : kcal.toLocaleString("en-US")
       },
       focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
-      energyGoal, energyGoalMissing: !kcalTarget && !selectedFood && selected <= Journal.today,
+      energyGoal, energyGoalMissing: !kcalTarget && selected <= Journal.today,
       goalHref: Journal.link("Goal", selected) + "#kcal-target",
       days, focusTrend,
       savedMessage: this.state.savedMessage,
@@ -472,6 +703,7 @@ class Component extends DCLogic {
       sel: {
         title: current.today ? "今日记录" : "当天记录",
         dateLabel: Journal.shortDate(selected) + (current.today ? "" : " " + Journal.dayName(selected)),
+        periodPill,
         hasMeals: entry.meals.length > 0,
         empty: entry.meals.length === 0,
         emptyNote: selected > Journal.today ? "还没到这一天" : current.today ? "还没记录，拍一张开始" : "这天没有记录"

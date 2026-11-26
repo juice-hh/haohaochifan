@@ -88,3 +88,87 @@ body { margin: 0; }
 .day-macro-values div > span { display: flex; align-items: center; gap: 5px; }
 .day-weight-note { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-radius: 999px; background: #FFFFFF; box-shadow: 0 10px 30px rgba(60, 45, 30, 0.06); width: fit-content; }
 .day-weight-note strong { font-size: 18px; color: #2A2622; font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; }
+
+/* ---------- Day page as one record-book page (2026-11-27) ---------- */
+.day-screen .day-summary, .day-screen .day-timeline { padding: 16px; border-radius: 30px; background: #fff; box-shadow: 0 10px 30px rgba(60, 45, 30, 0.06); }
+.day-summary .state-row { margin-top: 0; }
+.day-summary-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; margin-top: 12px; }
+.day-summary-kcal { display: flex; align-items: baseline; gap: 3px; margin: 0; }
+.day-summary-kcal strong { font: 800 42px/1 ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; color: #7A66E0; letter-spacing: -1px; }
+.day-summary-kcal .day-summary-zero { color: #CFC9C1; }
+.day-summary-kcal small { font-size: 13px; font-weight: 700; color: #2A2622; }
+.day-summary-kcal span { font-size: 14px; color: var(--day-muted); }
+.day-summary .day-chips { margin: 0 0 0 auto; }
+.day-macro-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; padding: 10px 12px; border-radius: 18px; background: #F6F4F0; font: 800 14px ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; }
+.day-macro-line > span { display: inline-flex; align-items: center; gap: 5px; }
+.day-macro-line > span > i { width: 8px; height: 8px; border-radius: 50%; background: #E7B84A; }
+.day-macro-line > span[data-macro="pro"] > i { background: #A796EE; }
+.day-macro-line > span[data-macro="fat"] > i { background: #8ED0AE; }
+.day-macro-line .day-focus-nutrients { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 0 auto; padding: 0; border: 0; }
+.day-macro-line .day-focus-nutrient { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px 4px 6px; border-radius: 12px; background: #FFF3D6; color: #9A6A12; font-size: 12px; font-weight: 700; }
+.day-macro-line .day-focus-nutrient[data-key="fiber"] { background: #E3F3EA; color: #2E7A57; }
+.day-macro-line .day-focus-nutrient strong { font: inherit; color: inherit; }
+.day-macro-line .day-focus-nutrient small { font-weight: 600; opacity: .8; }
+
+.day-screen .day-timeline { display: block; padding-bottom: 8px; }
+.day-timeline .section-head h2 { font-size: 18px; }
+.tl { margin: 6px 0 0; padding: 0; list-style: none; }
+.tl-row { position: relative; display: grid; grid-template-columns: 40px 30px minmax(0, 1fr); gap: 0 8px; align-items: start; padding: 7px 0; }
+.tl-row::before { content: ""; position: absolute; left: 62px; top: 37px; bottom: -7px; width: 2px; border-radius: 2px; background: #ECE8E1; }
+.tl-row:last-child::before { display: none; }
+.tl-time { padding-top: 8px; font: 800 11.5px ui-rounded, "SF Pro Rounded", "PingFang SC", sans-serif; color: #A39C94; text-align: right; }
+.tl-node { position: relative; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #F1EEE9; box-shadow: 0 0 0 4px #fff; }
+.tl-node[data-tone="green"] { background: var(--rb-green-soft); }
+.tl-node[data-tone="violet"] { background: var(--rb-violet-soft); }
+.tl-node[data-tone="orange"] { background: var(--rb-orange-soft); }
+.tl-node[data-tone="rose"] { background: var(--rb-rose-soft); }
+.tl-node[data-tone="blue"] { background: #E7EDF3; }
+.tl-node[data-tone="greenline"] { background: #fff; box-shadow: 0 0 0 4px #fff, inset 0 0 0 1.5px #A9D9BF; }
+.tl-node[data-tone="dash"] { background: #fff; box-shadow: 0 0 0 4px #fff, inset 0 0 0 1.5px #DDD8D0; }
+.tl-body { min-width: 0; }
+.tl-gap { margin: -2px 0 6px; font-size: 11px; color: #C1BBB3; }
+.tl-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; margin: 0; padding-top: 6px; font-size: 13px; color: var(--day-muted); }
+.tl-line strong { font: 800 14px ui-rounded, "SF Pro Rounded", "PingFang SC", sans-serif; color: var(--day-ink); }
+.tl-line em { font-style: normal; font-size: 11.5px; font-weight: 600; }
+.tl-line em[data-tone="good"] { color: var(--rb-green-deep); }
+.tl-line em[data-tone="rose"] { color: var(--rb-rose-deep); }
+.tl-tag { padding: 2px 7px; border-radius: 999px; background: var(--rb-orange-soft); color: var(--rb-orange-deep); font-size: 10.5px; font-weight: 700; }
+.tl-tag[data-type="strength"] { background: var(--rb-violet-soft); color: var(--rb-violet-deep); }
+.tl-tag[data-type="stretch"] { background: var(--rb-green-soft); color: var(--rb-green-deep); }
+.tl-remove { display: grid; place-items: center; width: 32px; height: 32px; margin: -8px -6px -8px auto; border: 0; border-radius: 50%; background: transparent; color: #C1BBB3; }
+
+.day-timeline .day-meal-section { padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.day-timeline .day-meal-card { display: block; margin: 0; padding: 10px 10px 8px; border-radius: 22px; background: #FAF9F6; }
+.tl-meal-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px; }
+.tl-meal-head h2 { margin: 0; font-size: 15px; }
+.tl-meal-head span { font: 800 12px ui-rounded, "SF Pro Rounded", "PingFang SC", sans-serif; color: var(--day-muted); }
+.tl-plate { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; padding: 8px 4px 2px; }
+.tl-food { display: grid; justify-items: center; gap: 1px; max-width: 96px; text-align: center; }
+.tl-food-art { position: relative; display: block; width: var(--size); transform: rotate(var(--tilt)); }
+.tl-food-art .sticker-focus-mark { transform: rotate(calc(var(--tilt) * -1)); }
+.tl-food strong { margin-top: 3px; font-size: 11.5px; font-weight: 600; overflow-wrap: anywhere; }
+.tl-food small { font: 700 10.5px ui-rounded, "SF Pro Rounded", "PingFang SC", sans-serif; color: #A39C94; }
+.tl-photo img { display: block; width: 92px; height: 92px; margin: 8px 4px 0; border-radius: 18px; object-fit: cover; }
+.tl-meal-name { margin: 6px 4px 0; font-size: 12.5px; font-weight: 700; overflow-wrap: anywhere; }
+.tl-meal-name small { display: block; font-weight: 500; color: var(--day-muted); }
+.tl-meal-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.tl-meal-tools { display: flex; margin-left: auto; }
+.tl-meal-tools a, .tl-meal-tools button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #5B48B8; }
+.tl-meal-tools button { color: #B63843; }
+
+.tl-walk { display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 12px; border-radius: 20px; background: linear-gradient(110deg, #E2F4EA, #F4FBF7); }
+.tl-walk strong { display: block; font-size: 13.5px; color: var(--rb-green-deep); }
+.tl-walk small { font-size: 11.5px; color: #4C8C6C; }
+.tl-walk-skip { margin-left: auto; min-height: 44px; padding: 0 6px; border: 0; background: transparent; color: #7FA893; font: inherit; font-size: 12px; font-weight: 700; }
+.tl-walk-go { min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--rb-green); color: #fff; font: inherit; font-size: 13px; font-weight: 700; }
+.tl-ask { padding: 10px 12px; border-radius: 20px; background: #F7F5FE; }
+.tl-ask p { margin: 0; font-size: 13px; font-weight: 700; }
+.tl-ask span { display: flex; gap: 6px; margin-top: 8px; }
+.tl-ask button { flex: 1; min-height: 38px; border: 0; border-radius: 14px; background: #fff; color: var(--day-muted); font: inherit; font-size: 12.5px; font-weight: 700; }
+.tl-ask button[aria-pressed="true"] { background: var(--rb-violet); color: #fff; }
+.tl-add { display: flex; align-items: center; margin: 0; padding-top: 1px; font-size: 12.5px; color: #A39C94; }
+.tl-add .app-text-button { margin-left: auto; min-height: 36px; padding: 0 4px; border: 0; background: transparent; color: #5B48B8; font: inherit; font-size: 12.5px; font-weight: 700; }
+.tl-note { display: block; width: 100%; margin-top: 1px; padding: 10px 13px; border: 0; border-radius: 18px 18px 18px 6px; background: var(--rb-violet-soft); color: #3F3566; font: inherit; font-size: 13px; line-height: 1.6; text-align: left; overflow-wrap: anywhere; }
+.tl-row[data-type="note"] .tl-note:empty::before { content: "写给今天的一句话"; }
+.tl-link { color: var(--day-muted) !important; }
+.tl-link hh-icon { margin-left: auto; color: #C1BBB3; }

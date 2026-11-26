@@ -35,3 +35,5 @@ NODE_PATH='../好好吃饭原型/node_modules' node tests/food-stickers.cjs
 照片处理专项使用 `NODE_PATH='../好好吃饭原型/node_modules' node tests/mobile-photo-reliability.cjs`。在 Chromium 和 WebKit 中验证本周顶部触摸入口、计划图标、日期弹层、处理途中重载后的照片草稿，以及选图后自动生成并保存透明贴纸。识别结果由测试提供，像素分割使用真实图片和本地模型。
 
 透明贴纸手动选择专项使用 `NODE_PATH='../好好吃饭原型/node_modules' node tests/cutout-selection.cjs`。在 Chromium 和 WebKit 中对真实沙拉照片操作多点、框选和圈画，核对整碗大小、透明背景与白边。识别接口在该专项中保持关闭。
+
+记录册专项使用 `NODE_PATH='../好好吃饭原型/node_modules' node tests/record-book.cjs`。在 Chromium 和 WebKit 的 390 与 320 宽度下验证每日状态、每餐感受、有氧和力量运动、精制碳水和糖的角标、点开餐品的吃法提示、下午状态、日记、经期开启、记录、结束和复盘、加入习惯计划，以及识别请求不带经期数据。

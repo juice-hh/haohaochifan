@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F2EF">
-<link rel="stylesheet" href="./mobile.css?v=20261126-12">
+<link rel="stylesheet" href="./mobile.css?v=20261127-6">
 <title>好好吃饭 设置</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261126-1"></script>
-<script src="./app-icons.js?v=20261126-1"></script>
+<script src="./journal.js?v=20261127-3"></script>
+<script src="./app-icons.js?v=20261127-1"></script>
 </head>
 <body style="margin:0">
 <x-dc>
@@ -36,6 +36,18 @@
       </sc-for>
     </div>
   </section>
+  <section class="goal-card">
+    <h2>记录册</h2>
+    <sc-for list="{{toggles}}" as="t">
+      <div class="settings-toggle">
+        <span class="settings-toggle-icon" aria-hidden="true"><hh-icon name="{{t.icon}}" size="22"></hh-icon></span>
+        <span class="settings-toggle-text"><strong id="{{t.id}}">{{t.label}}</strong><small>{{t.detail}}</small></span>
+        <button type="button" class="app-switch" role="switch" aria-checked="{{t.on}}" aria-labelledby="{{t.id}}" onClick="{{t.toggle}}"></button>
+      </div>
+    </sc-for>
+    <sc-if value="{{periodOn}}"><a class="settings-link-row" href="{{periodHref}}"><span>经期记录和复盘</span><hh-icon name="right" size="16"></hh-icon></a></sc-if>
+    <p class="goal-note">经期记录只保存在这台手机上，不会上传，识别饭菜时也不会带上。</p>
+  </section>
   <p class="goal-note" role="status">{{status}}</p>
 </main>
 </x-dc>
@@ -45,7 +57,7 @@ class Component extends DCLogic {
     super(props);
     let auto = true;
     try { auto = localStorage.getItem("hhcf-record-mode") !== "manual"; } catch {}
-    this.state = { auto, focus: Journal.readDietFocus().id, status: "" };
+    this.state = { auto, focus: Journal.readDietFocus().id, status: "", period: Journal.periodEnabled(), prompts: Journal.readPrompts() };
   }
 
   save(update, values) {
@@ -59,9 +71,19 @@ class Component extends DCLogic {
 
   renderVals() {
     const { auto, focus, status } = this.state;
-    const page = Journal.params.get("returnTo") === "Goal" ? "Goal" : "Main";
+    const page = ["Goal", "Day"].includes(Journal.params.get("returnTo")) ? Journal.params.get("returnTo") : "Main";
     const setMode = (enabled) => this.save(() => localStorage.setItem("hhcf-record-mode", enabled ? "ai" : "manual"), {auto: enabled});
+    const { period, prompts } = this.state;
+    const toggles = [
+      { id: "toggle-period", icon: "period", label: "记录经期", detail: "很多人经期会更想吃东西，记下来能看出规律。随时可以关掉。", on: String(period),
+        toggle: () => this.save(() => Journal.setPeriodEnabled(!period), { period: !period }) },
+      { id: "toggle-walk", icon: "walk", label: "饭后走走提醒", detail: "午饭和晚饭后在当天饭记里问一句，点一下就记好。", on: String(prompts.walk),
+        toggle: () => { const next = { ...prompts, walk: !prompts.walk }; this.save(() => Journal.savePrompts(next), { prompts: next }); } },
+      { id: "toggle-afternoon", icon: "sleepy", label: "下午状态", detail: "下午 3 点后问一句困不困，看看吃什么让下午更清醒。", on: String(prompts.afternoon),
+        toggle: () => { const next = { ...prompts, afternoon: !prompts.afternoon }; this.save(() => Journal.savePrompts(next), { prompts: next }); } }
+    ];
     return {
+      toggles, periodOn: period, periodHref: Journal.link("Period", Journal.selected(), { returnTo: "Settings" }),
       auto, manual: !auto, status, backHref: Journal.link(page, Journal.selected()),
       enable: () => setMode(true), disable: () => setMode(false),
       modeHint: auto ? "拍照或选图后会发送给 OpenAI 估算营养。" : "照片保存在当前设备。需要时可在编辑页开启单次识别。",

@@ -11,6 +11,7 @@ const dietFocuses = {
     instructions: `额外返回整餐膳食纤维 fiber，单位克。根据可辨认的食材、份量或可读营养标签估算。整餐纤维量缺乏合理依据时填 null。只有有依据时才填 0。不要推断炎症状态，也不要提供抗炎评分。`
   }
 };
+const refinedCarbInstructions = "\n\nfoods 每项填写 refinedCarb：这一份的主体是精制碳水时为 true，例如白米饭、白粥、白面条、米粉、白面包、白馒头、包子皮为主的面点、饼干蛋糕甜点、含糖饮料和果汁。全谷物、杂粮、薯类、蔬菜、肉蛋奶、水果为主时为 false。混合的一份按主体判断，比如牛肉面为 true，沙拉为 false。";
 const optionalGrams = { type: ["number", "null"], minimum: 0, maximum: 10000 };
 const gramFields = (keys) => Object.fromEntries(keys.map(key => [key, optionalGrams]));
 const validAmount = value => value === null || (Number.isFinite(value) && value >= 0 && value <= 10000);
@@ -32,9 +33,9 @@ const schema = {
     notes: { type: "string" },
     singleMixedDishBox: { ...regionSchema, type: ["object", "null"] },
     foods: { type: "array", maxItems: 16, items: {
-      type: "object", additionalProperties: false, required: ["name", "kcal", "box", "contour", "regions"],
+      type: "object", additionalProperties: false, required: ["name", "kcal", "refinedCarb", "box", "contour", "regions"],
       properties: {
-        name: { type: "string" }, kcal: optionalGrams,
+        name: { type: "string" }, kcal: optionalGrams, refinedCarb: { type: "boolean" },
         box: { type: "object", additionalProperties: false, required: ["x", "y", "width", "height"],
           properties: Object.fromEntries(["x", "y", "width", "height"].map(key => [key, { type: "number", minimum: 0, maximum: 1000 }])) },
         regions:{type:"array",minItems:1,maxItems:8,items:regionSchema},
@@ -101,7 +102,7 @@ module.exports = async function handler(req, res) {
         store: false,
         max_output_tokens: 6500,
         instructions: focus.instructions ? recognitionInstructions + "\n\n" + focus.instructions +
-          "\nfoods 每项的 nutrients 也填写这些额外指标，只计算该餐品，使用相同的证据标准。foodVisible=false 时整餐额外营养字段填 null。" : recognitionInstructions,
+          "\nfoods 每项的 nutrients 也填写这些额外指标，只计算该餐品，使用相同的证据标准。foodVisible=false 时整餐额外营养字段填 null。" + refinedCarbInstructions : recognitionInstructions + refinedCarbInstructions,
         input: [{ role: "user", content: [
           { type: "input_text", text: "请识别这餐并估算份量和营养，供我修改后保存。" },
           { type: "input_image", image_url: photo, detail: "high" }
@@ -153,7 +154,7 @@ module.exports = async function handler(req, res) {
         }
       }
       if (typeof nutrients.totalSugar === "number" && nutrients.addedSugar > nutrients.totalSugar) nutrients.addedSugar = null;
-      return { ...food, nutrients, regions:food.regions||[food.box], name: food.name.trim().slice(0, 60) };
+      return { ...food, nutrients, refinedCarb: food.refinedCarb === true, regions:food.regions||[food.box], name: food.name.trim().slice(0, 60) };
     });
     for (const key of focus.fields) {
       const value = meal[key];
@@ -171,6 +172,7 @@ module.exports = async function handler(req, res) {
         // The model identified a single mixed serving but returned ingredient rows.
         // Use the whole meal estimate to avoid counting a dish and its ingredients twice.
         meal.foods = [{ name: meal.name.trim().slice(0, 60), kcal: meal.kcal, box, regions: [box], contour: [],
+          refinedCarb: meal.foods.some(food => food.refinedCarb),
           nutrients: Object.fromEntries(foodKeys.map(key => [key, validAmount(meal[key]) ? meal[key] : null])) }];
       }
     }

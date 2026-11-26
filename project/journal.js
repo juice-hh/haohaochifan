@@ -423,7 +423,199 @@ const Journal = (() => {
     };
   }
 
+  // ---- Record book: how the day felt, movement, notes and the optional period log ----
+  const states = [
+    { id: "light", label: "轻盈", tone: "good" },
+    { id: "spirit", label: "精神", tone: "good" },
+    { id: "ok", label: "一般", tone: "plain" },
+    { id: "sleepy", label: "犯困", tone: "low" },
+    { id: "puffy", label: "浮肿", tone: "low" }
+  ];
+  const afternoonOptions = [
+    { id: "clear", label: "清醒" }, { id: "sleepy", label: "有点困" }, { id: "verySleepy", label: "很困" }
+  ];
+  const mealFeelings = [
+    { id: "comfy", label: "舒服", tone: "good" }, { id: "fresh", label: "清爽", tone: "good" },
+    { id: "justFull", label: "刚好饱", tone: "good" }, { id: "stuffed", label: "有点撑", tone: "warn" },
+    { id: "hungry", label: "还饿", tone: "warn" }, { id: "greasy", label: "有点腻", tone: "warn" },
+    { id: "sleepyAfter", label: "饭后犯困", tone: "warn" }
+  ];
+  const exerciseTypes = [
+    { id: "aerobic", label: "有氧", hint: "走路 跑步 骑车 游泳", presets: ["饭后走走", "快走", "跑步", "骑车", "游泳", "跳绳"] },
+    { id: "strength", label: "力量", hint: "深蹲 俯卧撑 器械", presets: ["深蹲", "靠桌俯卧撑", "哑铃", "平板支撑", "弹力带", "器械"] },
+    { id: "stretch", label: "舒展", hint: "瑜伽 拉伸 普拉提", presets: ["瑜伽", "拉伸", "普拉提"] }
+  ];
+  const quickExercises = [
+    { label: "饭后走走", type: "aerobic", minutes: 15, afterMeal: true },
+    { label: "快走", type: "aerobic", minutes: 30 },
+    { label: "深蹲", type: "strength", minutes: 10 }
+  ];
+  const periodFlows = [{ id: "light", label: "少", dots: 1 }, { id: "medium", label: "中", dots: 2 }, { id: "heavy", label: "多", dots: 3 }];
+  const periodFeelings = [
+    { id: "cramps", label: "痛经" }, { id: "backache", label: "腰酸" }, { id: "craveSweet", label: "想吃甜的" },
+    { id: "veryHungry", label: "特别饿" }, { id: "noAppetite", label: "没胃口" }, { id: "bloated", label: "浮肿" },
+    { id: "low", label: "情绪低" }, { id: "sleepy", label: "很困" }
+  ];
+  const habitOptions = [
+    { id: "earlyLastBite", label: "23 点前吃完最后一口", hint: "让经期前的觉睡得更好", icon: "bed" },
+    { id: "strengthTwice", label: "每周 2 次力量", hint: "深蹲 靠桌俯卧撑都算", icon: "dumbbell" },
+    { id: "walkAfterDinner", label: "晚饭后走 15 分钟", hint: "下午和晚上都会更清爽", icon: "walk" }
+  ];
+  const stateKey = (date) => "hhcf-state-v1:" + date;
+  const afternoonKey = (date) => "hhcf-afternoon-v1:" + date;
+  const feelingKey = (mealId) => "hhcf-feel-v1:" + mealId;
+  const exerciseKey = (date) => "hhcf-exercise-v1:" + date;
+  const noteKey = (date) => "hhcf-note-v1:" + date;
+  const periodKey = (date) => "hhcf-period-v1:" + date;
+  const periodPrefix = "hhcf-period-v1:";
+
+  const pickId = (list, id) => list.some((item) => item.id === id) ? id : null;
+  const stateOn = (date) => pickId(states, readJSON(localStorage, stateKey(date)));
+  function saveState(date, id) {
+    if (!isDate(date) || date > today) throw new Error("只能记录今天或过去的状态。");
+    if (id === null) localStorage.removeItem(stateKey(date));
+    else if (pickId(states, id)) localStorage.setItem(stateKey(date), JSON.stringify(id));
+  }
+  const afternoonOn = (date) => pickId(afternoonOptions, readJSON(localStorage, afternoonKey(date)));
+  function saveAfternoon(date, id) {
+    if (!isDate(date) || date > today) throw new Error("只能记录今天或过去的状态。");
+    if (id === null) localStorage.removeItem(afternoonKey(date));
+    else if (pickId(afternoonOptions, id)) localStorage.setItem(afternoonKey(date), JSON.stringify(id));
+  }
+  function feelingsFor(mealId) {
+    const value = readJSON(localStorage, feelingKey(mealId));
+    return Array.isArray(value) ? value.filter((id) => pickId(mealFeelings, id)) : [];
+  }
+  function saveFeelings(mealId, ids) {
+    const clean = [...new Set(ids)].filter((id) => pickId(mealFeelings, id));
+    if (clean.length) localStorage.setItem(feelingKey(mealId), JSON.stringify(clean));
+    else localStorage.removeItem(feelingKey(mealId));
+  }
+
+  // Shanghai clock time, used to place records on the day timeline.
+  const clockParts = (ms) => {
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(ms));
+    const get = (type) => parts.find((entry) => entry.type === type).value;
+    return { date: [get("year"), get("month"), get("day")].join("-"), minutes: Number(get("hour")) * 60 + Number(get("minute")) };
+  };
+  const nowMinutes = () => clockParts(Date.now()).minutes;
+  const clock = (minutes) => Math.floor(minutes / 60) + ":" + String(minutes % 60).padStart(2, "0");
+  const nominalMeal = { breakfast: 480, lunch: 750, snack: 930, dinner: 1110 };
+  function mealMinutes(meal) {
+    const kind = kindKeyOf(meal);
+    const nominal = nominalMeal[kind] ?? 720;
+    // Trust the saved time only when it fits the meal; a breakfast logged at night stays in the morning.
+    if (Number.isFinite(meal?.createdAt) && meal.createdAt > 0) {
+      const at = clockParts(meal.createdAt);
+      if (at.date === meal.date && (!kind || Math.abs(at.minutes - nominal) <= 180)) return at.minutes;
+    }
+    return nominal;
+  }
+  const kindKeyOf = (meal) => Object.hasOwn(kinds, meal?.kind) ? meal.kind : Object.keys(kinds).find((key) => kinds[key] === meal?.kind) ?? "";
+
+  function exercisesOn(date) {
+    const value = readJSON(localStorage, exerciseKey(date));
+    return (Array.isArray(value) ? value : []).filter((item) =>
+      item && pickId(exerciseTypes, item.type) && Number.isInteger(item.minutes) && item.minutes > 0 && item.minutes <= 1440)
+      .map((item) => ({ ...item, label: typeof item.label === "string" && item.label.trim() ? item.label.trim().slice(0, 30) : exerciseTypes.find((type) => type.id === item.type).label }));
+  }
+  function addExercise(date, { type, minutes, label, afterMeal = false, at = null }) {
+    if (!isDate(date) || date > today) throw new Error("只能记录今天或过去的运动。");
+    if (!pickId(exerciseTypes, type) || !Number.isInteger(minutes) || minutes < 1 || minutes > 1440) throw new Error("请选择运动类型并填写 1 到 1440 分钟。");
+    const list = readJSON(localStorage, exerciseKey(date));
+    const time = Number.isInteger(at) ? at : date === today ? nowMinutes() : 1140;
+    const item = { id: crypto.randomUUID(), type, minutes, label: (label || "").trim().slice(0, 30), afterMeal: Boolean(afterMeal), at: time };
+    localStorage.setItem(exerciseKey(date), JSON.stringify([...(Array.isArray(list) ? list : []), item]));
+    return item;
+  }
+  function removeExercise(date, id) {
+    const list = exercisesOn(date).filter((item) => item.id !== id);
+    if (list.length) localStorage.setItem(exerciseKey(date), JSON.stringify(list));
+    else localStorage.removeItem(exerciseKey(date));
+  }
+  // Older records only kept a single number of minutes per day; count it as unclassified.
+  function movementSummary(date) {
+    const sessions = exercisesOn(date);
+    const legacy = movementOn(date) ?? 0;
+    const by = (type) => sessions.filter((item) => item.type === type).reduce((sum, item) => sum + item.minutes, 0);
+    return {
+      sessions, total: legacy + sessions.reduce((sum, item) => sum + item.minutes, 0),
+      aerobic: by("aerobic"), strength: by("strength"), stretch: by("stretch"), legacy,
+      strengthCount: sessions.filter((item) => item.type === "strength").length,
+      walks: sessions.filter((item) => item.afterMeal).length
+    };
+  }
+
+  const noteOn = (date) => { const value = readJSON(localStorage, noteKey(date)); return typeof value === "string" ? value : ""; };
+  function saveNote(date, text) {
+    const value = String(text ?? "").slice(0, 500);
+    if (value.trim()) localStorage.setItem(noteKey(date), JSON.stringify(value));
+    else localStorage.removeItem(noteKey(date));
+  }
+
+  // Reminders on the day page. They are inline cards, never notifications.
+  function readPrompts() {
+    const value = readJSON(localStorage, "hhcf-prompts-v1");
+    return { walk: value?.walk !== false, afternoon: value?.afternoon !== false };
+  }
+  const savePrompts = (prompts) => localStorage.setItem("hhcf-prompts-v1", JSON.stringify(prompts));
+
+  // Period records stay on this device and are never sent with recognition requests.
+  const periodEnabled = () => readJSON(localStorage, "hhcf-period-enabled") === true;
+  function setPeriodEnabled(enabled) {
+    if (enabled) localStorage.setItem("hhcf-period-enabled", "true");
+    else localStorage.removeItem("hhcf-period-enabled");
+  }
+  function periodOn(date) {
+    const value = readJSON(localStorage, periodKey(date));
+    if (!value || typeof value !== "object") return null;
+    return {
+      flow: pickId(periodFlows, value.flow) ?? "medium",
+      feelings: Array.isArray(value.feelings) ? value.feelings.filter((id) => pickId(periodFeelings, id)) : [],
+      end: value.end === true
+    };
+  }
+  function savePeriodDay(date, changes) {
+    if (!isDate(date) || date > today) throw new Error("只能记录今天或过去的经期。");
+    const next = { ...(periodOn(date) ?? { flow: "medium", feelings: [], end: false }), ...changes };
+    localStorage.setItem(periodKey(date), JSON.stringify(next));
+  }
+  const removePeriodDay = (date) => localStorage.removeItem(periodKey(date));
+  // A period is a run of recorded days with gaps of at most one unrecorded day.
+  function periods() {
+    const dates = Object.keys(localStorage).filter((name) => name.startsWith(periodPrefix))
+      .map((name) => name.slice(periodPrefix.length)).filter((date) => isDate(date) && periodOn(date)).sort();
+    const runs = [];
+    for (const date of dates) {
+      const last = runs.at(-1);
+      if (last && !periodOn(last.at(-1)).end && addDays(last.at(-1), 2) >= date) last.push(date);
+      else runs.push([date]);
+    }
+    return runs.map((days) => {
+      const start = days[0], last = days.at(-1);
+      const ended = periodOn(last).end || addDays(last, 2) < today;
+      const all = [];
+      for (let date = start; date <= last; date = addDays(date, 1)) all.push(date);
+      return { start, end: last, days: all, recorded: days, ended, length: all.length };
+    });
+  }
+  function periodFor(date) {
+    return periods().find((run) => run.start <= date && (run.ended ? run.end >= date : date <= today)) ?? null;
+  }
+  const readHabits = () => { const value = readJSON(localStorage, "hhcf-habits-v1"); return Array.isArray(value) ? value.filter((id) => pickId(habitOptions, id)) : []; };
+  function toggleHabit(id) {
+    const list = readHabits();
+    const next = list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+    localStorage.setItem("hhcf-habits-v1", JSON.stringify(next));
+    return next.includes(id);
+  }
+
   return {
+    states, afternoonOptions, mealFeelings, exerciseTypes, quickExercises, periodFlows, periodFeelings, habitOptions,
+    stateOn, saveState, afternoonOn, saveAfternoon, feelingsFor, saveFeelings,
+    clock, nowMinutes, mealMinutes, kindKeyOf, readMeals,
+    exercisesOn, addExercise, removeExercise, movementSummary, noteOn, saveNote, readPrompts, savePrompts,
+    periodEnabled, setPeriodEnabled, periodOn, savePeriodDay, removePeriodDay, periods, periodFor, readHabits, toggleHabit,
     params, today, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
     shortDate, dayName, isDate, selected, link, day, estimate,
     readPhotoDraft: (id) => accessPhotos("readonly", (store) => store.get("draft:" + id)),

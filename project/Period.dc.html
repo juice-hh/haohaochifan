@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F2EF">
+<meta name="apple-mobile-web-app-title" content="好好吃饭">
+<link rel="manifest" href="./app.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
+<link rel="stylesheet" href="./mobile.css?v=20261127-6">
+<link rel="stylesheet" href="./period.css?v=20261127-1">
+<title>好好吃饭 经期记录</title>
+<script src="./support.js?v=20261125"></script>
+<script src="./journal.js?v=20261127-3"></script>
+<script src="./interactions.js?v=20261125"></script>
+<script src="./app-icons.js?v=20261127-1"></script>
+<script src="./nutrition-visual.js?v=20261127-1"></script>
+<script src="./food-stickers.js?v=20261127-1"></script>
+<script src="./insights.js?v=20261127-1"></script>
+</head>
+<body style="margin:0">
+<x-dc>
+<main class="screen screen--flow period-screen">
+  <header class="app-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="返回">‹</a>
+    <h1 class="page-title">{{title}}</h1>
+  </header>
+
+  <sc-if value="{{off}}">
+    <section class="period-card">
+      <div class="period-toggle"><span class="period-toggle-icon"><hh-icon name="period" size="22"></hh-icon></span><span><strong>记录经期</strong><small>很多人经期会更想吃东西，记下来能看出规律</small></span>
+        <button type="button" class="app-switch" role="switch" aria-checked="false" aria-label="记录经期" onClick="{{enable}}"></button></div>
+      <p class="period-privacy">经期记录只保存在这台手机上，不会上传。识别饭菜时也不会带上。</p>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{review}}">
+    <section class="rv-hero">
+      <hh-icon class="rv-drop" name="period" size="96"></hh-icon>
+      <small>{{review.range}}</small>
+      <h2>{{review.headline}}</h2>
+      <p>{{review.sub}}</p>
+      <div class="rv-days">
+        <sc-for list="{{review.days}}" as="d">
+          <div class="rv-day">
+            <span class="rv-day-n">第{{d.n}}天</span>
+            <span class="rv-day-flow" aria-label="{{d.flowLabel}}"><sc-for list="{{d.dots}}" as="x"><i></i></sc-for></span>
+            <span class="rv-day-state"><sc-if value="{{d.state}}"><hh-icon name="{{d.state}}" size="15"></hh-icon></sc-if></span>
+            <span class="rv-day-food"><sc-for list="{{d.foods}}" as="f"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker></sc-for></span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <sc-if value="{{review.items}}">
+      <header class="section-head period-head"><h2>身体提醒你的事</h2><small>对照前一个月</small></header>
+      <section class="period-card mirror">
+        <sc-for list="{{review.items}}" as="it">
+          <div class="mirror-row">
+            <span class="mirror-icon" data-id="{{it.id}}"><hh-icon name="{{it.icon}}" size="22"></hh-icon></span>
+            <div>
+              <p class="mirror-title">{{it.title}}<em data-id="{{it.id}}">{{it.badge}}</em></p>
+              <p class="mirror-text">{{it.text}}</p>
+              <sc-if value="{{it.dates}}"><p class="mirror-dates"><sc-for list="{{it.dates}}" as="d"><span>{{d}}</span></sc-for></p></sc-if>
+              <sc-if value="{{it.snacks}}"><p class="mirror-snacks"><sc-for list="{{it.snacks}}" as="s"><span>{{s}}</span></sc-for></p></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{review.compare}}">
+      <header class="section-head period-head"><h2>和上次比</h2><small>{{review.previousLabel}}</small></header>
+      <div class="period-compare">
+        <sc-for list="{{review.compare}}" as="c">
+          <div><span>{{c.label}}</span><p><s>{{c.before}}</s><strong>{{c.now}}</strong><small>{{c.unit}}</small></p><em data-good="{{c.good}}">{{c.note}}</em></div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <section class="period-next">
+      <h2>下个月可以养一养</h2>
+      <sc-for list="{{habits}}" as="h">
+        <div class="period-habit">
+          <span class="period-habit-icon"><hh-icon name="{{h.icon}}" size="20"></hh-icon></span>
+          <span><strong>{{h.label}}</strong><small>{{h.hint}}</small></span>
+          <button type="button" aria-pressed="{{h.on}}" onClick="{{h.toggle}}">{{h.action}}</button>
+        </div>
+      </sc-for>
+    </section>
+    <p class="period-care"><hh-icon name="period" size="16"></hh-icon><span>痛经不用硬扛，按医生建议可以早点吃止痛药。<strong>疼得很厉害或突然加重，请去看医生。</strong></span></p>
+  </sc-if>
+
+  <sc-if value="{{record}}">
+    <section class="period-card">
+      <div class="period-status">
+        <span class="period-ring" style="{{record.ring}}"><strong>{{record.big}}<small>{{record.bigLabel}}</small></strong></span>
+        <span><strong class="period-status-title">{{record.title}}</strong><small>{{record.note}}</small></span>
+      </div>
+      <sc-if value="{{record.active}}">
+        <p class="rb-label">{{record.dayLabel}}的量</p>
+        <div class="period-flow" role="group" aria-label="量">
+          <sc-for list="{{record.flows}}" as="f"><button type="button" aria-pressed="{{f.on}}" onClick="{{f.pick}}"><span aria-hidden="true"><sc-for list="{{f.dots}}" as="x"><i></i></sc-for></span>{{f.label}}</button></sc-for>
+        </div>
+        <p class="rb-label">身体感觉 可多选</p>
+        <div class="rb-presets period-feelings">
+          <sc-for list="{{record.feelings}}" as="f"><button type="button" class="rb-chip" aria-pressed="{{f.on}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for>
+        </div>
+        <button type="button" class="period-end" onClick="{{record.end}}">经期结束了</button>
+      </sc-if>
+      <sc-if value="{{record.canStart}}">
+        <button type="button" class="period-start" onClick="{{record.start}}">{{record.startLabel}}</button>
+      </sc-if>
+    </section>
+
+    <section class="period-tip">
+      <h2>经期想多吃，很正常</h2>
+      <p>经期前后身体消耗变大，会更想吃甜的、吃主食。想吃就吃一点，换成更温和的选择，会舒服很多。</p>
+      <div class="period-snacks"><span><hh-icon name="snack" size="30"></hh-icon>酸奶</span><span><hh-icon name="lunch" size="30"></hh-icon>水果</span><span><hh-icon name="carb" size="30"></hh-icon>饭团</span><span><hh-icon name="breakfast" size="30"></hh-icon>热饮</span></div>
+    </section>
+
+    <sc-if value="{{history}}">
+      <section class="period-card">
+        <h2 class="period-card-title">这几次经期</h2>
+        <sc-for list="{{history}}" as="h">
+          <a class="period-history" href="{{h.href}}"><span>{{h.label}}</span><strong>{{h.length}} 天</strong><hh-icon name="right" size="14"></hh-icon></a>
+        </sc-for>
+        <sc-if value="{{cycle}}"><p class="period-cycle">平均周期 {{cycle}} 天</p></sc-if>
+      </section>
+    </sc-if>
+    <p class="period-privacy period-privacy--page">经期记录只保存在这台手机上，不会上传。可以在设置里随时关掉。</p>
+  </sc-if>
+  <sc-if value="{{error}}"><p class="rb-error" role="alert">{{error}}</p></sc-if>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.date = Journal.selected(Journal.today);
+    this.state = { error: "", reviewStart: Journal.params.get("review") === "1" ? this.date : null };
+  }
+
+  act(work) {
+    try { work(); this.setState({ error: "" }); }
+    catch (failure) { this.setState({ error: failure.message || "暂时没能保存，请重试。" }); }
+  }
+
+  reviewVals(run) {
+    const data = Insights.review(run);
+    const flowDots = { light: 1, medium: 2, heavy: 3 };
+    const habits = Journal.readHabits();
+    const previous = data.previous;
+    return {
+      range: Journal.shortDate(run.start) + " 到 " + Journal.shortDate(run.end) + " 共 " + run.length + " 天",
+      headline: data.headline, sub: data.sub,
+      days: data.days.map((day) => {
+        const foods = day.meals.flatMap((meal) => FoodStickers.groups([meal], day.date)[0].foods.filter((food) => food.hasSticker)).slice(0, 2);
+        return { n: day.index, dots: Array(day.record ? flowDots[day.record.flow] : 0).fill(1),
+          flowLabel: day.record ? "量" + Journal.periodFlows.find((f) => f.id === day.record.flow).label : "没记量",
+          state: day.state ?? "", foods };
+      }),
+      items: data.items.length ? data.items.map((item) => ({ ...item, dates: item.dates?.length ? item.dates : null,
+        snacks: item.snacks?.length ? item.snacks.map((meal) => meal.name) : null })) : null,
+      previousLabel: previous ? Journal.shortDate(previous.start) + "那次" : "",
+      compare: data.compare.length ? data.compare.map((c) => ({ ...c, good: String(c.now <= c.before),
+        note: c.now === c.before ? "差不多" : c.label === "天数" ? (c.now < c.before ? "短了 " + (c.before - c.now) + " 天" : "长了 " + (c.now - c.before) + " 天")
+          : c.now < c.before ? "少了 " + (c.before - c.now) + " " + c.unit : "多了 " + (c.now - c.before) + " " + c.unit })) : null,
+      habitList: Journal.habitOptions.map((item) => ({ ...item, on: String(habits.includes(item.id)), action: habits.includes(item.id) ? "已加入" : "加入计划",
+        toggle: () => this.act(() => Journal.toggleHabit(item.id)) }))
+    };
+  }
+
+  renderVals() {
+    const date = this.date;
+    const enabled = Journal.periodEnabled();
+    const back = Journal.params.get("returnTo");
+    const backHref = back === "Settings" ? Journal.link("Settings", date, { returnTo: "Main" }) : Journal.link("Main", date);
+    const runs = Journal.periods();
+    const reviewRun = this.state.reviewStart ? runs.find((run) => run.start === this.state.reviewStart && run.ended) : null;
+    const base = { backHref, error: this.state.error, enable: () => this.act(() => Journal.setPeriodEnabled(true)) };
+    if (!enabled && !reviewRun) return { ...base, title: "经期记录", off: true, review: null, record: null, history: null, habits: [] };
+    if (reviewRun) {
+      const review = this.reviewVals(reviewRun);
+      return { ...base, title: "这次经期", off: false, record: null, history: null, review, habits: review.habitList };
+    }
+
+    const today = Journal.today;
+    const current = runs.find((run) => !run.ended);
+    const todayRecord = Journal.periodOn(today);
+    const ended = runs.filter((run) => run.ended);
+    const cycles = ended.slice(1).map((run, i) => (Journal.asDate(run.start) - Journal.asDate(ended[i].start)) / 86400000).filter((days) => days >= 15 && days <= 60);
+    const cycle = cycles.length ? Math.round(cycles.reduce((a, b) => a + b, 0) / cycles.length) : 0;
+    const flowOf = todayRecord?.flow;
+    let record;
+    if (current) {
+      const day = current.days.indexOf(today) + 1 || current.length;
+      record = {
+        active: true, canStart: false, big: String(day), bigLabel: "第几天", ring: "--p:" + Math.min(100, Math.round(day / 7 * 100)) + "%",
+        title: "经期中", note: Journal.shortDate(current.start) + "开始" + (cycle ? " 平均周期 " + cycle + " 天" : ""),
+        dayLabel: "今天",
+        flows: Journal.periodFlows.map((f) => ({ ...f, dots: Array(f.dots).fill(1), on: String(flowOf === f.id),
+          pick: () => this.act(() => Journal.savePeriodDay(today, { flow: f.id })) })),
+        feelings: Journal.periodFeelings.map((f) => ({ ...f, on: String(!!todayRecord?.feelings.includes(f.id)),
+          pick: () => this.act(() => {
+            const list = todayRecord?.feelings ?? [];
+            Journal.savePeriodDay(today, { feelings: list.includes(f.id) ? list.filter((id) => id !== f.id) : [...list, f.id] });
+          }) })),
+        end: () => {
+          try {
+            Journal.savePeriodDay(todayRecord ? today : current.recorded.at(-1), { end: true });
+            window.history.replaceState(null, "", Journal.link("Period", current.start, { review: "1", returnTo: back || "Main" }));
+            this.setState({ error: "", reviewStart: current.start });
+          } catch (failure) { this.setState({ error: failure.message }); }
+        }
+      };
+    } else {
+      const last = ended.at(-1);
+      const since = last ? Math.round((Journal.asDate(today) - Journal.asDate(last.start)) / 86400000) : null;
+      const next = last && cycle ? cycle - since : null;
+      record = {
+        active: false, canStart: true, big: since === null ? "—" : String(since), bigLabel: since === null ? "还没有记录" : "天前开始",
+        ring: "--p:" + (cycle && since !== null ? Math.min(100, Math.round(since / cycle * 100)) : 0) + "%",
+        title: last ? "不在经期" : "还没有记录",
+        note: last ? "上次 " + Journal.shortDate(last.start) + "，" + last.length + " 天" + (next !== null && next > 0 ? "，预计 " + next + " 天后" : "") : "来了那天点下面的按钮",
+        startLabel: "今天来了",
+        start: () => this.act(() => Journal.savePeriodDay(today, { flow: "medium", feelings: [], end: false }))
+      };
+    }
+    const pastRuns = ended.slice(-4).reverse().map((run) => ({ label: Journal.shortDate(run.start), length: run.length,
+      href: Journal.link("Period", run.start, { review: "1", returnTo: back || "Main" }) }));
+    return { ...base, title: "经期记录", off: false, review: null, record, history: pastRuns.length ? pastRuns : null, cycle, habits: [] };
+  }
+}
+</script>
+</body>
+</html>

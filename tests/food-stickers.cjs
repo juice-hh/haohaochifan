@@ -40,25 +40,29 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await stickers.nth(5).waitFor();
   assert.equal(await board.getByRole('button',{name:'全量',exact:true}).getAttribute('aria-pressed'),'true');
   assert.equal(await stickers.count(),6);
-  assert.equal(await stickers.first().locator('.sticker-nutrition-line > span:first-child').first().innerText(),'123 kcal');
+  assert.equal(await stickers.first().locator('.sticker-kcal').innerText(),'123 kcal');
   assert.equal(await nutrition.locator('h3').innerText(),'全天营养');
   const primaryArt=await stickers.first().locator('.week-board-art').boundingBox();
   const secondaryArt=await stickers.nth(1).locator('.week-board-art').boundingBox();
   assert(primaryArt.width > secondaryArt.width && primaryArt.y + 20 < secondaryArt.y);
   const stickerStyle=await stickers.first().getAttribute('style');
+  const dish=board.locator('.dish-card');
   await stickers.first().tap();
-  assert.equal(await nutrition.locator('h3').innerText(),'测试食物1');
-  assert.deepEqual(await nutrition.locator('.week-nutrient strong').allTextContents(),['123','16.5','4','0']);
+  assert.equal(await dish.locator('h3').innerText(),'测试食物1');
+  assert.deepEqual(await dish.locator('dd').allTextContents(),['16.5 g','4 g','0 g']);
+  assert.equal(await stickers.nth(1).getAttribute('data-dim'),'true');
+  // The day totals stay put while a dish is open.
+  assert.deepEqual(await nutrition.locator('.week-nutrient strong').allTextContents(),['523','37','20','0']);
   await board.getByRole('button',{name:'三餐',exact:true}).click();
-  assert.deepEqual(await board.getByRole('heading').allTextContents(),['早餐','午餐','晚餐']);
+  assert.deepEqual(await board.locator('.week-board-meal-heading').getByRole('heading').allTextContents(),['早餐','午餐','晚餐']);
   const emptyBreakfast=board.locator('section[aria-label="早餐"]');
   assert.equal(await emptyBreakfast.locator('.week-board-meal-heading .week-board-empty').innerText(),'未记录');
   assert.equal(await board.locator('section[aria-label="晚餐"] .week-board-sticker').count(),6);
   assert.equal(await stickers.first().getAttribute('aria-pressed'),'true');
   await stickers.nth(1).tap();
-  assert.deepEqual(await nutrition.locator('.week-nutrient strong').allTextContents(),['60','2','—','0']);
-  await nutrition.getByRole('button',{name:'看全天',exact:true}).click();
-  assert.deepEqual(await nutrition.locator('.week-nutrient strong').allTextContents(),['523','37','20','0']);
+  assert.deepEqual(await dish.locator('dd').allTextContents(),['2 g','—','0 g']);
+  await dish.getByRole('button',{name:/收起/}).click();
+  assert.equal(await dish.count(),0);
   await board.getByRole('button',{name:'全量',exact:true}).click();
   assert.equal(await stickers.first().getAttribute('style'),stickerStyle);
   await stickers.first().tap();
@@ -76,7 +80,8 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
    return corner===0&&center>0;
   }),true);
   await p.getByRole('link',{name:'11月12日 周四的记录',exact:true}).click();
-  await p.locator('.day-meal-card img').waitFor();
+  // The day timeline shows a meal's stickers; the original photo only appears when there are none.
+  await p.locator('.day-meal-card food-sticker canvas').first().waitFor();
   assert.equal(await p.locator('.day-meal-card').count(),1);
   await p.getByRole('link',{name:'编辑这餐',exact:true}).click();
   await p.locator('.record-food-nutrition summary').first().click();
@@ -100,8 +105,8 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   assert.equal(await p.locator('.day-meal-card').count(),1);
   await p.goto(base+'/Main.dc.html?date=2026-11-12');
   assert.equal(await stickers.count(),6);
-  assert.equal(await stickers.first().locator('.sticker-nutrition-line > span').first().innerText(),'— kcal');
-  assert.equal(await stickers.last().locator('.sticker-nutrition-line > span').first().innerText(),'88 kcal');
+  assert.equal(await stickers.first().locator('.sticker-kcal').count(),0);
+  assert.equal(await stickers.last().locator('.sticker-kcal').innerText(),'88 kcal');
   await p.goto(base+'/Day.dc.html?date=2026-11-12');
   await p.getByRole('link',{name:'编辑这餐',exact:true}).click();
   await p.getByRole('button',{name:'更换照片',exact:true}).click();
@@ -112,7 +117,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
     [...document.querySelectorAll('.food-result food-sticker')].every(sticker=>sticker.getAttribute('cutout')==='null'));
   assert.equal(await p.locator('.food-result').count(),6);
   await p.locator('.record-save').click();await p.waitForURL('**/Day.dc.html?**');
-  await p.locator('.day-meal-card img').waitFor();
+  await p.locator('.day-meal-card .tl-photo img').waitFor();
   assert.equal(await p.locator('.day-meal-card').count(),1);
   await p.goto(base+'/Main.dc.html?date=2026-11-12');
   await stickers.nth(5).waitFor();

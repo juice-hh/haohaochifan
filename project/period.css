@@ -1,0 +1,82 @@
+/* Period record and review */
+.period-screen { gap: 12px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+.period-card { padding: 16px; border-radius: 28px; background: #fff; box-shadow: var(--hh-shadow); }
+.period-card-title { margin: 0 0 6px; font-size: 16px; }
+.period-toggle, .period-status { display: flex; align-items: center; gap: 12px; }
+.period-toggle-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 14px; background: var(--rb-rose-soft); }
+.period-toggle strong, .period-status-title { display: block; font-size: 16px; }
+.period-toggle small, .period-status small { display: block; margin-top: 2px; font-size: 12px; color: var(--hh-muted); }
+.period-toggle .app-switch[aria-checked="true"] { background: var(--rb-rose); }
+.period-privacy { margin: 12px 0 0; padding: 10px 12px; border-radius: 16px; background: #FAF9F6; font-size: 12px; line-height: 1.55; color: var(--hh-muted); }
+.period-privacy--page { margin: 0 4px; padding: 0; background: transparent; }
+.period-ring { --p: 0%; display: grid; place-items: center; flex: none; width: 78px; height: 78px; border-radius: 50%; background: conic-gradient(var(--rb-rose) 0 var(--p), #F6E3E8 var(--p) 100%); }
+.period-ring strong { display: grid; place-content: center; width: 62px; height: 62px; border-radius: 50%; background: #fff; font: 800 22px/1 var(--hh-num); text-align: center; }
+.period-ring small { display: block; margin-top: 3px; font: 700 10px inherit; font-family: inherit; color: var(--hh-muted); }
+.period-status-title { font-size: 20px; }
+.period-flow { display: flex; gap: 8px; margin-top: 8px; }
+.period-flow button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border: 0; border-radius: 14px; background: #F6F4F0; color: var(--hh-muted); font: inherit; font-size: 13px; font-weight: 700; }
+.period-flow button span { display: flex; gap: 2px; }
+.period-flow i, .rv-day-flow i { display: block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
+.period-flow button[aria-pressed="true"] { background: var(--rb-rose-soft); color: var(--rb-rose-deep); box-shadow: inset 0 0 0 2px #F3BACB; }
+.period-feelings .rb-chip { background: #F6F4F0; }
+.period-feelings .rb-chip[aria-pressed="true"] { background: var(--rb-rose-soft); color: var(--rb-rose-deep); }
+.period-end, .period-start { width: 100%; min-height: 46px; margin-top: 16px; border: 0; border-radius: 23px; font: inherit; font-size: 14px; font-weight: 700; }
+.period-end { background: transparent; color: var(--rb-rose-deep); box-shadow: inset 0 0 0 1.5px #F3BACB; }
+.period-start { background: var(--rb-rose); color: #fff; }
+.period-tip { padding: 16px; border-radius: 28px; background: linear-gradient(160deg, #FCE6EC, #FEF4F7); }
+.period-tip h2 { margin: 0; font-size: 15px; color: var(--rb-rose-deep); }
+.period-tip p { margin: 8px 0 0; font-size: 13px; line-height: 1.65; color: #5A3A44; }
+.period-snacks { display: flex; gap: 14px; margin-top: 12px; }
+.period-snacks span { display: grid; justify-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
+.period-snacks hh-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #fff; }
+.period-history { display: flex; align-items: center; gap: 8px; min-height: 44px; border-top: 1px solid #F0ECE6; color: var(--hh-muted) !important; font-size: 13px; }
+.period-history strong { margin-left: auto; font: 800 14px var(--hh-num); color: var(--hh-ink); }
+.period-cycle { margin: 8px 0 0; font-size: 12px; color: var(--hh-muted); }
+
+.rv-hero { position: relative; overflow: hidden; padding: 20px 16px 16px; border-radius: 32px; background: radial-gradient(120% 120% at 90% 0%, #F9D3DE 0%, #FCE6EC 45%, #FEF4F7 100%); }
+.rv-drop { position: absolute; right: -10px; top: -14px; opacity: .35; transform: rotate(14deg); }
+.rv-hero small { position: relative; font-size: 12px; font-weight: 700; color: var(--rb-rose-deep); }
+.rv-hero h2 { position: relative; margin: 6px 0 0; font-size: 24px; line-height: 1.35; }
+.rv-hero p { position: relative; margin: 8px 0 0; font-size: 12.5px; color: #7A4E5B; }
+.rv-days { display: flex; gap: 6px; margin-top: 16px; overflow-x: auto; scrollbar-width: none; }
+.rv-day { flex: 1 0 52px; display: grid; justify-items: center; gap: 5px; padding: 8px 0 9px; border-radius: 18px; background: #ffffffc7; }
+.rv-day-n { font-size: 10.5px; font-weight: 700; color: var(--rb-rose-deep); }
+.rv-day-flow { display: flex; gap: 2px; height: 7px; color: var(--rb-rose); }
+.rv-day-state { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #fff; }
+.rv-day-food { display: flex; min-height: 28px; }
+.rv-day-food food-sticker { width: 28px; margin: 0 -4px; }
+.period-head { margin: 8px 4px 0; }
+.period-head h2 { font-size: 17px; }
+.mirror { padding-block: 6px; }
+.mirror-row { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid #F0ECE6; }
+.mirror-row:first-child { border-top: 0; }
+.mirror-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 16px; background: var(--rb-violet-soft); }
+.mirror-icon[data-id="backache"] { background: #E7EDF3; }
+.mirror-icon[data-id="crave"], .mirror-icon[data-id="cramps"] { background: var(--rb-rose-soft); }
+.mirror-title { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; font-weight: 700; }
+.mirror-title em { padding: 2px 8px; border-radius: 999px; background: var(--rb-violet-soft); color: var(--rb-violet-deep); font-style: normal; font-size: 11px; }
+.mirror-title em[data-id="crave"], .mirror-title em[data-id="cramps"] { background: var(--rb-rose-soft); color: var(--rb-rose-deep); }
+.mirror-title em[data-id="backache"] { background: #E7EDF3; color: #4F6B86; }
+.mirror-text { margin: 5px 0 0; font-size: 13px; line-height: 1.6; color: #4D4842; }
+.mirror-dates, .mirror-snacks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.mirror-dates span, .mirror-snacks span { padding: 3px 8px; border-radius: 999px; background: #F6F4F0; font-size: 10.5px; font-weight: 700; color: var(--hh-muted); }
+.period-compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.period-compare > div { padding: 12px 10px; border-radius: 22px; background: #fff; box-shadow: var(--hh-shadow); }
+.period-compare span { font-size: 11.5px; font-weight: 700; color: var(--hh-muted); }
+.period-compare p { display: flex; align-items: baseline; gap: 4px; margin: 6px 0 0; }
+.period-compare s { font: 800 13px var(--hh-num); color: #A39C94; }
+.period-compare strong { font: 800 22px var(--hh-num); }
+.period-compare small { font-size: 11px; }
+.period-compare em { display: block; margin-top: 3px; font-style: normal; font-size: 11px; font-weight: 700; color: var(--hh-muted); }
+.period-compare em[data-good="true"] { color: var(--rb-green-deep); }
+.period-next { padding: 16px; border-radius: 30px; background: linear-gradient(160deg, #E2F4EA, #F4FBF7); }
+.period-next h2 { margin: 0; font-size: 16px; color: var(--rb-green-deep); }
+.period-habit { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 20px; background: #ffffffc7; }
+.period-habit-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; background: #fff; }
+.period-habit strong { display: block; font-size: 13.5px; }
+.period-habit small { font-size: 11.5px; color: var(--hh-muted); }
+.period-habit button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: #fff; color: var(--rb-green-deep); box-shadow: inset 0 0 0 1.5px #BFE3CF; font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.period-habit button[aria-pressed="true"] { background: var(--rb-green); color: #fff; box-shadow: none; }
+.period-care { display: flex; gap: 10px; margin: 0; padding: 13px 15px; border-radius: 24px; background: #fff; font-size: 12.5px; line-height: 1.6; color: var(--hh-muted); }
+.period-care hh-icon { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 10px; background: var(--rb-rose-soft); }
+.period-care strong { color: var(--hh-ink); }

@@ -17,6 +17,7 @@
   function normalize(items) {
     return Array.isArray(items) ? items.slice(0,16).filter(f=>f&&typeof f.name==='string').map(f=>({
       name:f.name.slice(0,60), kcal:amount(f.kcal), box:box(f.box), contour:[], cutout:cutout(f.cutout), reviewReason:typeof f.reviewReason==='string'?f.reviewReason.slice(0,180):'',
+      ...(typeof f.refinedCarb==='boolean'&&(f.refinedName===undefined||f.refinedName===f.name)?{refinedCarb:f.refinedCarb,refinedName:String(f.refinedName??f.name).slice(0,60)}:{}),
       ...(f.nutrients && typeof f.nutrients === 'object' ? {
         nutrients: Object.fromEntries(Object.keys(nutrientLabels).map(key => [key, amount(f.nutrients[key])]))
       } : {})
@@ -43,7 +44,7 @@
           }
           const kcal = f.kcal===null?'热量待补充':'约 '+ Math.round(f.kcal)+' kcal';
           return {name:f.name,photo,box:JSON.stringify(f.box),cutout:JSON.stringify(f.cutout),
-            energy:f.kcal, nutrients,
+            energy:f.kcal, nutrients, refinedCarb:NutritionVisual.isRefinedCarb(f),
             hasSticker:!!photo&&!!f.cutout, partial:!!f.cutout&&!!f.reviewReason,
             kcal, label:f.name+'，'+(f.kcal===null?kcal:'约 '+ Math.round(f.kcal)+' 千卡')};
         })

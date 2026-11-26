@@ -7,16 +7,18 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-12">
-<link rel="stylesheet" href="./day.css?v=20261126-3">
+<link rel="stylesheet" href="./mobile.css?v=20261127-6">
+<link rel="stylesheet" href="./day.css?v=20261127-1">
 <title>好好吃饭 单日详情</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261126-1"></script>
+<script src="./journal.js?v=20261127-3"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
 <script src="./navigation.js?v=20261125-3"></script>
-<script src="./app-icons.js?v=20261126-1"></script>
-<script src="./food-stickers.js?v=20261126-1"></script>
+<script src="./app-icons.js?v=20261127-1"></script>
+<script src="./nutrition-visual.js?v=20261127-1"></script>
+<script src="./food-stickers.js?v=20261127-1"></script>
+<script src="./record-sheets.js?v=20261127-1"></script>
 </head>
 <body>
 <x-dc>
@@ -52,57 +54,98 @@
     <p role="alert" style="margin: 0; color: #B63843; font-size: 13px">{{error}}</p>
   </sc-if>
 
+  <section class="day-summary">
+    <sc-if value="{{stateRow}}">
+      <div class="state-row" data-state="{{stateRow.current}}">
+        <span class="state-row-badge" aria-hidden="true"><hh-icon name="{{stateRow.icon}}" size="22"></hh-icon></span>
+        <span class="state-row-text"><strong>{{stateRow.title}}</strong><small>{{stateRow.note}}</small></span>
+        <span class="state-row-options" role="group" aria-label="这天的感觉">
+          <sc-for list="{{stateRow.options}}" as="o">
+            <button type="button" aria-pressed="{{o.on}}" aria-label="{{o.label}}" title="{{o.label}}" onClick="{{o.pick}}"><hh-icon name="{{o.id}}" size="15"></hh-icon></button>
+          </sc-for>
+        </span>
+      </div>
+    </sc-if>
+    <div class="day-summary-row">
+      <p class="day-summary-kcal"><sc-if value="{{hasEnergy}}"><strong>{{kcalText}}</strong><small>kcal</small></sc-if><sc-if value="{{missingEnergy}}"><span>热量待补充</span></sc-if><sc-if value="{{empty}}"><strong class="day-summary-zero">0</strong><small>kcal</small></sc-if></p>
+      <sc-if value="{{dayChips}}">
+        <div class="day-chips">
+          <sc-for list="{{dayChips}}" as="c">
+            <a class="day-chip" href="{{c.href}}" onClick="{{c.open}}" data-kind="{{c.kind}}"><span class="day-chip-icon"><hh-icon name="{{c.icon}}" size="14"></hh-icon></span><span><strong>{{c.value}}<small>{{c.unit}}</small></strong><em data-tone="{{c.tone}}">{{c.note}}</em></span></a>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <sc-if value="{{hasNutrition}}">
+      <div class="day-macro-line">
+        <sc-if value="{{hasMacros}}"><sc-for list="{{macros}}" as="macro"><span data-macro="{{macro.icon}}"><i aria-hidden="true"></i><span class="visually-hidden">{{macro.label}}</span>{{macro.amount}}</span></sc-for></sc-if>
+        <sc-if value="{{hasFocusNutrients}}">
+          <span class="day-focus-nutrients" aria-label="饮食关注指标小计">
+            <sc-for list="{{focusNutrients}}" as="item">
+              <span class="day-focus-nutrient" data-key="{{item.key}}"><hh-icon name="{{item.key}}" size="14"></hh-icon><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></span>
+            </sc-for>
+          </span>
+        </sc-if>
+      </div>
+    </sc-if>
+  </section>
+
   <sc-if value="{{empty}}">
     <journal-meal-slots date="{{date}}" via="{{via}}"></journal-meal-slots>
   </sc-if>
 
-  <sc-if value="{{hasMeals}}">
-    <div class="day-overview">
-      <span>{{mealCount}}</span>
-      <sc-if value="{{hasEnergy}}"><span>已记约 <strong>{{kcal}}</strong> kcal</span></sc-if>
-      <sc-if value="{{missingEnergy}}"><span>热量待补充</span></sc-if>
-    </div>
-
-    <div class="day-timeline" aria-label="按餐查看原照和记录">
-      <sc-for list="{{mealSections}}" as="section">
-        <section class="day-meal-section">
-          <div class="day-meal-header">
-            <h2><hh-icon name="{{section.kind}}" size="22"></hh-icon>{{section.label}}</h2><span class="day-meal-count">{{section.status}}</span>
-          </div>
-          <sc-for list="{{section.records}}" as="meal">
-            <article class="day-meal-card">
-              <sc-if value="{{meal.photo}}">
-                <a href="{{meal.editHref}}" aria-label="查看{{meal.name}}"><img src="{{meal.photo}}" alt="这餐的原照片" draggable="false"></a>
+  <sc-if value="{{hasTimeline}}">
+    <section class="day-timeline" aria-labelledby="day-timeline-heading">
+      <header class="section-head"><h2 id="day-timeline-heading">这一天</h2><small>按时间</small></header>
+      <ol class="tl">
+        <sc-for list="{{timeline}}" as="ev">
+          <li class="tl-row" data-type="{{ev.type}}">
+            <span class="tl-time">{{ev.time}}</span>
+            <span class="tl-node" data-tone="{{ev.tone}}" aria-hidden="true"><hh-icon name="{{ev.icon}}" size="15"></hh-icon></span>
+            <div class="tl-body">
+              <sc-if value="{{ev.gap}}"><p class="tl-gap">{{ev.gap}}</p></sc-if>
+              <sc-if value="{{ev.meal}}">
+                <section class="day-meal-section">
+                  <article class="day-meal-card">
+                    <header class="tl-meal-head"><h2>{{ev.meal.kindLabel}}</h2><span>{{ev.meal.kcalText}}</span></header>
+                    <sc-if value="{{ev.meal.hasStickers}}">
+                      <div class="tl-plate">
+                        <sc-for list="{{ev.meal.foods}}" as="f">
+                          <span class="tl-food" style="{{f.style}}"><span class="tl-food-art"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><sc-for list="{{f.marks}}" as="mk"><span class="sticker-focus-mark" data-mark="{{mk.key}}"><hh-icon name="{{mk.key}}" size="13"></hh-icon></span></sc-for></span><strong>{{f.name}}</strong><sc-if value="{{f.kcalText}}"><small>{{f.kcalText}}</small></sc-if></span>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ev.meal.photoOnly}}">
+                      <a class="tl-photo" href="{{ev.meal.editHref}}" aria-label="查看{{ev.meal.name}}"><img src="{{ev.meal.photo}}" alt="这餐的原照片" draggable="false"></a>
+                    </sc-if>
+                    <p class="tl-meal-name">{{ev.meal.name}}<sc-if value="{{ev.meal.dishDetails}}"><small>{{ev.meal.dishDetails}}</small></sc-if></p>
+                    <div class="tl-meal-actions">
+                      <button type="button" class="feeling-bubble" data-tone="{{ev.meal.feelTone}}" onClick="{{ev.meal.feel}}">{{ev.meal.feelText}}</button>
+                      <span class="tl-meal-tools">
+                        <a href="{{ev.meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="18"></hh-icon></a>
+                        <button type="button" onClick="{{ev.meal.remove}}" aria-label="{{ev.meal.deleteLabel}}" title="删除"><hh-icon name="trash" size="18"></hh-icon></button>
+                      </span>
+                    </div>
+                  </article>
+                </section>
               </sc-if>
-              <div class="day-meal-body">
-                <strong>{{meal.name}}</strong><small>{{meal.wholeKcal}}</small>
-                <sc-if value="{{meal.dishDetails}}"><p>{{meal.dishDetails}}</p></sc-if>
-                <div><a href="{{meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="18"></hh-icon></a><button type="button" onClick="{{meal.remove}}" aria-label="{{meal.deleteLabel}}" title="删除"><hh-icon name="trash" size="18"></hh-icon></button></div>
-              </div>
-            </article>
-          </sc-for>
-        </section>
-      </sc-for>
-    </div>
-  </sc-if>
-
-  <sc-if value="{{hasNutrition}}">
-    <section class="day-nutrition" aria-label="已记录营养含量">
-      <h2>营养小计</h2>
-      <sc-if value="{{hasMacros}}"><div class="day-macro-values">
-        <sc-for list="{{macros}}" as="macro"><div><span><hh-icon name="{{macro.icon}}" size="18"></hh-icon>{{macro.label}}</span><strong>{{macro.amount}}</strong></div></sc-for>
-      </div></sc-if>
-      <sc-if value="{{hasFocusNutrients}}">
-        <div class="day-focus-nutrients" aria-label="饮食关注指标小计">
-          <sc-for list="{{focusNutrients}}" as="item">
-            <div class="day-focus-nutrient"><hh-icon name="{{item.key}}" size="18"></hh-icon><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
-          </sc-for>
-        </div>
-      </sc-if>
+              <sc-if value="{{ev.link}}"><a class="tl-line tl-link" href="{{ev.link.href}}">{{ev.link.text}} <strong>{{ev.link.strong}}</strong><sc-if value="{{ev.link.note}}"><em data-tone="rose">{{ev.link.note}}</em></sc-if><hh-icon name="right" size="14"></hh-icon></a></sc-if>
+              <sc-if value="{{ev.line}}"><p class="tl-line">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><sc-if value="{{ev.line.tag}}"><span class="tl-tag" data-type="{{ev.line.tagType}}">{{ev.line.tag}}</span></sc-if><sc-if value="{{ev.line.note}}"><em data-tone="{{ev.line.noteTone}}">{{ev.line.note}}</em></sc-if><sc-if value="{{ev.line.remove}}"><button type="button" class="tl-remove" onClick="{{ev.line.remove}}" aria-label="{{ev.line.removeLabel}}"><hh-icon name="close" size="14"></hh-icon></button></sc-if></p></sc-if>
+              <sc-if value="{{ev.walk}}">
+                <div class="tl-walk"><span><strong>吃完走 15 分钟？</strong><small>下午会更清爽</small></span><button type="button" class="tl-walk-skip" onClick="{{ev.walk.skip}}">跳过</button><button type="button" class="tl-walk-go" onClick="{{ev.walk.go}}">走了</button></div>
+              </sc-if>
+              <sc-if value="{{ev.ask}}">
+                <div class="tl-ask"><p>下午感觉怎么样</p><span role="group" aria-label="下午感觉"><sc-for list="{{ev.ask.options}}" as="o"><button type="button" aria-pressed="{{o.on}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for></span></div>
+              </sc-if>
+              <sc-if value="{{ev.add}}"><p class="tl-add"><span>{{ev.add.text}}</span><button type="button" class="app-text-button" onClick="{{ev.add.open}}">{{ev.add.action}}</button></p></sc-if>
+              <sc-if value="{{ev.note}}"><button type="button" class="tl-note" onClick="{{ev.note.open}}">{{ev.note.text}}</button></sc-if>
+            </div>
+          </li>
+        </sc-for>
+      </ol>
     </section>
   </sc-if>
 
-  <sc-if value="{{hasWeight}}"><p class="day-weight-note"><hh-icon name="weight" size="20"></hh-icon><span class="visually-hidden">当天体重</span><strong>{{weight}} kg</strong></p></sc-if>
   <journal-nav page="Day" date="{{date}}" via="{{via}}"></journal-nav>
 </main>
 </x-dc>
@@ -126,6 +169,126 @@ class Component extends DCLogic {
     } catch {
       this.setState({ error: "暂时没能恢复这餐，请检查浏览器空间后再试。" });
     }
+  }
+
+  async openSheet(kind, value) {
+    const done = await (kind === "exercise" ? RecordSheets.exercise(this.date)
+      : kind === "feelings" ? RecordSheets.feelings(value) : RecordSheets.note(this.date));
+    if (done) this.setState({});
+  }
+
+  act(work) {
+    try { work(); this.setState({ error: "" }); }
+    catch (failure) { this.setState({ error: failure.message || "暂时没能保存，请重试。" }); }
+  }
+
+  timeline(entry, groupViews) {
+    const date = this.date;
+    const events = [];
+    const prompts = Journal.readPrompts();
+    const isToday = date === Journal.today;
+    const now = isToday ? Journal.nowMinutes() : 24 * 60;
+    const tones = Object.fromEntries(Journal.mealFeelings.map((item) => [item.id, item]));
+
+    // Weight and period sit at the start of the day.
+    const period = Journal.periodEnabled() ? Journal.periodOn(date) : null;
+    if (period) {
+      const run = Journal.periodFor(date);
+      const day = run ? run.days.indexOf(date) + 1 : 1;
+      const feelings = period.feelings.map((id) => Journal.periodFeelings.find((item) => item.id === id)?.label).filter(Boolean);
+      events.push({ at: 1, type: "period", icon: "period", tone: "rose",
+        link: { href: Journal.link("Period", date, { returnTo: "Main" }), text: "经期第", strong: day + " 天", note: [Journal.periodFlows.find((f) => f.id === period.flow)?.label === "少" ? "量少" : Journal.periodFlows.find((f) => f.id === period.flow)?.label === "多" ? "量多" : "", ...feelings].filter(Boolean).join(" "), noteTone: "rose" } });
+    }
+    if (entry.weight !== null) {
+      const previous = Journal.previousWeight(date)?.weight ?? null;
+      const delta = previous === null ? null : entry.weight - previous;
+      events.push({ at: 2, type: "weight", icon: "weight", tone: "blue",
+        line: { text: "称了体重", strong: Journal.formatWeight(entry.weight) + " kg",
+          note: delta === null || delta === 0 ? "" : (delta < 0 ? "比上次轻 " : "比上次重 ") + Journal.formatWeight(Math.abs(delta)), noteTone: delta < 0 ? "good" : "plain" } });
+    }
+
+    // Meals, each placed at the time it was recorded.
+    groupViews.forEach((group, index) => {
+      const meal = entry.meals[index];
+      const at = Journal.mealMinutes(meal);
+      const ids = Journal.feelingsFor(meal.id);
+      const warn = ids.some((id) => tones[id]?.tone === "warn");
+      const good = ids.length && !warn;
+      const foods = group.foods.filter((food) => food.hasSticker);
+      const kindKey = Journal.kindKeyOf(meal);
+      const refined = group.foods.some((food) => food.refinedCarb);
+      events.push({ at, type: "meal", icon: good ? "light" : warn ? "sleepy" : kindKey || "lunch", tone: good ? "green" : warn ? "violet" : "plain",
+        meal: { ...group, kindLabel: group.kind, kindKey, refined,
+          kcalText: Number.isFinite(meal.kcal) ? Math.round(meal.kcal) + " kcal" : "",
+          hasStickers: foods.length > 0, photoOnly: !foods.length && !!group.photo,
+          foods: foods.slice(0, 4).map((food, i) => ({ ...food, marks: NutritionVisual.focusMarks(food),
+            kcalText: NutritionVisual.known(food.energy) ? Math.round(food.energy) + " kcal" : "",
+            style: "--tilt:" + ([-4, 6, -3, 8][i]) + "deg;--size:" + (i === 0 ? 84 : foods.length > 2 ? 58 : 66) + "px" })),
+          feelTone: ids.length ? (warn ? "warn" : "good") : "add",
+          feelText: ids.length ? ids.map((id) => tones[id]?.label).join(" ") : "+ 感受",
+          feel: () => this.openSheet("feelings", meal) } });
+    });
+
+    // Exercise sessions and the older daily minutes.
+    for (const item of Journal.exercisesOn(date)) {
+      const type = Journal.exerciseTypes.find((t) => t.id === item.type);
+      events.push({ at: item.at ?? 1140, type: "move", icon: item.type === "strength" ? "dumbbell" : item.type === "stretch" ? "stretch" : "walk", tone: item.type === "strength" ? "violet" : "orange",
+        line: { text: item.label || type.label, strong: item.minutes + " 分钟", tag: type.label, tagType: item.type,
+          remove: () => this.act(() => Journal.removeExercise(date, item.id)), removeLabel: "删除这次" + (item.label || type.label) } });
+    }
+    const legacy = Journal.movementOn(date);
+    if (legacy) events.push({ at: 1150, type: "move", icon: "walk", tone: "orange", line: { text: "运动", strong: legacy + " 分钟" } });
+
+    // An after-meal walk prompt shows once, under the latest lunch or dinner, for about two hours.
+    const walked = (at) => Journal.exercisesOn(date).some((item) => item.afterMeal && item.at >= at && item.at <= at + 150);
+    const skipKey = "hhcf-walk-skip:" + date;
+    let skipped = [];
+    try { skipped = JSON.parse(sessionStorage.getItem(skipKey)) || []; } catch {}
+    if (prompts.walk && isToday) {
+      const meal = events.filter((ev) => ev.type === "meal" && ["lunch", "dinner"].includes(ev.meal.kindKey)).at(-1);
+      if (meal && now >= meal.at && now <= meal.at + 120 && !walked(meal.at) && !skipped.includes(meal.meal.id)) {
+        events.push({ at: meal.at + 0.5, type: "walk", icon: "walk", tone: "greenline",
+          walk: {
+            go: () => this.act(() => Journal.addExercise(date, { type: "aerobic", minutes: 15, label: "饭后走走", afterMeal: true, at: Math.min(now, meal.at + 20) })),
+            skip: () => { sessionStorage.setItem(skipKey, JSON.stringify([...skipped, meal.meal.id])); this.setState({}); }
+          } });
+      }
+    }
+    // Afternoon check: once a day from 15:00, or whenever it was already answered.
+    const afternoon = Journal.afternoonOn(date);
+    const hadLunch = events.some((ev) => ev.type === "meal" && ev.meal.kindKey === "lunch");
+    if (afternoon || (prompts.afternoon && date <= Journal.today && now >= 900 && hadLunch)) {
+      events.push({ at: 900, type: "ask", icon: afternoon === "clear" ? "light" : afternoon ? "sleepy" : "sleepy", tone: afternoon === "clear" ? "green" : "violet",
+        ask: { options: Journal.afternoonOptions.map((item) => ({ ...item, on: String(item.id === afternoon),
+          pick: () => this.act(() => Journal.saveAfternoon(date, item.id === afternoon ? null : item.id)) })) } });
+    }
+    // Empty snack slot after lunch.
+    if (date <= Journal.today && hadLunch && !events.some((ev) => ev.type === "meal" && ev.meal.kindKey === "snack") && now >= 900) {
+      events.push({ at: 930, type: "add", icon: "plus", tone: "dash",
+        add: { text: "没有加餐", action: "记一笔", open: () => document.querySelector("journal-nav")?.open("snack") } });
+    }
+    // Movement entry and the note close the day.
+    if (date <= Journal.today) {
+      events.push({ at: 1300, type: "add", icon: "walk", tone: "dash",
+        add: { text: Journal.exercisesOn(date).length ? "还有别的运动？" : "今天动了吗", action: "记一次运动", open: () => this.openSheet("exercise") } });
+      const note = Journal.noteOn(date);
+      events.push({ at: 1320, type: "note", icon: "pen", tone: "plain",
+        note: { text: note || "写给今天的一句话", open: () => this.openSheet("note"), empty: !note } });
+    }
+
+    events.sort((a, b) => a.at - b.at);
+    let lastMeal = null;
+    return events.map((ev) => {
+      const out = { ...ev, time: ev.at >= 60 && ev.type !== "note" && ev.type !== "add" ? Journal.clock(Math.round(ev.at)) : "",
+        meal: ev.meal ?? null, line: ev.line ?? null, link: ev.link ?? null, walk: ev.walk ?? null, ask: ev.ask ?? null, add: ev.add ?? null, note: ev.note ?? null, gap: "" };
+      if (ev.type === "meal") {
+        if (lastMeal !== null && ev.at - lastMeal >= 180) out.gap = Math.round((ev.at - lastMeal) / 60) + " 小时后";
+        lastMeal = ev.at;
+      }
+      if (ev.type === "ask") out.time = "15:00";
+      if (ev.type === "note" && !ev.note.empty) out.time = "";
+      return out;
+    });
   }
 
   async removeMeal(meal) {
@@ -167,7 +330,30 @@ class Component extends DCLogic {
     const status = Journal.params.get("status");
     const notice = status === "weighed" ? "已记下当天体重"
       : status === "saved" ? "已记下这一餐" : status === "updated" ? "已保存修改" : status === "restored" ? "已恢复这餐" : "";
+    const canRecord = date <= Journal.today;
+    const stateId = Journal.stateOn(date);
+    const stateInfo = Journal.states.find((item) => item.id === stateId);
+    const stateRow = canRecord ? {
+      current: stateId ?? "none", icon: stateId ?? "light",
+      title: stateInfo ? stateInfo.label : date === Journal.today ? "今天感觉怎么样" : "这天感觉怎么样",
+      note: stateInfo ? (date === Journal.today ? "今天的感觉" : "这天的感觉") : "点一下就好",
+      options: Journal.states.map((item) => ({ ...item, on: String(item.id === stateId),
+        pick: () => this.act(() => Journal.saveState(date, item.id === stateId ? null : item.id)) }))
+    } : null;
+    const move = Journal.movementSummary(date);
+    const previous = entry.weight === null ? null : Journal.previousWeight(date)?.weight ?? null;
+    const dayChips = canRecord ? [
+      { kind: "move", icon: move.strengthCount ? "dumbbell" : "walk", value: move.total ? String(move.total) : "记", unit: move.total ? "分" : "",
+        note: move.total ? (move.strengthCount ? "含力量" : "运动") : "运动", tone: "plain", href: "#exercise",
+        open: (event) => { event.preventDefault(); this.openSheet("exercise"); } },
+      { kind: "weight", icon: "weight", value: entry.weight === null ? "记" : Journal.formatWeight(entry.weight), unit: "",
+        note: entry.weight === null || previous === null ? "体重" : (entry.weight <= previous ? "−" : "+") + Journal.formatWeight(Math.abs(entry.weight - previous)),
+        tone: entry.weight !== null && previous !== null && entry.weight < previous ? "good" : "plain",
+        href: Journal.link("Weigh", date, { from: "day", via: this.from }), open: null }
+    ] : null;
+    const timeline = canRecord || entry.meals.length ? this.timeline(entry, groupViews) : [];
     return {
+      stateRow, dayChips, timeline, hasTimeline: timeline.length > 0, kcalText: entry.kcal.toLocaleString("en-US"),
       date, via: this.from,
       hasMeals: entry.meals.length > 0,
       empty: entry.meals.length === 0,
