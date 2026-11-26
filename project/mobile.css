@@ -1550,3 +1550,143 @@ hh-icon { display: inline-grid; place-items: center; flex: none; line-height: 0;
 .focus-chart { position: relative; }
 .focus-reference { position: absolute; left: 0; right: 0; bottom: calc(26px + 70px * var(--reference-bottom) / 100%); border-top: 1.5px dashed #E2553F99; pointer-events: none; z-index: 1; }
 .focus-reference > span { position: absolute; right: 0; bottom: 2px; padding: 1px 6px; border-radius: 999px; background: #FFFFFFE6; color: #C2412F; font-size: 10px; font-weight: 800; }
+
+/* ---------- Home: food stickers first, numbers second ----------
+   Week strip replaces the weight chart + photo calendar; nutrients fold into one row. */
+.screen--week { --top-spacing: 40px; }
+.week-header { gap: 4px; }
+.week-header .page-title { font-size: 26px; flex: none; }
+.week-header .week-range-controls { margin: 0 auto 0 2px; color: var(--hh-muted); font: 700 14px var(--hh-num); }
+.week-header .week-range-controls button { width: 32px; min-height: 40px; }
+
+.week-strip { margin-top: 6px; }
+.week-strip .week-calendar-grid { gap: 3px; }
+.week-strip .week-calendar-day {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-height: 0; padding: 7px 0 6px; border-radius: 999px; color: var(--hh-muted);
+}
+.week-strip .week-weekday { width: auto; padding: 0 6px; border-radius: 8px; font-size: 11px; font-weight: 700; line-height: 17px; }
+.week-strip .week-date { font: 800 16px/20px var(--hh-num); color: var(--hh-ink); }
+.week-thumb {
+  position: relative; display: block; width: 34px; height: 34px; border-radius: 50%;
+  background: #E9E6E0;
+}
+.week-thumb .week-original-photo {
+  width: 100%; height: 100%; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(60, 45, 30, .18);
+}
+.week-thumb-count {
+  position: absolute; right: -4px; bottom: -3px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box;
+  border: 2px solid var(--hh-bg); border-radius: 8px; background: var(--hh-dark); color: #fff;
+  font: 800 9px/11px var(--hh-num); text-align: center;
+}
+.week-calendar-day[aria-pressed="true"] .week-thumb-count { border-color: #fff; }
+.week-weight-change { height: 13px; font: 800 10px/13px var(--hh-num); white-space: nowrap; letter-spacing: -.2px; }
+.week-weight-change[data-trend="up"] { color: #C2412F; }
+.week-weight-change[data-trend="down"] { color: #2A785D; }
+.week-weight-change[data-trend="flat"] { color: var(--hh-muted); }
+.week-strip .plan-markers { height: 10px; margin-top: -2px; }
+.week-strip .plan-markers .plan-icon { width: 10px; height: 10px; }
+
+/* Day card */
+.week-day-record { margin-top: 10px; padding: 16px 16px 14px; }
+.week-day-header h2 { font-size: 20px; }
+.week-nutrition-panel { position: static; padding: 0; background: transparent; }
+.week-nutrition-header { min-height: 0; }
+.week-nutrition-panel[data-food="false"] .week-nutrition-header { display: none; }
+.week-nutrition-panel[data-food="true"] .week-nutrition-header { margin-top: 10px; }
+.week-nutrition-header h3 { font-size: 15px; }
+
+.week-energy-row { display: block; margin: 8px 0 0; }
+.week-nutrient.week-energy {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center;
+  column-gap: 14px; row-gap: 2px;
+}
+.week-energy-row .week-nutrient.week-energy > dd.energy-value { grid-column: 2; grid-row: 1; align-self: end; }
+.week-energy-row .week-nutrient.week-energy > dd.energy-goal { grid-column: 1; grid-row: 1 / span 2; }
+.week-energy-row .week-nutrient.week-energy > dd.energy-goal[data-state="unset"] { grid-column: 2; grid-row: 2; justify-items: start; }
+.week-energy-row .week-nutrient.week-energy > dd.energy-goal-note { grid-column: 2; grid-row: 2; align-self: start; margin: 0; font-size: 12px; font-weight: 700; color: var(--hh-muted); }
+.energy-goal-note[data-state="over"] { color: #C2412F; }
+.week-nutrient.week-energy strong { font-size: 42px; }
+
+/* Collapsed summary row */
+.nutrition-summary {
+  position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  margin-top: 12px; padding: 7px 44px 7px 14px; border-radius: 24px; background: #F8F7F4;
+}
+.nutrition-summary .week-macros { display: flex; gap: 10px; margin: 0; }
+.nutrition-summary .week-macro { display: flex; align-items: center; gap: 3px; }
+.nutrition-summary .week-macro dt { gap: 0; }
+.nutrition-summary .week-macro strong { font-size: 14px; }
+.nutrition-summary .week-macro small { font-size: 10px; }
+.nutrition-summary[data-open="false"] .week-macro-label,
+.nutrition-summary[data-open="false"] .week-nutrient-ratio,
+.nutrition-summary[data-open="false"] .week-macro-bar { display: none; }
+.nutrition-summary[data-open="false"] .week-macro .visually-hidden { display: none; }
+.nutrition-summary[data-open="false"] .day-focus-nutrients { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 0 auto; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient { gap: 3px; padding: 3px 9px 3px 6px; font-size: 12px; min-height: 0; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient strong { margin-left: 2px; font-size: 13px; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient small { display: none; }
+.nutrition-summary[data-open="false"] .day-focus-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.nutrition-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 36px; min-height: 36px !important; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--hh-muted);
+}
+.nutrition-toggle hh-icon { transition: transform .2s ease; }
+
+.nutrition-summary[data-open="true"] { display: block; padding: 14px 14px 12px; }
+.nutrition-summary[data-open="true"] .nutrition-toggle { top: 8px; transform: none; }
+.nutrition-summary[data-open="true"] .nutrition-toggle hh-icon { transform: rotate(180deg); }
+.nutrition-summary[data-open="true"] .week-macros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-right: 28px; }
+.nutrition-summary[data-open="true"] .week-macro { display: grid; gap: 2px; }
+.nutrition-summary[data-open="true"] .week-macro dt { gap: 4px; }
+.nutrition-summary[data-open="true"] .week-macro strong { font-size: 20px; }
+.nutrition-summary[data-open="true"] .day-focus-nutrients { display: grid; margin-top: 10px; }
+
+/* Sticker board sits right under the summary */
+.week-day-record .week-board { margin-top: 12px; padding-top: 4px; }
+.week-board-switch button { min-height: 38px; }
+
+/* Empty day */
+.home-energy { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.home-energy-text { display: grid; gap: 2px; }
+.home-energy-text strong { font: 800 42px/1 var(--hh-num); color: #CFC9C2; letter-spacing: -1px; }
+.home-energy-text small { font-size: 13px; color: var(--hh-ink); letter-spacing: 0; }
+.home-energy-text span { font-size: 12px; font-weight: 700; color: var(--hh-muted); }
+.home-energy .energy-goal-set { margin-left: auto; }
+.week-day-record journal-meal-slots { margin-top: 12px; }
+
+/* Weekly focus card: one line until opened */
+.focus-trend { margin-top: 12px; padding: 4px 8px 4px 14px; border-radius: 28px; }
+.focus-trend[data-open="true"] { padding-bottom: 12px; }
+.focus-trend-toggle {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; padding: 0;
+  border: 0; background: transparent; color: inherit; font: inherit; text-align: left;
+}
+.focus-trend-toggle h2 { margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; }
+.focus-trend-date { margin-left: 4px; color: var(--hh-purple-deep); font-size: 12px; white-space: nowrap; }
+.focus-trend-chevron { color: var(--hh-muted); transition: transform .2s ease; }
+.focus-trend[data-open="true"] .focus-trend-chevron { transform: rotate(180deg); }
+.focus-spark { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 24px; margin-left: auto; }
+.focus-spark-bar { display: block; width: 6px; height: max(3px, var(--bar-height)); border-radius: 3px; background: #8869d5; opacity: .55; }
+.focus-spark-bar[data-selected="true"] { opacity: 1; }
+.focus-spark-bar[data-known="false"] { height: 3px; background: #DDD6E6; opacity: 1; }
+.focus-spark-reference { position: absolute; left: -3px; right: -3px; bottom: var(--reference-bottom); border-top: 1.5px dashed #E2553F99; }
+.focus-trend[data-open="true"] .focus-legend { margin-top: 2px; }
+
+/* Collapsed row: everything on one line */
+.nutrition-summary[data-open="false"] { flex-wrap: nowrap; gap: 8px; padding: 6px 40px 6px 12px; min-height: 44px; box-sizing: border-box; }
+.nutrition-summary[data-open="false"] .week-macros { gap: 8px; flex: none; }
+.nutrition-summary[data-open="false"] .week-macro small { display: none; }
+.nutrition-summary[data-open="false"] .day-focus-nutrients { flex-wrap: nowrap; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient { padding: 3px 8px 3px 5px; white-space: nowrap; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient strong { margin-left: 0; }
+.nutrition-summary .day-focus-nutrients { padding-top: 0; border-top: 0; }
+.nutrition-summary[data-open="true"] .day-focus-nutrients { margin-top: 12px; }
+.week-day-record .week-board { margin-top: 10px; }
+.week-day-record .week-board-switch { margin-bottom: -10px; }
+.nutrition-toggle hh-icon, .focus-trend-chevron { transform: rotate(90deg); }
+.nutrition-summary[data-open="true"] .nutrition-toggle hh-icon, .focus-trend[data-open="true"] .focus-trend-chevron { transform: rotate(-90deg); }
+.focus-trend[data-open="true"] .focus-spark { visibility: hidden; }
+.week-energy-row .week-nutrient.week-energy:not(:has(.energy-goal)) { grid-template-columns: 1fr; }
+.week-energy-row .week-nutrient.week-energy:not(:has(.energy-goal)) > dd.energy-value { grid-column: 1; }
