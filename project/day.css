@@ -68,7 +68,7 @@ body { margin: 0; }
 .day-weight-note { margin: 2px 4px; color: var(--day-muted); font-size: 13px; }
 
 /* Theme: warm canvas, each meal is its own white card */
-.day-screen { --day-paper: #F3F2EF; --day-ink: #2A2622; --day-muted: #8F8A84; --day-rule: transparent; --day-action: #5B48B8; gap: 14px; }
+.day-screen { --day-paper: #F3F2EF; --day-ink: #2A2622; --day-muted: #6E6862; --day-rule: transparent; --day-action: #5B48B8; gap: 14px; }
 .day-date { font-size: 24px; }
 .day-timeline { display: grid; gap: 12px; border: 0; }
 .day-meal-section { padding: 6px 16px 10px; border: 0; border-radius: 28px; background: #FFFFFF; box-shadow: 0 10px 30px rgba(60, 45, 30, 0.06); }

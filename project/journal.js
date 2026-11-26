@@ -90,12 +90,13 @@ const Journal = (() => {
     return {
       habit: typeof goal?.habit === "string" ? goal.habit : "",
       weight: validWeight(weight) ? weight : null,
-      movement: Number.isInteger(goal?.movement) && goal.movement >= 1 && goal.movement <= 10080 ? goal.movement : null
+      movement: Number.isInteger(goal?.movement) && goal.movement >= 1 && goal.movement <= 10080 ? goal.movement : null,
+      kcal: Number.isInteger(goal?.kcal) && goal.kcal >= 500 && goal.kcal <= 6000 ? goal.kcal : null
     };
   }
 
-  function saveGoal({ habit, weight, movement }) {
-    localStorage.setItem("hhcf-goal-v1", JSON.stringify({ habit, weightHundredths: weight, movement }));
+  function saveGoal({ habit, weight, movement, kcal = null }) {
+    localStorage.setItem("hhcf-goal-v1", JSON.stringify({ habit, weightHundredths: weight, movement, kcal }));
   }
 
   function movementOn(date) {

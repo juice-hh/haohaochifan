@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-8">
+<link rel="stylesheet" href="./mobile.css?v=20261126-11">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261125"></script>
+<script src="./journal.js?v=20261126-1"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
 <script src="./navigation.js?v=20261125-3"></script>
@@ -126,6 +126,22 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
           <div class="week-nutrient week-energy">
             <dt><hh-icon name="energy" size="16"></hh-icon>{{nutrition.energyLabel}}</dt>
             <dd><strong>{{nutrition.kcal}}</strong><sc-if value="{{nutrition.hasEnergy}}"><small> kcal</small></sc-if></dd>
+            <sc-if value="{{energyGoal}}">
+              <dd class="energy-goal" data-state="{{energyGoal.state}}">
+                <svg class="energy-ring" width="76" height="76" viewBox="0 0 76 76" role="img" aria-label="{{energyGoal.aria}}">
+                  <circle cx="38" cy="38" r="31" class="energy-ring-track"></circle>
+                  <circle cx="38" cy="38" r="31" class="energy-ring-fill" stroke-dasharray="{{energyGoal.dash}}" transform="rotate(-90 38 38)"></circle>
+                  <text x="38" y="36" text-anchor="middle" class="energy-ring-percent">{{energyGoal.percent}}</text>
+                  <text x="38" y="50" text-anchor="middle" class="energy-ring-caption">{{energyGoal.caption}}</text>
+                </svg>
+                <span class="energy-goal-note">{{energyGoal.note}}</span>
+              </dd>
+            </sc-if>
+            <sc-if value="{{energyGoalMissing}}">
+              <dd class="energy-goal" data-state="unset">
+                <a class="energy-goal-set" href="{{goalHref}}"><hh-icon name="plus" size="16"></hh-icon>设每日目标</a>
+              </dd>
+            </sc-if>
           </div>
           <sc-for list="{{nutrition.macros}}" as="m">
             <div class="week-nutrient">
@@ -212,6 +228,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         <sc-for list="{{focusTrend.metrics}}" as="m"><span class="focus-legend-item" style="{{m.style}}"><hh-icon name="{{m.key}}" size="16"></hh-icon>{{m.label}}</span></sc-for>
       </div>
       <div class="focus-chart">
+        <sc-if value="{{focusTrend.reference}}"><span class="focus-reference" style="{{focusTrend.reference.style}}"><span>{{focusTrend.reference.label}}</span></span></sc-if>
         <sc-for list="{{focusTrend.days}}" as="day">
           <button type="button" aria-pressed="{{day.selected}}" aria-label="{{day.label}}" onClick="{{day.pick}}">
             <span class="focus-chart-track" aria-hidden="true">
@@ -367,6 +384,22 @@ class Component extends DCLogic {
       focusNutrients = Journal.dayFocusNutrients([{ focusNutrients: nutrients }]);
     }
     const hasSupply = percentages.some((value) => value > 0);
+    // A daily target gives the big number a reference point. Only the whole-day view uses it.
+    const kcalTarget = Journal.readGoal().kcal;
+    let energyGoal = null;
+    if (kcalTarget && !selectedFood && kcal !== null) {
+      const ratio = kcal / kcalTarget;
+      const circumference = 2 * Math.PI * 31;
+      const left = kcalTarget - kcal;
+      energyGoal = {
+        state: ratio > 1.05 ? "over" : ratio >= 0.9 ? "near" : "under",
+        dash: (Math.min(ratio, 1) * circumference).toFixed(1) + " " + circumference.toFixed(1),
+        percent: Math.round(ratio * 100) + "%",
+        caption: "/" + kcalTarget,
+        note: left >= 0 ? "还可吃 " + left + " kcal" : "超出 " + -left + " kcal",
+        aria: "每日热量目标 " + kcalTarget + " 千卡，已吃 " + Math.round(ratio * 100) + "%"
+      };
+    }
     const macros = [
       { label: "碳水", color: "#E7BE54" },
       { label: "蛋白质", color: "#A996F2" },
@@ -387,7 +420,10 @@ class Component extends DCLogic {
       key, label: Journal.focusNutrients[key], style: "--chart-color:" + metricColors[index]
     }));
     const dailyFocus = raw.map(({ entry }) => Journal.dayFocusNutrients(entry.meals));
-    const maximum = Math.max(1, ...dailyFocus.flatMap((items) => items.filter((item) => activeFocus.fields.includes(item.key)).map((item) => item.value ?? 0)));
+    // Reference amounts: WHO suggests keeping added sugar under ~25 g; common fibre guidance is 25 g or more.
+    const reference = activeFocus.id === "sugar" ? { key: "addedSugar", grams: 25, label: "添加糖建议 ≤25g" }
+      : activeFocus.id === "antiInflammatory" ? { key: "fiber", grams: 25, label: "膳食纤维建议 ≥25g" } : null;
+    const maximum = Math.max(reference ? reference.grams * 1.2 : 1, ...dailyFocus.flatMap((items) => items.filter((item) => activeFocus.fields.includes(item.key)).map((item) => item.value ?? 0)));
     const selectedFocus = dailyFocus[raw.indexOf(current)].filter((item) => activeFocus.fields.includes(item.key));
     const coverage = selectedFocus.filter(item => item.coverage).map(item => item.label + " " + item.coverage);
     const focusTrend = metrics.length ? {
@@ -395,6 +431,7 @@ class Component extends DCLogic {
       selectedLabel: Journal.shortDate(selected),
       coverage: coverage.join("；") || (selectedFocus.some(item => item.value !== null) ? selectedFocus.map(item => item.label + " " + item.amount).join(" / ") : "所选日期未记录关注指标"),
       metrics,
+      reference: reference ? { label: reference.label, style: "--reference-bottom:" + Math.round(reference.grams / maximum * 100) + "%" } : null,
       days: raw.map((day, i) => {
         const bars = metrics.map(metric => {
           const item = dailyFocus[i].find(item => item.key === metric.key);
@@ -422,6 +459,8 @@ class Component extends DCLogic {
         kcal: kcal === null ? "—" : kcal.toLocaleString("en-US")
       },
       focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
+      energyGoal, energyGoalMissing: !kcalTarget && !selectedFood,
+      goalHref: Journal.link("Goal", selected) + "#kcal-target",
       days, tip, segments, focusTrend,
       savedMessage: this.state.savedMessage,
       weekTitle: week === Journal.weekStart(Journal.today) ? "本周" : "周记",

@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-8">
+<link rel="stylesheet" href="./mobile.css?v=20261126-11">
 <title>好好吃饭 我的目标</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261125"></script>
+<script src="./journal.js?v=20261126-1"></script>
 <script src="./navigation.js?v=20261125-3"></script>
 <script src="./interactions.js?v=20261125"></script>
 </head>
@@ -77,6 +77,10 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <input id="goal-weight" enterkeyhint="done" type="text" inputmode="decimal" maxlength="7" placeholder="填写你自己的目标" value="{{target}}" onInput="{{setTarget}}">
     </label>
     <label class="goal-field">
+      <span>每日热量目标（kcal，选填）</span>
+      <input id="kcal-target" enterkeyhint="done" type="number" inputmode="numeric" min="500" max="6000" step="1" placeholder="比如 1800" value="{{kcalTarget}}" onInput="{{setKcalTarget}}">
+    </label>
+    <label class="goal-field">
       <span>每周运动目标（分钟，选填）</span>
       <input id="movement-target" enterkeyhint="done" type="number" inputmode="numeric" min="1" max="10080" step="1" placeholder="比如 90" value="{{movementTarget}}" onInput="{{setMovementTarget}}">
     </label>
@@ -100,6 +104,7 @@ class Component extends DCLogic {
       target: this.goal.weight === null ? "" : Journal.formatWeight(this.goal.weight),
       message: "",
       movementTarget: this.goal.movement ?? "",
+      kcalTarget: this.goal.kcal ?? "",
       movementDate,
       minutes: Journal.movementOn(movementDate) ?? "",
       movementMessage: ""
@@ -108,6 +113,7 @@ class Component extends DCLogic {
       this.state.habit.trim() !== this.goal.habit ||
       (this.state.target.trim() ? Journal.parseWeight(this.state.target) !== this.goal.weight || this.goal.weight === null : this.goal.weight !== null) ||
       String(this.state.movementTarget) !== String(this.goal.movement ?? "") ||
+      String(this.state.kcalTarget) !== String(this.goal.kcal ?? "") ||
       String(this.state.minutes) !== String(Journal.movementOn(this.state.movementDate) ?? ""));
   }
 
@@ -142,7 +148,13 @@ class Component extends DCLogic {
       JournalUI.focusField("#movement-target");
       return;
     }
-    const goal = { habit: this.state.habit.trim(), weight, movement };
+    const kcal = this.state.kcalTarget === "" ? null : Number(this.state.kcalTarget);
+    if (kcal !== null && (!Number.isInteger(kcal) || kcal < 500 || kcal > 6000)) {
+      this.setState({ message: "请输入 500 到 6000 之间的每日热量。" });
+      JournalUI.focusField("#kcal-target");
+      return;
+    }
+    const goal = { habit: this.state.habit.trim(), weight, movement, kcal };
     try {
       Journal.saveGoal(goal);
       this.goal = goal;
@@ -200,6 +212,7 @@ class Component extends DCLogic {
       futureMovement: this.state.movementDate > Journal.today,
       setMinutes: (event) => this.setState({ minutes: event.target.value, movementMessage: "" }),
       setMovementTarget: (event) => this.setState({ movementTarget: event.target.value, message: "" }),
+      setKcalTarget: (event) => this.setState({ kcalTarget: event.target.value, message: "" }),
       saveMovement: (event) => this.saveMovement(event),
       hasWeightChart: weights.length > 1,
       weightPoints, weightLine: weightPoints.map(p => p.x + "," + p.y).join(" "),
