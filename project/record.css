@@ -137,3 +137,5 @@
 .food-result { border: 0; }
 .record-screen .record-save { background: #7A66E0 !important; }
 .record-delete { border-radius: 999px; }
+.record-delete, .food-remove { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.record-food-nutrition summary { display: flex; align-items: center; gap: 5px; }

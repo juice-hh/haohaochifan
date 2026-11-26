@@ -23,14 +23,15 @@
   function serving(energy, nutrients) {
     const grams = macroKeys.map((key) => nutrients?.[key]);
     const focused = Journal.readDietFocus().fields.map((key) => ({
-      label: Journal.focusNutrients[key],
+      key, label: Journal.focusNutrients[key],
       value: nutrients?.[key]
     }));
     return {
       kcal: known(energy) ? format(energy) + " kcal" : "— kcal",
       ring: "--nutrition-ring:" + ringFor(grams),
       ringLabel: macroLabels.map((label, i) => label + " " + (known(grams[i]) ? format(grams[i]) + " 克" : "未记录")).join("，"),
-      focus: focused.map(({ label, value }) => label + " " + (known(value) ? format(value) + " g" : "—")).join(" / ")
+      focus: focused.map(({ label, value }) => label + " " + (known(value) ? format(value) + " g" : "—")).join(" / "),
+      focusChips: focused.map(({ key, label, value }) => ({ key, label, value: known(value) ? format(value) + "g" : "—" }))
     };
   }
 
@@ -39,7 +40,7 @@
     return {
       kcal, ring, ringLabel,
       macros: macroLabels.map((label, index) => ({
-        label, value: known(grams[index]) ? format(grams[index]) + " g" : "—",
+        label, icon: macroKeys[index], value: known(grams[index]) ? format(grams[index]) + " g" : "—",
         color: "--nutrient-color:" + colors[index]
       })),
       focus: focusItems.map(({ label, value, ...item }) => ({

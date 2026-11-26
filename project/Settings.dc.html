@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F2EF">
-<link rel="stylesheet" href="./mobile.css?v=20261126-4">
+<link rel="stylesheet" href="./mobile.css?v=20261126-8">
 <title>好好吃饭 设置</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261125"></script>
+<script src="./app-icons.js?v=20261126-1"></script>
 </head>
 <body style="margin:0">
 <x-dc>
@@ -29,7 +30,7 @@
     <div class="settings-focus" role="group" aria-label="饮食关注">
       <sc-for list="{{focuses}}" as="focus">
         <button type="button" aria-pressed="{{focus.active}}" onClick="{{focus.choose}}">
-          <span class="settings-focus-mark" data-focus="{{focus.id}}" aria-hidden="true">{{focus.mark}}</span>
+          <span class="settings-focus-mark" data-focus="{{focus.id}}" aria-hidden="true"><hh-icon name="{{focus.icon}}" size="24"></hh-icon></span>
           <span><strong>{{focus.label}}</strong><small>{{focus.detail}}</small></span>
         </button>
       </sc-for>
@@ -65,7 +66,7 @@ class Component extends DCLogic {
       enable: () => setMode(true), disable: () => setMode(false),
       modeHint: auto ? "拍照或选图后会发送给 OpenAI 估算营养。" : "照片保存在当前设备。需要时可在编辑页开启单次识别。",
       focuses: Journal.dietFocuses.map((item, index) => ({
-        ...item, mark: ["基", "糖", "纤"][index], active: item.id === focus,
+        ...item, icon: ["energy", "sugar", "fiber"][index], active: item.id === focus,
         detail: item.fields.length ? item.fields.map(key => Journal.focusNutrients[key]).join("、") : "热量、碳水、蛋白质和脂肪",
         choose: () => this.save(() => Journal.saveDietFocus(item.id), {focus: item.id})
       }))

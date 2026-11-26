@@ -7,14 +7,15 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-4">
+<link rel="stylesheet" href="./mobile.css?v=20261126-8">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261125"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
 <script src="./navigation.js?v=20261125-3"></script>
-<script src="./nutrition-visual.js?v=20261125"></script>
+<script src="./nutrition-visual.js?v=20261126-2"></script>
+<script src="./app-icons.js?v=20261126-1"></script>
 <script src="./food-stickers.js?v=20261125-4"></script>
 </head>
 <body>
@@ -123,12 +124,12 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         </header>
         <dl class="week-nutrients" aria-label="已记录营养含量">
           <div class="week-nutrient week-energy">
-            <dt>{{nutrition.energyLabel}}</dt>
+            <dt><hh-icon name="energy" size="16"></hh-icon>{{nutrition.energyLabel}}</dt>
             <dd><strong>{{nutrition.kcal}}</strong><sc-if value="{{nutrition.hasEnergy}}"><small> kcal</small></sc-if></dd>
           </div>
           <sc-for list="{{nutrition.macros}}" as="m">
             <div class="week-nutrient">
-              <dt>{{m.label}}</dt>
+              <dt><hh-icon name="{{m.icon}}" size="16"></hh-icon>{{m.label}}</dt>
               <dd><strong>{{m.value}}</strong><sc-if value="{{m.known}}"><small> g</small></sc-if></dd>
               <sc-if value="{{m.ratio}}"><dd class="week-nutrient-ratio">{{m.ratio}}</dd></sc-if>
             </div>
@@ -142,7 +143,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
         <sc-if value="{{hasFocusNutrients}}">
           <div class="day-focus-nutrients" aria-label="饮食关注指标">
             <sc-for list="{{focusNutrients}}" as="item">
-              <div class="day-focus-nutrient"><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
+              <div class="day-focus-nutrient"><hh-icon name="{{item.key}}" size="18"></hh-icon><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
             </sc-for>
           </div>
         </sc-if>
@@ -174,7 +175,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
           <section class="week-board-section" aria-label="{{g.label}}">
             <sc-if value="{{g.title}}">
               <div class="week-board-meal-heading">
-                <h3>{{g.title}}</h3>
+                <h3><hh-icon name="{{g.kind}}" size="18"></hh-icon>{{g.title}}</h3>
                 <sc-if value="{{g.emptyLabel}}"><span class="week-board-empty">{{g.emptyLabel}}</span></sc-if>
               </div>
             </sc-if>
@@ -184,7 +185,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
                   <button type="button" class="week-board-sticker" style="{{f.style}}" onClick="{{f.pick}}" aria-pressed="{{f.active}}" aria-label="{{f.label}}">
                     <span class="sticker-nutrition-line">
                       <span>{{f.visual.kcal}}</span><span class="nutrition-ring" role="img" aria-label="{{f.visual.ringLabel}}" style="{{f.visual.ring}}"></span>
-                      <sc-if value="{{f.visual.focus}}"><small class="sticker-focus">{{f.visual.focus}}</small></sc-if>
+                      <sc-if value="{{f.visual.focus}}"><small class="sticker-focus" aria-hidden="true"><sc-for list="{{f.visual.focusChips}}" as="c"><span><hh-icon name="{{c.key}}" size="13"></hh-icon>{{c.value}}</span></sc-for></small></sc-if>
                     </span>
                     <span class="week-board-art" aria-hidden="true"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker></span>
                     <span class="week-board-caption">
@@ -208,7 +209,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     <section class="focus-trend" aria-label="{{focusTrend.title}}">
       <header><h2>{{focusTrend.title}}</h2><strong>{{focusTrend.selectedLabel}}</strong></header>
       <div class="focus-legend" aria-label="图例">
-        <sc-for list="{{focusTrend.metrics}}" as="m"><span style="{{m.style}}">{{m.label}}</span></sc-for>
+        <sc-for list="{{focusTrend.metrics}}" as="m"><span class="focus-legend-item" style="{{m.style}}"><hh-icon name="{{m.key}}" size="16"></hh-icon>{{m.label}}</span></sc-for>
       </div>
       <div class="focus-chart">
         <sc-for list="{{focusTrend.days}}" as="day">
@@ -253,7 +254,7 @@ class Component extends DCLogic {
     this.select(date);
   }
 
-  boardSection(records, title = "") {
+  boardSection(records, title = "", kind = "") {
     const stickers = records.flatMap((record) => record.foods).map((food, index) => {
       const active = food.key === this.state.foodKey;
       // Seed the scatter from the record so taps don't rearrange the board.
@@ -268,7 +269,7 @@ class Component extends DCLogic {
       };
     });
     return {
-      title, label: title || "全天餐品", stickers, hasStickers: stickers.length > 0,
+      title, kind, label: title || "全天餐品", stickers, hasStickers: stickers.length > 0,
       emptyLabel: records.length ? "" : "未记录",
       pending: records.filter((meal) => meal.missingFoods)
     };
@@ -347,7 +348,7 @@ class Component extends DCLogic {
       Object.entries(Journal.kinds)
         .map(([key, title]) => {
           const meals = records.filter((record) => record.kindKey === key);
-          return key !== "snack" || meals.length ? this.boardSection(meals, title) : null;
+          return key !== "snack" || meals.length ? this.boardSection(meals, title, key) : null;
         }).filter(Boolean);
     const otherMeals = records.filter((record) => !Object.hasOwn(Journal.kinds, record.kindKey));
     if (boardView === "meals" && otherMeals.length) boardSections.push(this.boardSection(otherMeals, "其他"));
@@ -371,7 +372,7 @@ class Component extends DCLogic {
       { label: "蛋白质", color: "#A996F2" },
       { label: "脂肪", color: "#8FCFA6" }
     ].map(({ label, color }, index) => ({
-      label,
+      label, icon: ["carb", "pro", "fat"][index],
       known: macroValues[index] !== null,
       value: macroValues[index] ?? "—",
       ratio: hasSupply && macroValues[index] !== null ? "供能 " + percentages[index] + "%" : "",

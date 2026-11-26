@@ -83,3 +83,9 @@ body { margin: 0; }
 .day-macro-values div { border-left: 0; padding: 12px; border-radius: 18px; background: #F8F7F4; }
 .day-macro-values strong { font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; }
 .day-overview strong { font-size: 18px; color: #7A66E0; }
+.day-meal-body > div a, .day-meal-body > div button { display: inline-grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0; }
+.day-meal-body > div a { color: #5B48B8; }
+.day-meal-body > div button { color: #B63843; }
+.day-macro-values div > span { display: flex; align-items: center; gap: 5px; }
+.day-weight-note { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-radius: 999px; background: #FFFFFF; box-shadow: 0 10px 30px rgba(60, 45, 30, 0.06); width: fit-content; }
+.day-weight-note strong { font-size: 18px; color: #2A2622; font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", system-ui, sans-serif; }

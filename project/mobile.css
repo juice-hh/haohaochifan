@@ -1507,3 +1507,24 @@ journal-nav { background: linear-gradient(transparent, var(--hh-bg) 42%); }
 .journal-dock nav a:is([aria-current="page"], :active, :focus-visible) { --nav-icon-body: #B7A8FF; --nav-icon-cutout: var(--hh-dark); }
 .week-header .settings-link { --nav-icon-body: #CFCAC3; --nav-icon-cutout: var(--hh-bg); --nav-icon-detail: #8F8A84; }
 .journal-dock .journal-camera { box-shadow: 0 0 0 5px var(--hh-bg), 0 12px 26px rgba(122, 102, 224, 0.4); }
+
+/* ---------- Icons in place of text labels ---------- */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+hh-icon { display: inline-grid; place-items: center; flex: none; line-height: 0; vertical-align: middle; }
+.week-nutrient dt { display: flex; align-items: center; gap: 4px; }
+.week-board-meal-heading h3, .day-meal-header h2 { display: flex; align-items: center; gap: 6px; }
+.screen .day-focus-nutrient { display: flex; align-items: center; gap: 8px; }
+.focus-legend-item::before { display: none; }
+.focus-legend-item { gap: 3px !important; }
+.recognition-macro-legend .nutrient-chip { gap: 3px; padding: 3px 9px 3px 5px; border-radius: 999px; background: #F8F7F4; }
+.recognition-macro-legend .nutrient-chip::before { display: none; }
+.record-meal-summary .recognition-macro-legend .nutrient-chip { background: rgba(255, 255, 255, 0.1); }
+.nutrition-focus-cards > div { display: inline-flex; align-items: center; gap: 4px; }
+.sticker-focus { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; flex-basis: 100%; }
+.sticker-focus > span { display: inline-flex; align-items: center; gap: 2px; font-weight: 800; }
+.album-filter-options button { display: inline-flex; align-items: center; gap: 4px; }
+.settings-screen .goal-card > .app-segmented, .settings-screen .settings-focus { align-self: stretch; }
+.settings-screen .app-toolbar { background: var(--hh-bg); }
+.settings-focus button { border: 0 !important; border-radius: 22px !important; background: #F8F7F4 !important; box-shadow: none; }
+.settings-focus button[aria-pressed="true"] { background: var(--hh-purple-soft) !important; box-shadow: inset 0 0 0 2px var(--hh-purple); }
+.settings-focus-mark { display: grid; place-items: center; }

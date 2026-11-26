@@ -7,14 +7,15 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-4">
-<link rel="stylesheet" href="./day.css?v=20261126-1">
+<link rel="stylesheet" href="./mobile.css?v=20261126-8">
+<link rel="stylesheet" href="./day.css?v=20261126-2">
 <title>好好吃饭 单日详情</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261125"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
 <script src="./navigation.js?v=20261125-3"></script>
+<script src="./app-icons.js?v=20261126-1"></script>
 <script src="./food-stickers.js?v=20261125-4"></script>
 </head>
 <body>
@@ -66,7 +67,7 @@
       <sc-for list="{{mealSections}}" as="section">
         <section class="day-meal-section">
           <div class="day-meal-header">
-            <h2>{{section.label}}</h2><span class="day-meal-count">{{section.status}}</span>
+            <h2><hh-icon name="{{section.kind}}" size="22"></hh-icon>{{section.label}}</h2><span class="day-meal-count">{{section.status}}</span>
           </div>
           <sc-for list="{{section.records}}" as="meal">
             <article class="day-meal-card">
@@ -76,7 +77,7 @@
               <div class="day-meal-body">
                 <strong>{{meal.name}}</strong><small>{{meal.wholeKcal}}</small>
                 <sc-if value="{{meal.dishDetails}}"><p>{{meal.dishDetails}}</p></sc-if>
-                <div><a href="{{meal.editHref}}">编辑这餐</a><button type="button" onClick="{{meal.remove}}" aria-label="{{meal.deleteLabel}}">删除</button></div>
+                <div><a href="{{meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="18"></hh-icon></a><button type="button" onClick="{{meal.remove}}" aria-label="{{meal.deleteLabel}}" title="删除"><hh-icon name="trash" size="18"></hh-icon></button></div>
               </div>
             </article>
           </sc-for>
@@ -89,19 +90,19 @@
     <section class="day-nutrition" aria-label="已记录营养含量">
       <h2>营养小计</h2>
       <sc-if value="{{hasMacros}}"><div class="day-macro-values">
-        <sc-for list="{{macros}}" as="macro"><div><span>{{macro.label}}</span><strong>{{macro.amount}}</strong></div></sc-for>
+        <sc-for list="{{macros}}" as="macro"><div><span><hh-icon name="{{macro.icon}}" size="18"></hh-icon>{{macro.label}}</span><strong>{{macro.amount}}</strong></div></sc-for>
       </div></sc-if>
       <sc-if value="{{hasFocusNutrients}}">
         <div class="day-focus-nutrients" aria-label="饮食关注指标小计">
           <sc-for list="{{focusNutrients}}" as="item">
-            <div class="day-focus-nutrient"><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
+            <div class="day-focus-nutrient"><hh-icon name="{{item.key}}" size="18"></hh-icon><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></div>
           </sc-for>
         </div>
       </sc-if>
     </section>
   </sc-if>
 
-  <sc-if value="{{hasWeight}}"><p class="day-weight-note">当天体重 <strong>{{weight}} kg</strong></p></sc-if>
+  <sc-if value="{{hasWeight}}"><p class="day-weight-note"><hh-icon name="weight" size="20"></hh-icon><span class="visually-hidden">当天体重</span><strong>{{weight}} kg</strong></p></sc-if>
   <journal-nav page="Day" date="{{date}}" via="{{via}}"></journal-nav>
 </main>
 </x-dc>
@@ -149,15 +150,15 @@ class Component extends DCLogic {
       deleteLabel: "删除" + group.name,
       remove: () => this.removeMeal(entry.meals[index])
     }));
-    const summarize = (label, records) => ({
-      label, records, status: records.length ? records.length + " 笔" : date > Journal.today ? "尚未到这一天" : "未记录"
+    const summarize = (label, records, kind = "") => ({
+      label, kind, records, status: records.length ? records.length + " 笔" : date > Journal.today ? "尚未到这一天" : "未记录"
     });
     const mealSections = Object.entries(Journal.kinds).map(([kind, label]) =>
-      summarize(label, groupViews.filter(group => group.kindKey === kind)));
+      summarize(label, groupViews.filter(group => group.kindKey === kind), kind));
     const otherMeals = groupViews.filter(group => !Object.hasOwn(Journal.kinds, group.kindKey));
     if (otherMeals.length) mealSections.push(summarize("其他", otherMeals));
     const macros = ["碳水", "蛋白质", "脂肪"].map((label, index) => ({
-      label,
+      label, icon: ["carb", "pro", "fat"][index],
       amount: entry.macroKnown[index] ? entry.grams[index] + " g" : "未填写"
     }));
     const hasMacros = entry.macroKnown.some(Boolean);

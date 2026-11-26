@@ -7,11 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-4">
+<link rel="stylesheet" href="./mobile.css?v=20261126-8">
 <title>好好吃饭 饭相册</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
+<script src="./app-icons.js?v=20261126-1"></script>
 <script src="./food-stickers.js?v=20261125-4"></script>
 <script src="./navigation.js?v=20261125-3"></script>
 </head>
@@ -102,7 +103,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
       </div>
       <sc-if value="{{filterOptions.length}}">
         <div class="album-filter-options" role="group" aria-label="筛选食物">
-          <sc-for list="{{filterOptions}}" as="option"><button type="button" aria-pressed="{{option.active}}" onClick="{{option.pick}}">{{option.label}}</button></sc-for>
+          <sc-for list="{{filterOptions}}" as="option"><button type="button" aria-pressed="{{option.active}}" onClick="{{option.pick}}"><sc-if value="{{option.icon}}"><hh-icon name="{{option.icon}}" size="16"></hh-icon></sc-if>{{option.label}}</button></sc-for>
         </div>
       </sc-if>
       <sc-if value="{{filterNote}}"><p>{{filterNote}}</p></sc-if>
@@ -249,7 +250,8 @@ class Component extends DCLogic {
       : foodFilter === "type" ? [...new Set([...groups.values()].flatMap(group => [...group.types]))].sort((a,b) => a.localeCompare(b, "zh-CN"))
       : [];
     const filterOptions = categories.length ? ["all", ...categories].map(key => ({
-      label: key === "all" ? "全部食物" : key, active: foodCategory === key, pick: () => this.setState({foodCategory: key})
+      label: key === "all" ? "全部食物" : key, icon: { 碳水: "carb", 蛋白质: "pro", 维生素: "fiber", 脂肪: "fat" }[key] ?? "",
+      active: foodCategory === key, pick: () => this.setState({foodCategory: key})
     })) : [];
     const list = [...groups.values()].filter(group => foodCategory === "all" || (foodFilter === "nutrition" ? group.nutrients : group.types).has(foodCategory))
       .sort((a, b) => b.count - a.count || b.date.localeCompare(a.date));

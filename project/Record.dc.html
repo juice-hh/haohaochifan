@@ -7,13 +7,14 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261126-4">
-<link rel="stylesheet" href="./record.css?v=20261126-1">
+<link rel="stylesheet" href="./mobile.css?v=20261126-8">
+<link rel="stylesheet" href="./record.css?v=20261126-3">
 <title>好好吃饭 拍一餐</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
-<script src="./nutrition-visual.js?v=20261125"></script>
+<script src="./nutrition-visual.js?v=20261126-2"></script>
+<script src="./app-icons.js?v=20261126-1"></script>
 <script src="./food-stickers.js?v=20261125-4"></script>
 </head>
 <body>
@@ -116,17 +117,17 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
           <h3>{{f.heading}}</h3>
           <div class="sticker-nutrition-line"><strong>{{f.visual.kcal}}</strong><span class="nutrition-ring" role="img" aria-label="{{f.visual.ringLabel}}" style="{{f.visual.ring}}"></span></div>
           <div class="recognition-macro-legend">
-            <sc-for list="{{f.visual.macros}}" as="m"><span style="{{m.color}}">{{m.label}} <strong>{{m.value}}</strong></span></sc-for>
+            <sc-for list="{{f.visual.macros}}" as="m"><span class="nutrient-chip" style="{{m.color}}" title="{{m.label}}"><hh-icon name="{{m.icon}}" size="16"></hh-icon><span class="visually-hidden">{{m.label}}</span><strong>{{m.value}}</strong></span></sc-for>
           </div>
           <sc-if value="{{f.visual.focus.length}}">
             <div class="nutrition-focus-cards">
-              <sc-for list="{{f.visual.focus}}" as="m"><div><span>{{m.label}}</span><strong>{{m.value}}</strong></div></sc-for>
+              <sc-for list="{{f.visual.focus}}" as="m"><div title="{{m.label}}"><hh-icon name="{{m.key}}" size="15"></hh-icon><span class="visually-hidden">{{m.label}}</span><strong>{{m.value}}</strong></div></sc-for>
             </div>
           </sc-if>
         </div>
         <sc-if value="{{f.reviewReason}}"><p class="food-review-note">{{f.reviewReason}}</p></sc-if>
         <details class="record-food-nutrition">
-          <summary>编辑餐品</summary>
+          <summary><hh-icon name="edit" size="16"></hh-icon>编辑餐品</summary>
           <div class="nutrition-fields">
             <label class="goal-field dish-name-field"><span>食物名称</span><input name="food-name-{{f.index}}" maxlength="60" enterkeyhint="done" autocomplete="off" placeholder="比如鸡蛋（2个）" value="{{f.name}}" onInput="{{f.setName}}"></label>
             <label class="goal-field"><span>热量（kcal）</span><input name="food-kcal-{{f.index}}" type="number" min="0" max="10000" step="0.1" inputmode="decimal" enterkeyhint="done" placeholder="待补充" value="{{f.kcal}}" onInput="{{f.setKcal}}"></label>
@@ -134,7 +135,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
               <label class="goal-field"><span>{{n.label}}（克）</span><input name="{{n.name}}" type="number" min="0" max="10000" step="0.1" inputmode="decimal" enterkeyhint="done" placeholder="未填写" value="{{n.value}}" onInput="{{n.change}}"></label>
             </sc-for>
           </div>
-          <button class="food-remove" type="button" onClick="{{f.remove}}" aria-label="{{f.removeLabel}}">移除餐品</button>
+          <button class="food-remove" type="button" onClick="{{f.remove}}" aria-label="{{f.removeLabel}}"><hh-icon name="trash" size="16"></hh-icon>移除餐品</button>
         </details>
       </article>
     </sc-for>
@@ -145,11 +146,11 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       <h2>整餐营养</h2>
       <div class="sticker-nutrition-line"><strong>{{mealVisual.kcal}}</strong><span class="nutrition-ring" role="img" aria-label="{{mealVisual.ringLabel}}" style="{{mealVisual.ring}}"></span></div>
       <div class="recognition-macro-legend">
-        <sc-for list="{{mealVisual.macros}}" as="m"><span style="{{m.color}}">{{m.label}} <strong>{{m.value}}</strong></span></sc-for>
+        <sc-for list="{{mealVisual.macros}}" as="m"><span class="nutrient-chip" style="{{m.color}}" title="{{m.label}}"><hh-icon name="{{m.icon}}" size="16"></hh-icon><span class="visually-hidden">{{m.label}}</span><strong>{{m.value}}</strong></span></sc-for>
       </div>
       <sc-if value="{{mealVisual.focus.length}}">
         <div class="nutrition-focus-cards">
-          <sc-for list="{{mealVisual.focus}}" as="m"><div><span>{{m.label}}</span><strong>{{m.value}}</strong></div></sc-for>
+          <sc-for list="{{mealVisual.focus}}" as="m"><div title="{{m.label}}"><hh-icon name="{{m.key}}" size="15"></hh-icon><span class="visually-hidden">{{m.label}}</span><strong>{{m.value}}</strong></div></sc-for>
         </div>
       </sc-if>
     </section>
@@ -162,7 +163,7 @@ a{color:#6F6A78;text-decoration:none}a:hover{color:#2A2633}
       </sc-for>
     </div>
   </details>
-  <sc-if value="{{editing}}"><button class="record-delete" type="button" onClick="{{deleteMeal}}" aria-disabled="{{busy}}">删除这餐</button></sc-if>
+  <sc-if value="{{editing}}"><button class="record-delete" type="button" onClick="{{deleteMeal}}" aria-disabled="{{busy}}"><hh-icon name="trash" size="18"></hh-icon>删除这餐</button></sc-if>
 
   <div class="record-actions">
   <sc-if value="{{error}}">
@@ -701,7 +702,7 @@ class Component extends DCLogic {
     const showEditor = s.started && !cameraOpen;
     const busy = s.busy || s.recognizing || cameraOpen || this.saving;
     const hasDraft = Boolean(s.name.trim() || s.foods.length || photo || (s.photo === null && this.original?.photoKey));
-    const focusItems = (get) => this.focusKeys.map(key => ({ label: Journal.focusNutrients[key], value: get(key) }));
+    const focusItems = (get) => this.focusKeys.map(key => ({ key, label: Journal.focusNutrients[key], value: get(key) }));
     const macroKeys = ["carb", "pro", "fat"];
     const mealGrams = macroKeys.map(key => this.mealAmount(key));
     const estimated = mealGrams.every(NutritionVisual.known) ? Journal.estimate(mealGrams.map(Number)).kcal : null;
