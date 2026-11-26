@@ -634,7 +634,7 @@ html[data-keyboard-open] .record-actions { padding-bottom: 8px; }
 .food-sticker-item > strong { font-size: 13px; overflow-wrap: anywhere; }
 .food-sticker-visual { position: relative; width: 100%; padding-bottom: 13px; }
 food-sticker { display: grid; place-items: center; width: 100%; aspect-ratio: 1; min-width: 0; }
-food-sticker canvas { width: 100%; height: 100%; display: block; filter: drop-shadow(0 4px 5px #5B48B81F); }
+food-sticker canvas { width: 100%; height: 100%; display: block; }
 .food-sticker-fallback { display: grid; place-items: center; padding: 10px; box-sizing: border-box; width: 90%; aspect-ratio: 1; border: 4px solid #FFF; background: #ECE8FB; color: #5B48B8; font-size: 13px; font-weight: 800; border-radius: 26px; overflow-wrap: anywhere; }
 .food-kcal-badge { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); max-width: 100%; box-sizing: border-box; white-space: nowrap; border: 2px solid #FFF; padding: 4px 7px; border-radius: 14px; background: #ECE8FB; color: #5B48B8; font-size: 11px; font-weight: 800; }
 .food-missing { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; color: #6F6A78; font-size: 13px; margin: 0; }
@@ -1684,9 +1684,9 @@ hh-icon { display: inline-grid; place-items: center; flex: none; line-height: 0;
 .nutrition-summary .day-focus-nutrients { padding-top: 0; border-top: 0; }
 .nutrition-summary[data-open="true"] .day-focus-nutrients { margin-top: 12px; }
 .week-day-record .week-board { margin-top: 10px; }
-.week-day-record .week-board-switch { margin-bottom: -10px; }
+.week-day-record .week-board[data-view="all"] .week-board-switch { margin-bottom: -10px; }
 .nutrition-toggle hh-icon, .focus-trend-chevron { transform: rotate(90deg); }
 .nutrition-summary[data-open="true"] .nutrition-toggle hh-icon, .focus-trend[data-open="true"] .focus-trend-chevron { transform: rotate(-90deg); }
 .focus-trend[data-open="true"] .focus-spark { visibility: hidden; }
-.week-energy-row .week-nutrient.week-energy:not(:has(.energy-goal)) { grid-template-columns: 1fr; }
-.week-energy-row .week-nutrient.week-energy:not(:has(.energy-goal)) > dd.energy-value { grid-column: 1; }
+.week-energy-row .week-nutrient.week-energy:is(:not(:has(.energy-goal)), :has(.energy-goal[data-state="unset"])) { grid-template-columns: 1fr; }
+.week-energy-row .week-nutrient.week-energy:is(:not(:has(.energy-goal)), :has(.energy-goal[data-state="unset"])) > dd:is(.energy-value, .energy-goal) { grid-column: 1; }

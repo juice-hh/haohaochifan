@@ -33,7 +33,6 @@ body { margin: 0; }
 .day-sticker-grid { padding: 0 4px 10px; }
 .day-sticker { gap: 3px; padding: 5px 2px; border-radius: 10px; }
 .day-sticker food-sticker { max-width: 102px; }
-.day-sticker food-sticker canvas { filter: drop-shadow(0 4px 5px #25203e24); }
 .day-sticker > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .day-sticker .food-kcal-badge { position: static; transform: none; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--day-muted); font-size: 12px; font-weight: 600; }
 .day-entry-list { padding-bottom: 8px; }

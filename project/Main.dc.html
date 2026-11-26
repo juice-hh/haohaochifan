@@ -16,7 +16,7 @@
 <script src="./navigation.js?v=20261125-3"></script>
 <script src="./nutrition-visual.js?v=20261126-2"></script>
 <script src="./app-icons.js?v=20261126-1"></script>
-<script src="./food-stickers.js?v=20261125-4"></script>
+<script src="./food-stickers.js?v=20261126-1"></script>
 </head>
 <body>
 <x-dc>
@@ -456,11 +456,11 @@ class Component extends DCLogic {
         kcal: kcal === null ? "—" : kcal.toLocaleString("en-US")
       },
       focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
-      energyGoal, energyGoalMissing: !kcalTarget && !selectedFood,
+      energyGoal, energyGoalMissing: !kcalTarget && !selectedFood && selected <= Journal.today,
       goalHref: Journal.link("Goal", selected) + "#kcal-target",
       days, focusTrend,
       savedMessage: this.state.savedMessage,
-      weekTitle: week === Journal.weekStart(Journal.today) ? "本周" : "周记",
+      weekTitle: "本周",
       weekLabel: week.slice(5).replace("-", ".") + " – " + lastDay.slice(5).replace("-", "."),
       showWeekPlans: raw.some((day) => day.plans.length),
       selectedHasPlans: current.plans.length > 0,

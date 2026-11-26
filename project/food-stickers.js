@@ -91,8 +91,9 @@
         const logicalSize=Math.max(24,this.renderedWidth||112);
         const size=Math.min(512,Math.ceil(logicalSize*Math.min(3,window.devicePixelRatio||2)));
         const density=size/logicalSize;
+        const border=Math.min(8,logicalSize*.065)*density,room=size-border*3.4;
         // A 20px kernel must not become a blurry 100px food. Preserve available source detail.
-        const scale=Math.min(size*.9/Math.max(w,h),1.25*density),dx=(size-w*scale)/2,dy=(size-h*scale)/2;
+        const scale=Math.min(room/Math.max(w,h),1.25*density),dx=(size-w*scale)/2,dy=(size-h*scale)/2-border*.2;
         const layer=document.createElement('canvas');layer.width=layer.height=size;
         const lc=layer.getContext('2d');lc.imageSmoothingEnabled=true;lc.imageSmoothingQuality='high';
         lc.drawImage(source,dx-left*scale,dy-top*scale,source.width*scale,source.height*scale);
@@ -117,12 +118,17 @@
         lc.globalCompositeOperation='destination-in';lc.drawImage(matte,0,0);
         const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
         canvas.setAttribute('aria-label',this.getAttribute('name')||'食物');canvas.setAttribute('role','img');
-        const ctx=canvas.getContext('2d'),border=Math.min(4.5,logicalSize*.045)*density;
-        for(let i=0;i<24;i++){const angle=i*Math.PI/12;ctx.drawImage(layer,Math.cos(angle)*border,Math.sin(angle)*border);}
-        ctx.globalCompositeOperation='source-in';ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
-        ctx.globalCompositeOperation='source-over';ctx.drawImage(layer,0,0);
+        // Die-cut look: a thick white margin around the food, then a soft paper shadow under it.
+        const ctx=canvas.getContext('2d');
+        const cut=document.createElement('canvas');cut.width=cut.height=size;
+        const cc=cut.getContext('2d');
+        for(const radius of [border,border*.55])for(let i=0;i<32;i++){const angle=i*Math.PI/16;cc.drawImage(layer,Math.cos(angle)*radius,Math.sin(angle)*radius);}
+        cc.globalCompositeOperation='source-in';cc.fillStyle='#fff';cc.fillRect(0,0,size,size);
+        ctx.shadowColor='rgba(72,52,30,.18)';ctx.shadowBlur=Math.max(2,border*.7);ctx.shadowOffsetY=Math.max(1,border*.25);
+        ctx.drawImage(cut,0,0);
+        ctx.shadowColor='transparent';ctx.drawImage(layer,0,0);
         this.replaceChildren(canvas);
-        matte.width=matte.height=layer.width=layer.height=0;
+        cut.width=cut.height=matte.width=matte.height=layer.width=layer.height=0;
       }).catch(()=>{});
     }
   }
