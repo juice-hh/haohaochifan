@@ -190,5 +190,61 @@
     return { days, items, compare, previous, headline, headline2: better.join("，"), sub };
   }
 
-  window.Insights = { week, movement, sugarWeek, review, refinedLunch };
+  // ---- Album: every dish ever recorded, grouped by name, with how people felt after it ----
+  const feelingTone = (id) => Journal.mealFeelings.find((item) => item.id === id)?.tone;
+  const plainName = (name) => String(name).replace(/(?:[（(]?(?:\d+(?:\.\d+)?|[一二两三四五六七八九十]+)\s*(?:克|碗|个|只|盒|份|杯|盘|瓶|片|块|颗|根)[）)]?)$/u, "")
+    .replace(/^[一二两三四五六七八九十]+(?:碗|个|只|盒|份|杯|盘|瓶|片|块|颗|根)/u, "").trim() || String(name);
+  const plantWords = /青椒|彩椒|卷心菜|白菜|番茄|西红柿|黄瓜|胡萝卜|西兰花|生菜|菠菜|芹菜|茄子|苹果|香蕉|橙子|猕猴桃|橘子|莓|水果|沙拉|蔬菜|菌|菇|豆角|秋葵/u;
+
+  function foods(fromDate = "0000-01-01", toDate = Journal.today) {
+    const groups = new Map();
+    // Walk back from today; the journal keeps meals in this browser, so a year is plenty.
+    const dates = [];
+    const start = fromDate === "0000-01-01" ? Journal.addDays(toDate, -400) : fromDate;
+    for (let date = start; date <= toDate; date = Journal.addDays(date, 1)) if (Journal.readMeals(date).length) dates.push(date);
+    for (const date of dates) {
+      const afternoon = Journal.afternoonOn(date);
+      const state = Journal.stateOn(date);
+      for (const meal of Journal.readMeals(date)) {
+        const group = FoodStickers.groups([meal], date)[0];
+        const items = group.foods.length ? group.foods : [{ name: meal.name, energy: Number.isFinite(meal.kcal) ? meal.kcal : null, nutrients: {}, hasSticker: false, photo: Journal.photoFor(meal) }];
+        const feelings = Journal.feelingsFor(meal.id);
+        const kind = Journal.kindKeyOf(meal);
+        const walked = Journal.exercisesOn(date).some((e) => e.afterMeal && e.at >= Journal.mealMinutes(meal) && e.at <= Journal.mealMinutes(meal) + 150);
+        for (const item of items) {
+          const name = plainName(item.name);
+          const entry = groups.get(name) ?? { name, times: [], refined: false, plant: plantWords.test(name) };
+          entry.times.push({ date, kind, meal, food: item, feelings, afternoon: kind === "lunch" ? afternoon : null, state, walked,
+            period: Journal.periodEnabled() && !!Journal.periodOn(date) });
+          if (NutritionVisual.isRefinedCarb(item)) entry.refined = true;
+          if (item.hasSticker) entry.sticker = item;
+          groups.set(name, entry);
+        }
+      }
+    }
+    return [...groups.values()].map((entry) => {
+      const count = entry.times.length;
+      const tally = new Map();
+      for (const time of entry.times) for (const id of time.feelings) tally.set(id, (tally.get(id) ?? 0) + 1);
+      const sleepy = entry.times.filter((t) => t.afternoon && t.afternoon !== "clear").length;
+      if (sleepy) tally.set("afternoonSleepy", sleepy);
+      const good = entry.times.filter((t) => t.feelings.some((id) => feelingTone(id) === "good")).length;
+      const low = entry.times.filter((t) => t.feelings.some((id) => feelingTone(id) === "warn") || (t.afternoon && t.afternoon !== "clear")).length;
+      const kinds = new Map();
+      for (const t of entry.times) if (t.kind) kinds.set(t.kind, (kinds.get(t.kind) ?? 0) + 1);
+      const usualKind = [...kinds.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+      const energies = entry.times.map((t) => t.food.energy).filter((v) => NutritionVisual.known(v));
+      const avg = (key) => {
+        const values = entry.times.map((t) => t.food.nutrients?.[key]).filter((v) => NutritionVisual.known(v)).map(Number);
+        return values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length * 10) / 10 : null;
+      };
+      return { ...entry, count, last: entry.times.at(-1).date, tally, good, low, usualKind,
+        kcal: energies.length ? Math.round(energies.reduce((a, b) => a + Number(b), 0) / energies.length) : null,
+        carb: avg("carb"), addedSugar: avg("addedSugar"), fiber: avg("fiber"),
+        period: entry.times.filter((t) => t.period).length };
+    });
+  }
+  const feelingLabel = (id) => id === "afternoonSleepy" ? "下午犯困" : Journal.mealFeelings.find((item) => item.id === id)?.label ?? id;
+
+  window.Insights = { week, movement, sugarWeek, review, refinedLunch, foods, feelingLabel, plainName };
 })();

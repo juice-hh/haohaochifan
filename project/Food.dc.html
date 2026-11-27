@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F2EF">
+<meta name="apple-mobile-web-app-title" content="好好吃饭">
+<link rel="manifest" href="./app.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
+<link rel="stylesheet" href="./mobile.css?v=20261127-26">
+<link rel="stylesheet" href="./album.css?v=20261127-3">
+<title>好好吃饭 一种食物</title>
+<script src="./support.js?v=20261125"></script>
+<script src="./journal.js?v=20261127-5"></script>
+<script src="./interactions.js?v=20261125"></script>
+<script src="./app-icons.js?v=20261127-1"></script>
+<script src="./nutrition-visual.js?v=20261127-1"></script>
+<script src="./food-stickers.js?v=20261127-1"></script>
+<script src="./navigation.js?v=20261127-3"></script>
+<script src="./insights.js?v=20261127-6"></script>
+</head>
+<body style="margin:0">
+<x-dc>
+<main class="screen screen--tabs food-screen">
+  <header class="app-toolbar food-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="返回饭相册"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></a>
+    <h1 class="food-title">{{name}}</h1>
+  </header>
+
+  <sc-if value="{{missing}}"><p class="goal-note album-empty">没有找到这道菜的记录。</p></sc-if>
+
+  <sc-if value="{{food}}">
+    <section class="food-hero">
+      <span class="food-hero-art"><sc-if value="{{food.cutout}}"><food-sticker photo="{{food.photo}}" cutout="{{food.cutout}}" name="{{name}}"></food-sticker></sc-if><sc-if value="{{food.photoOnly}}"><img src="{{food.photoOnly}}" alt="" draggable="false"></sc-if></span>
+      <small>吃了 {{food.count}} 次  最近 {{food.last}}</small>
+      <h2>{{food.headline}}</h2>
+      <div class="food-hero-rows">
+        <sc-for list="{{food.facts}}" as="f"><div><span>{{f.label}}</span><strong>{{f.value}}<sc-if value="{{f.unit}}"><small>{{f.unit}}</small></sc-if></strong></div></sc-for>
+      </div>
+    </section>
+
+    <sc-if value="{{food.after}}">
+      <header class="section-head food-head"><h2>吃完以后</h2><small>{{food.count}} 次里</small></header>
+      <section class="food-after">
+        <sc-for list="{{food.after}}" as="a">
+          <div class="food-bar"><span>{{a.label}}</span><span class="food-bar-track"><i style="{{a.style}}"></i></span><strong>{{a.count}} 次</strong></div>
+        </sc-for>
+      </section>
+    </sc-if>
+    <sc-if value="{{food.noFeelings}}"><p class="food-hint">记下每次吃完的感受，这里会慢慢看出这道菜让你感觉怎么样。</p></sc-if>
+
+    <sc-if value="{{food.tip}}"><p class="food-tip">{{food.tip.lead}}<strong>{{food.tip.strong}}</strong></p></sc-if>
+
+    <header class="section-head food-head"><h2>每一次</h2><sc-if value="{{food.swipe}}"><small>左右滑</small></sc-if></header>
+    <div class="food-times">
+      <sc-for list="{{food.times}}" as="t">
+        <a class="food-time" href="{{t.href}}">
+          <span class="food-time-art"><sc-if value="{{t.cutout}}"><food-sticker photo="{{t.photo}}" cutout="{{t.cutout}}" name="{{name}}"></food-sticker></sc-if><sc-if value="{{t.photoOnly}}"><img src="{{t.photoOnly}}" alt="" draggable="false"></sc-if></span>
+          <strong>{{t.date}}</strong><span>{{t.kind}}</span>
+          <sc-if value="{{t.tag}}"><em data-tone="{{t.tag.tone}}">{{t.tag.text}}</em></sc-if>
+        </a>
+      </sc-for>
+    </div>
+    <a class="food-again" href="{{againHref}}">再记一次{{name}}</a>
+  </sc-if>
+  <journal-nav page="Album" date="{{navDate}}"></journal-nav>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.name = Journal.params.get("name") || "";
+    this.state = {};
+  }
+
+  renderVals() {
+    const name = this.name;
+    const entry = Insights.foods().find((f) => f.name === name);
+    const base = { name, navDate: Journal.today, backHref: Journal.link("Album", Journal.today, { view: "food" }) };
+    if (!entry) return { ...base, food: null, missing: true, againHref: "" };
+    const kinds = { breakfast: "早饭", lunch: "午饭", dinner: "晚饭", snack: "加餐" };
+    const warn = (id) => id === "afternoonSleepy" || Journal.mealFeelings.find((x) => x.id === id)?.tone === "warn";
+    const color = (id) => id === "afternoonSleepy" ? "#8C7BE0" : warn(id) ? "#F08A3E" : "#4FAE84";
+    const tally = [...entry.tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
+    const after = tally.length ? tally.map(([id, n]) => ({ label: Insights.feelingLabel(id), count: n,
+      style: "width:" + Math.round(n / entry.count * 100) + "%;background:" + color(id) })) : null;
+
+    // A gentle tip from what actually happened on the days with this dish.
+    let tip = null;
+    const lunches = entry.times.filter((t) => t.afternoon);
+    const walkedClear = lunches.filter((t) => t.walked && t.afternoon === "clear").length;
+    const sleepy = entry.tally.get("afternoonSleepy") ?? 0;
+    if (entry.refined && sleepy >= 2) {
+      tip = walkedClear ? { lead: "饭后走了一走的那" + (walkedClear > 1 ? " " + walkedClear + " 次" : "次") + "，下午没犯困。", strong: "下次试试半份，或者先吃菜和肉。" }
+        : { lead: "这道菜之后常常下午犯困。", strong: "下次试试半份，先吃菜和肉，饭后走 15 分钟。" };
+    } else if ((entry.tally.get("stuffed") ?? 0) >= 2) {
+      tip = { lead: "吃完常常有点撑。", strong: "下次可以少盛一点，吃慢一些。" };
+    } else if (entry.good >= 3 && entry.good / entry.count >= 0.6) {
+      tip = { lead: "这道菜大多数时候让你感觉不错。", strong: "累的时候可以想起它。" };
+    }
+    const usual = entry.usualKind ? kinds[entry.usualKind] : "";
+    const facts = [
+      entry.kcal !== null ? { label: "平均", value: String(entry.kcal), unit: " kcal" } : null,
+      entry.carb !== null ? { label: "碳水", value: String(entry.carb), unit: " g" } : null,
+      Journal.readDietFocus().id === "antiInflammatory"
+        ? (entry.fiber !== null ? { label: "膳食纤维", value: String(entry.fiber), unit: " g" } : null)
+        : (entry.addedSugar !== null ? { label: "添加糖", value: String(entry.addedSugar), unit: " g" } : null)
+    ].filter(Boolean);
+    const times = entry.times.slice().reverse().map((t) => {
+      const ids = t.feelings;
+      const tagId = (t.afternoon && t.afternoon !== "clear") ? "afternoonSleepy" : ids[0];
+      const text = tagId ? (t.walked && !warn(tagId) ? "走了 " : "") + Insights.feelingLabel(tagId).replace("下午", "") : t.walked ? "饭后走了" : "";
+      return { date: Journal.shortDate(t.date), kind: kinds[t.kind] ?? "",
+        photo: t.food.hasSticker ? t.food.photo : "", cutout: t.food.hasSticker ? t.food.cutout : "",
+        photoOnly: !t.food.hasSticker && t.food.photo ? t.food.photo : "",
+        tag: text ? { text, tone: tagId && warn(tagId) ? (tagId === "afternoonSleepy" ? "low" : "warn") : "good" } : null,
+        href: Journal.link("Day", t.date, { from: "album" }) };
+    });
+    const latest = entry.times.at(-1);
+    const againKind = entry.usualKind || latest.kind || "";
+    return {
+      ...base, missing: false,
+      food: {
+        count: entry.count, last: Journal.shortDate(entry.last),
+        photo: entry.sticker?.photo ?? "", cutout: entry.sticker?.cutout ?? "",
+        photoOnly: !entry.sticker && latest.food.photo ? latest.food.photo : "",
+        headline: usual ? "常在" + usual + "吃" : "记过 " + entry.count + " 次",
+        facts, after, noFeelings: !after, tip, times, swipe: times.length > 3
+      },
+      againHref: Journal.link("Record", Journal.today, { returnTo: "Album", name: latest.meal.name || name, ...(againKind ? { kind: againKind } : {}) })
+    };
+  }
+}
+</script>
+</body>
+</html>

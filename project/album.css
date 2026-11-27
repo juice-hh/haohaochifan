@@ -1,0 +1,135 @@
+/* 饭相册: month book and food shelf (2026-11-27) */
+.album-screen { gap: 12px; }
+.album-head { display: flex; align-items: baseline; gap: 10px; }
+.album-count { margin: 0; font: 700 13px var(--hh-num); color: var(--hh-muted); }
+.album-head .album-plan-link { margin-left: auto; align-self: center; }
+.album-head .settings-dot { display: block; width: 22px; height: 22px; border-radius: 50%; background: #CFC9C1; }
+.album-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 999px; background: #fff; box-shadow: 0 6px 18px rgba(60, 45, 30, .05); }
+.album-tabs button { flex: 1; min-height: 40px; border: 0; border-radius: 999px; background: transparent; color: var(--hh-muted); font: inherit; font-size: 14px; font-weight: 700; }
+.album-tabs button[aria-pressed="true"] { background: var(--hh-dark); color: #fff; }
+
+.album-month { padding: 14px 12px 12px; border-radius: 30px; background: #fff; box-shadow: var(--hh-shadow); }
+.album-month-head { display: flex; align-items: center; justify-content: space-between; }
+.album-month-head strong { font: 800 18px var(--hh-num); }
+.album-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; color: var(--hh-muted); }
+.album-state-bar { display: flex; gap: 2px; height: 8px; margin: 8px 6px 0; border-radius: 5px; overflow: hidden; }
+.album-state-bar i { display: block; }
+.album-state-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 6px 6px 0; font-size: 10.5px; color: var(--hh-muted); }
+.album-state-legend span { display: inline-flex; align-items: center; gap: 3px; }
+.album-state-legend em { display: block; width: 7px; height: 7px; border-radius: 50%; }
+.album-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 10px; text-align: center; font-size: 11px; font-weight: 700; color: #A39C94; }
+.album-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
+.album-day { position: relative; min-height: 58px; padding: 0; border-radius: 14px; background: transparent; }
+.album-day[data-state="light"] { background: #E6F4EC; }
+.album-day[data-state="spirit"] { background: #FFF3D9; }
+.album-day[data-state="sleepy"] { background: #EEEAFC; }
+.album-day[data-state="puffy"] { background: #E6EFF9; }
+.album-day[data-state="ok"] { background: #F2F0EC; }
+.album-day[data-state="none"][data-empty="false"] { background: #F6F4F0; }
+.album-day[data-today="true"] { box-shadow: inset 0 0 0 2px var(--rb-green); }
+.album-day[data-selected="true"] { box-shadow: inset 0 0 0 2px var(--hh-purple); }
+.album-day-face { position: absolute; inset: 0; display: block; }
+.album-day-face b { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font: 800 11px var(--hh-num); color: var(--hh-ink); z-index: 3; }
+.album-day[data-empty="true"] .album-day-face b { color: #A39C94; }
+.album-day-sticker { position: absolute; top: calc(4px + var(--j) * 5px); left: 50%; width: calc(34px - var(--j) * 6px); transform: translateX(calc(-50% + var(--j) * 6px)) rotate(var(--tilt)); z-index: calc(2 - var(--j)); }
+.album-day-sticker food-sticker { display: block; width: 100%; }
+.album-day-photo { position: absolute; top: 6px; left: 50%; width: 28px; height: 28px; margin-left: -14px; border: 2px solid #fff; border-radius: 50%; object-fit: cover; }
+.album-day-period { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--rb-rose); z-index: 3; }
+.album-day-refined { position: absolute; bottom: 3px; right: 3px; display: grid; place-items: center; width: 13px; height: 13px; border-radius: 4px; background: #fff; z-index: 3; }
+.album-day .plan-markers { position: absolute; top: 3px; left: 3px; z-index: 3; }
+.album-month-foot { display: flex; justify-content: space-between; gap: 8px; margin: 10px 6px 0; font-size: 11.5px; color: var(--hh-muted); }
+.album-month-foot strong { font: 800 12.5px var(--hh-num); color: var(--hh-ink); }
+.album-screen .calendar-plan-status:empty { display: none; }
+
+.album-month-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.album-month-cards:has(> .album-card:only-child) { grid-template-columns: 1fr; }
+.album-card { padding: 14px; border-radius: 24px; background: #fff; box-shadow: 0 10px 24px rgba(60, 45, 30, .05); }
+.album-card h2 { margin: 0; font-size: 12px; font-weight: 700; color: var(--hh-muted); }
+.album-card p { margin: 6px 0 0; font-size: 11.5px; font-weight: 700; color: var(--hh-muted); }
+.album-card-stickers { display: flex; margin-top: 8px; }
+.album-card-stickers food-sticker { width: 38px; margin-right: -6px; }
+.album-card-big { display: block; margin-top: 4px; font: 800 24px var(--hh-num); }
+.album-card-big small { margin-left: 2px; font-size: 12px; color: var(--hh-muted); }
+.album-spark { display: flex; align-items: flex-end; gap: 3px; height: 32px; margin-top: 8px; }
+.album-spark i { flex: 1; border-radius: 3px 3px 1px 1px; background: var(--rb-green-soft); }
+.album-spark i[data-last="true"] { background: var(--rb-green); }
+
+.album-filters { display: flex; gap: 6px; margin: 0 -16px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+.album-filters::-webkit-scrollbar { display: none; }
+.album-filters button { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: #fff; color: var(--hh-muted); font: inherit; font-size: 12.5px; font-weight: 700; }
+.album-filters button[aria-pressed="true"] { background: var(--rb-green-soft); color: var(--rb-green-deep); }
+.album-filters button[aria-pressed="true"][data-tone="low"] { background: var(--rb-violet-soft); color: var(--rb-violet-deep); }
+.album-filters button[aria-pressed="true"][data-tone="grain"] { background: var(--rb-yellow-soft); color: var(--rb-yellow-deep); }
+.album-hero { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px; border-radius: 26px; background: linear-gradient(110deg, #E2F4EA, #F7FCF9); color: var(--hh-ink) !important; }
+.album-hero-art food-sticker { display: block; width: 110px; }
+.album-hero-text { display: grid; gap: 6px; justify-items: start; font-size: 12.5px; line-height: 1.55; }
+.album-hero-text em { padding: 3px 9px; border-radius: 999px; background: #fff; color: var(--rb-green-deep); font-style: normal; font-size: 11px; font-weight: 700; }
+.album-hero-text strong { color: var(--rb-green-deep); }
+.album-hero-go { padding: 6px 12px; border-radius: 999px; background: var(--rb-green); color: #fff; font-size: 12px; }
+.album-foods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.album-food { position: relative; display: grid; gap: 2px; padding: 12px; border-radius: 26px; background: #fff; box-shadow: 0 10px 24px rgba(60, 45, 30, .05); color: var(--hh-ink) !important; }
+.album-food > .sticker-focus-mark { top: 10px; right: 10px; }
+.album-food-art { display: grid; place-items: center; height: 92px; }
+.album-food-art food-sticker { width: 86px; }
+.album-food-art img { width: 76px; height: 76px; border: 3px solid #fff; border-radius: 22px; object-fit: cover; box-shadow: 0 4px 10px rgba(60,45,30,.14); }
+.album-food-noart { display: grid; place-items: center; width: 80px; height: 64px; border-radius: 20px; background: #F6F4F0; font-size: 13px; font-weight: 700; color: var(--hh-muted); text-align: center; padding: 4px; }
+.album-food-name { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: 4px; }
+.album-food-name strong { min-width: 0; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.album-food-name span { font: 800 12.5px var(--hh-num); color: var(--hh-purple-deep); }
+.album-food-meta { font-size: 11.5px; color: var(--hh-muted); }
+.album-food-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.album-food-tags em { padding: 3px 8px; border-radius: 999px; font-style: normal; font-size: 10.5px; font-weight: 700; background: var(--rb-green-soft); color: var(--rb-green-deep); }
+.album-food-tags em[data-tone="low"] { background: var(--rb-violet-soft); color: var(--rb-violet-deep); }
+.album-food-tags em[data-tone="warn"] { background: var(--rb-orange-soft); color: var(--rb-orange-deep); }
+.album-food-tags em[data-tone="period"] { background: var(--rb-rose-soft); color: var(--rb-rose-deep); }
+.album-empty { text-align: center; }
+@media (max-width: 359px) { .album-day { min-height: 50px; } .album-day-sticker { width: calc(28px - var(--j) * 5px); } .album-hero { grid-template-columns: 90px minmax(0, 1fr); } .album-hero-art food-sticker { width: 84px; } }
+
+/* 一种食物 */
+.food-screen { gap: 12px; }
+.food-toolbar { display: flex; align-items: center; gap: 8px; }
+.food-title { margin: 0; font-size: 22px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.food-hero { position: relative; overflow: hidden; min-height: 150px; padding: 18px 16px 16px; border-radius: 32px; background: radial-gradient(120% 120% at 85% 0%, #FFF1D6 0%, #FFF8EA 50%, #FFFFFF 100%); box-shadow: var(--hh-shadow); }
+.food-hero-art { position: absolute; right: 6px; top: 4px; width: 140px; transform: rotate(6deg); }
+.food-hero-art food-sticker { display: block; width: 140px; }
+.food-hero-art img { width: 120px; height: 120px; border: 4px solid #fff; border-radius: 30px; object-fit: cover; }
+.food-hero small { position: relative; font-size: 12px; font-weight: 700; color: var(--rb-yellow-deep); }
+.food-hero h2 { position: relative; margin: 4px 0 0; max-width: 58%; font-size: 24px; }
+.food-hero-rows { position: relative; display: flex; gap: 16px; margin-top: 14px; max-width: 62%; }
+.food-hero-rows span { display: block; font-size: 11px; font-weight: 700; color: var(--hh-muted); }
+.food-hero-rows strong { font: 800 18px var(--hh-num); white-space: nowrap; }
+.food-hero-rows small { font-size: 11px; color: var(--hh-muted); }
+.food-head { margin: 6px 4px 0; }
+.food-head h2 { font-size: 16px; }
+.food-after { padding: 14px 16px; border-radius: 26px; background: #fff; box-shadow: 0 10px 24px rgba(60, 45, 30, .05); }
+.food-bar { display: grid; grid-template-columns: 64px minmax(0, 1fr) 36px; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; }
+.food-bar + .food-bar { margin-top: 10px; }
+.food-bar-track { display: block; height: 10px; border-radius: 6px; background: #F1EEE9; overflow: hidden; }
+.food-bar-track i { display: block; height: 100%; border-radius: 6px; }
+.food-bar strong { font: 800 12px var(--hh-num); color: var(--hh-muted); text-align: right; }
+.food-hint { margin: 0 4px; font-size: 12.5px; line-height: 1.6; color: var(--hh-muted); }
+.food-tip { margin: 0; padding: 13px 15px; border-radius: 24px; background: #FBF4E6; color: #6B5226; font-size: 12.5px; line-height: 1.6; }
+.food-tip strong { color: #3D2F14; }
+.food-times { display: flex; gap: 8px; margin: 0 -16px; padding: 0 16px 4px; overflow-x: auto; scrollbar-width: none; }
+.food-times::-webkit-scrollbar { display: none; }
+.food-time { flex: none; display: grid; justify-items: center; gap: 3px; width: 96px; padding: 10px; border-radius: 22px; background: #fff; box-shadow: 0 8px 20px rgba(60, 45, 30, .05); color: var(--hh-ink) !important; }
+.food-time-art food-sticker { display: block; width: 56px; }
+.food-time-art img { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; }
+.food-time strong { font-size: 11.5px; }
+.food-time > span { font-size: 10.5px; color: #A39C94; }
+.food-time em { padding: 2px 7px; border-radius: 999px; font-style: normal; font-size: 10px; font-weight: 700; background: var(--rb-green-soft); color: var(--rb-green-deep); }
+.food-time em[data-tone="low"] { background: var(--rb-violet-soft); color: var(--rb-violet-deep); }
+.food-time em[data-tone="warn"] { background: var(--rb-orange-soft); color: var(--rb-orange-deep); }
+.food-again { display: grid; place-items: center; min-height: 50px; margin-top: 4px; border-radius: 25px; background: var(--hh-purple); color: #fff !important; font-size: 15px; font-weight: 700; }
+.food-screen { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+/* Match pass: bigger overlapping day stickers, quiet settings dot, today outlined in green. */
+.album-head .album-plan-link { width: 44px; height: 44px; background: transparent !important; box-shadow: none !important; }
+.album-day-sticker { top: calc(3px + var(--j) * 4px); width: calc(38px - var(--j) * 6px); transform: translateX(calc(-62% + var(--j) * 14px)) rotate(var(--tilt)); }
+.album-day-sticker:only-child, .album-day-face > .album-day-sticker:first-child:nth-last-child(2) { transform: translateX(-50%); }
+.album-day[data-today="true"] { box-shadow: inset 0 0 0 2px var(--rb-green); }
+.album-card p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.album-screen a, .food-screen a { text-decoration: none; }
+.album-hero a { color: inherit !important; }
+.album-hero-go { color: #fff !important; font-weight: 700; }
+.food-head { margin-top: 10px; }
+.album-filters { margin-top: 2px; }

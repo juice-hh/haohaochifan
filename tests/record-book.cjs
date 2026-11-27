@@ -109,6 +109,17 @@ const addDays=(date,n)=>{const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getU
    await p.waitForTimeout(1500);
    assert(sent.length===0||sent.every(body=>!/period|经期|craveSweet/.test(body)),'recognition request carries no period data');
 
+   // 饭相册: month coloured by state, food view, and a single food page.
+   await p.goto(base+'/Album.dc.html');
+   assert.equal(await p.locator('.album-day[data-today="true"]').getAttribute('data-state'),'light');
+   await p.getByRole('button',{name:'食物',exact:true}).click();
+   await p.locator('.album-food').filter({hasText:'番茄牛肉面'}).click();
+   await p.waitForURL('**/Food.dc.html?**');
+   await p.locator('.food-title').filter({hasText:'番茄牛肉面'}).waitFor();
+   await p.getByRole('link',{name:/再记一次番茄牛肉面/}).waitFor();
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'food page fits '+width);
+   await p.goto(base+'/Album.dc.html?plan=1');
+   await p.getByRole('button',{name:'散步',exact:true}).waitFor();
    assert.deepEqual(errors,[],engine+' '+width+' page errors');
    console.log('PASS',engine,width+'px','state, feelings, exercise types, refined-carb mark, afternoon check, note, period record, review, settings, no period data in recognition');
    await context.close();

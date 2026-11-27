@@ -8,6 +8,7 @@
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
 <link rel="stylesheet" href="./mobile.css?v=20261127-26">
+<link rel="stylesheet" href="./album.css?v=20261127-3">
 <title>好好吃饭 饭相册</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-5"></script>
@@ -16,113 +17,110 @@
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
 <script src="./navigation.js?v=20261127-3"></script>
+<script src="./insights.js?v=20261127-6"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
 body{margin:0}
-a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
+a{color:#2A2633;text-decoration:none}
 </style>
 </helmet>
-<div class="screen screen--tabs" style="background: #F3F2EF; color: #2A2633; font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; display: flex; flex-direction: column; gap: 12px">
-  <header class="page-header">
+<div class="screen screen--tabs album-screen">
+  <header class="page-header album-head">
     <h1 class="page-title">饭相册</h1>
-    <p class="page-header-note">{{monthCount}}</p>
+    <p class="album-count">{{headCount}}</p>
+    <a class="app-icon-button settings-link album-plan-link" href="{{planHref}}" aria-label="{{planLabel}}"><span class="settings-dot" aria-hidden="true"></span></a>
   </header>
 
-  <div class="album-view-switch app-segmented" role="group" aria-label="饭相册视图">
-    <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
-      <button type="button" aria-pressed="{{v.selected}}" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
-    </sc-for>
+  <div class="album-tabs" role="group" aria-label="饭相册视图">
+    <sc-for list="{{views}}" as="v"><button type="button" aria-pressed="{{v.selected}}" onClick="{{v.pick}}">{{v.label}}</button></sc-for>
   </div>
 
-  <sc-if value="{{isCal}}" hint-placeholder-val="{{true}}">
-    <div style="background: #FFFFFF; border-radius: 32px; padding: 16px 12px 14px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 8px">
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px">
-        <button class="app-step-button" aria-label="上个月" onClick="{{previousMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F3F2EF; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-        </button>
-        <span style="font-size: 18px; font-weight: 900">{{monthLabel}}</span>
-        <button class="app-step-button" aria-label="下个月" onClick="{{nextMonth}}" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #F3F2EF; color: #6F6A78; display: flex; align-items: center; justify-content: center; padding: 0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
-        </button>
+  <sc-if value="{{isCal}}">
+    <section class="album-month">
+      <div class="album-month-head">
+        <button type="button" class="album-arrow" aria-label="上个月" onClick="{{previousMonth}}"><hh-icon name="left" size="18"></hh-icon></button>
+        <strong>{{monthLabel}}</strong>
+        <button type="button" class="album-arrow" aria-label="下个月" onClick="{{nextMonth}}"><hh-icon name="right" size="18"></hh-icon></button>
       </div>
-      <div class="calendar-plan-toolbar">
-        <span>{{calendarHint}}</span>
-        <sc-if value="{{planning}}"><button type="button" class="plan-action" data-active="true" onClick="{{switchPlanning}}">完成</button></sc-if>
-      </div>
+      <sc-if value="{{stateBar}}">
+        <div class="album-state-bar" aria-hidden="true"><sc-for list="{{stateBar.parts}}" as="b"><i style="{{b.style}}"></i></sc-for></div>
+        <p class="album-state-legend"><sc-for list="{{stateBar.legend}}" as="l"><span><em style="{{l.style}}"></em>{{l.label}}</span></sc-for></p>
+      </sc-if>
       <sc-if value="{{planning}}">
+        <div class="calendar-plan-toolbar"><span>点日期贴上，再点一次取消</span><button type="button" class="plan-action" data-active="true" onClick="{{switchPlanning}}">完成</button></div>
         <div class="plan-picker" role="group" aria-label="计划贴纸">
-          <sc-for list="{{stickers}}" as="s">
-            <button type="button" class="plan-chip" aria-pressed="{{s.active}}" onClick="{{s.pick}}">
-              <span class="plan-icon" data-plan="{{s.id}}" aria-hidden="true"></span> {{s.label}}
-            </button>
-          </sc-for>
+          <sc-for list="{{stickers}}" as="s"><button type="button" class="plan-chip" aria-pressed="{{s.active}}" onClick="{{s.pick}}"><span class="plan-icon" data-plan="{{s.id}}" aria-hidden="true"></span> {{s.label}}</button></sc-for>
         </div>
       </sc-if>
-      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; font-size: 12px; font-weight: 700; color: #6F6A78">
-        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px">
-        <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
-          <div class="calendar-cell" data-selected="{{c.selected}}">
+      <div class="album-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      <div class="album-cal">
+        <sc-for list="{{cells}}" as="c">
+          <div class="calendar-cell album-day" data-selected="{{c.selected}}" data-state="{{c.state}}" data-empty="{{c.empty}}" data-today="{{c.today}}">
             <sc-if value="{{c.date}}">
-              <div class="calendar-cell-face" aria-hidden="true">
-                <div class="calendar-food-stack">
-                  <sc-for list="{{c.tiles}}" as="t" hint-placeholder-count="2">
-                    <div style="{{t.style}}"></div>
-                  </sc-for>
-                </div>
-                <span style="{{c.numStyle}}">{{c.day}}</span>
-                <span style="{{c.dotStyle}}"></span>
-                <sc-if value="{{showCalendarPlans}}">
-                  <span class="plan-markers">
-                    <sc-for list="{{c.plans}}" as="p"><span class="plan-icon" data-plan="{{p.id}}"></span></sc-for>
-                  </span>
-                </sc-if>
-              </div>
-              <sc-if value="{{planning}}">
-                <button type="button" class="calendar-cell-target" aria-label="{{c.planAria}}" aria-pressed="{{c.marked}}" onClick="{{c.toggle}}"></button>
-              </sc-if>
-              <sc-if value="{{c.href}}">
-                <a class="calendar-cell-target" href="{{c.href}}" aria-label="{{c.aria}}"></a>
-              </sc-if>
+              <span class="album-day-face" aria-hidden="true">
+                <sc-for list="{{c.stickers}}" as="t"><span class="album-day-sticker" style="{{t.style}}"><food-sticker photo="{{t.photo}}" cutout="{{t.cutout}}" name="{{t.name}}"></food-sticker></span></sc-for>
+                <sc-if value="{{c.photo}}"><img class="album-day-photo" src="{{c.photo}}" alt="" draggable="false"></sc-if>
+                <sc-if value="{{c.period}}"><i class="album-day-period"></i></sc-if>
+                <sc-if value="{{c.refined}}"><i class="album-day-refined"><hh-icon name="grain" size="10"></hh-icon></i></sc-if>
+                <b>{{c.day}}</b>
+                <sc-if value="{{showCalendarPlans}}"><span class="plan-markers"><sc-for list="{{c.plans}}" as="p"><span class="plan-icon" data-plan="{{p.id}}"></span></sc-for></span></sc-if>
+              </span>
+              <sc-if value="{{planning}}"><button type="button" class="calendar-cell-target" aria-label="{{c.planAria}}" aria-pressed="{{c.marked}}" onClick="{{c.toggle}}"></button></sc-if>
+              <sc-if value="{{c.href}}"><a class="calendar-cell-target" href="{{c.href}}" aria-label="{{c.aria}}"></a></sc-if>
             </sc-if>
           </div>
         </sc-for>
       </div>
-      <div style="display: flex; justify-content: center; gap: 14px; font-size: 12px; font-weight: 700; color: #6F6A78; padding-top: 4px">有 {{loggedDays}} 天留下了饭记</div>
-    </div>
+      <p class="album-month-foot"><span>记了 <strong>{{loggedDays}}</strong> 天</span><sc-if value="{{lightNote}}"><span>{{lightNote.before}}<strong>{{lightNote.count}}</strong>{{lightNote.after}}</span></sc-if></p>
+    </section>
     <p class="calendar-plan-status" role="status">{{planStatus}}</p>
+
+    <sc-if value="{{monthCards}}">
+      <div class="album-month-cards">
+        <sc-if value="{{topFoods}}">
+          <section class="album-card">
+            <h2>这个月最常吃</h2>
+            <span class="album-card-stickers"><sc-for list="{{topFoods.items}}" as="t"><sc-if value="{{t.cutout}}"><food-sticker photo="{{t.photo}}" cutout="{{t.cutout}}" name="{{t.name}}"></food-sticker></sc-if></sc-for></span>
+            <p>{{topFoods.text}}</p>
+          </section>
+        </sc-if>
+        <sc-if value="{{comfy}}">
+          <section class="album-card">
+            <h2>吃完觉得舒服</h2>
+            <strong class="album-card-big">{{comfy.percent}}<small>%</small></strong>
+            <span class="album-spark" aria-hidden="true"><sc-for list="{{comfy.bars}}" as="b"><i style="{{b.style}}" data-last="{{b.last}}"></i></sc-for></span>
+          </section>
+        </sc-if>
+      </div>
+    </sc-if>
   </sc-if>
 
-  <sc-if value="{{isFood}}" hint-placeholder-val="{{false}}">
-    <div class="album-filters" aria-label="食物分类">
-      <div class="app-segmented" role="group" aria-label="分类方式">
-        <sc-for list="{{foodFilterModes}}" as="mode"><button type="button" aria-pressed="{{mode.active}}" onClick="{{mode.pick}}">{{mode.label}}</button></sc-for>
-      </div>
-      <sc-if value="{{filterOptions.length}}">
-        <div class="album-filter-options" role="group" aria-label="筛选食物">
-          <sc-for list="{{filterOptions}}" as="option"><button type="button" aria-pressed="{{option.active}}" onClick="{{option.pick}}"><sc-if value="{{option.icon}}"><hh-icon name="{{option.icon}}" size="16"></hh-icon></sc-if>{{option.label}}</button></sc-for>
-        </div>
-      </sc-if>
-      <sc-if value="{{filterNote}}"><p>{{filterNote}}</p></sc-if>
+  <sc-if value="{{isFood}}">
+    <div class="album-filters" role="group" aria-label="按吃完的感觉筛选">
+      <sc-for list="{{filters}}" as="f"><button type="button" aria-pressed="{{f.active}}" data-tone="{{f.tone}}" onClick="{{f.pick}}"><sc-if value="{{f.icon}}"><hh-icon name="{{f.icon}}" size="13"></hh-icon></sc-if>{{f.label}}</button></sc-for>
     </div>
-    <sc-if value="{{foodEmpty}}"><p class="goal-note">当前分类没有记录。</p></sc-if>
-    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
-      <sc-for list="{{foods}}" as="f" hint-placeholder-count="6">
-        <a href="{{f.href}}" style="background: #FFFFFF; border-radius: 28px; padding: 14px 14px 12px; box-shadow: 0 10px 30px rgba(90, 70, 160, 0.06); display: flex; flex-direction: column; gap: 6px">
-          <div style="position: relative; height: 92px">
-            <sc-for list="{{f.layers}}" as="l" hint-placeholder-count="3">
-              <div style="{{l.style}}">{{l.label}}</div>
-            </sc-for>
-          </div>
-          <div style="display: flex; align-items: baseline; justify-content: space-between">
-            <span style="font-size: 15px; font-weight: 900">{{f.name}}</span>
-            <span style="font-size: 13px; font-weight: 900; color: #5B48B8">×{{f.count}}</span>
-          </div>
-          <span style="font-size: 12px; font-weight: 600; color: #6F6A78">{{f.meta}}</span>
+    <sc-if value="{{hero}}">
+      <div class="album-hero">
+        <a class="album-hero-art" href="{{hero.href}}" aria-label="看看{{hero.name}}"><food-sticker photo="{{hero.photo}}" cutout="{{hero.cutout}}" name="{{hero.name}}"></food-sticker></a>
+        <span class="album-hero-text"><em>让你轻盈的一餐</em><a href="{{hero.href}}">{{hero.name}}吃了 {{hero.count}} 次，有 {{hero.good}} 次吃完都说<strong>{{hero.word}}</strong>{{hero.after}}</a><a class="album-hero-go" href="{{hero.againHref}}">再记一次</a></span>
+      </div>
+    </sc-if>
+    <sc-if value="{{foodEmpty}}"><p class="goal-note album-empty">{{foodEmpty}}</p></sc-if>
+    <div class="album-foods">
+      <sc-for list="{{foods}}" as="f">
+        <a class="album-food" href="{{f.href}}">
+          <sc-for list="{{f.marks}}" as="m"><span class="sticker-focus-mark" data-mark="{{m.key}}"><hh-icon name="{{m.key}}" size="13"></hh-icon></span></sc-for>
+          <span class="album-food-art">
+            <sc-if value="{{f.cutout}}"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker></sc-if>
+            <sc-if value="{{f.photoOnly}}"><img src="{{f.photoOnly}}" alt="" draggable="false"></sc-if>
+            <sc-if value="{{f.nameOnly}}"><span class="album-food-noart">{{f.name}}</span></sc-if>
+          </span>
+          <span class="album-food-name"><strong>{{f.name}}</strong><span>×{{f.count}}</span></span>
+          <span class="album-food-meta">最近 {{f.last}}</span>
+          <sc-if value="{{f.tags}}"><span class="album-food-tags"><sc-for list="{{f.tags}}" as="t"><em data-tone="{{t.tone}}">{{t.text}}</em></sc-for></span></sc-if>
         </a>
       </sc-for>
     </div>
@@ -140,7 +138,7 @@ class Component extends DCLogic {
       month: Journal.monthStart(this.date),
       planning: Journal.params.get("plan") === "1",
       sticker: Journal.planStickers[0].id,
-      planStatus: "", foodFilter: "all", foodCategory: "all"
+      planStatus: "", filter: "all"
     };
   }
 
@@ -169,129 +167,127 @@ class Component extends DCLogic {
   }
 
   renderVals() {
-    var self = this;
-    var tints = ['#FFEADB', '#FDE6F0', '#FFF4C9', '#E3F6E2', '#E1EEFF', '#EEE9FF'];
-    var views = [{ id: 'cal', label: '日历' }, { id: 'food', label: '按食物' }].map(function (v) {
-      var on = self.state.view === v.id;
-      return {
-        label: v.label, selected: on,
-        pick: function () { self.setState({ view: v.id }); },
-        style: 'height: 36px; border: none; border-radius: 999px; padding: 0 16px; font-size: 14px; font-family: inherit; font-weight: 800; background: ' + (on ? '#7A66E0' : 'transparent') + '; color: ' + (on ? '#FFFFFF' : '#6F6A78')
-      };
-    });
-
-    const { month, planning } = this.state;
-    const sticker = Journal.planStickers.find(({ id }) => id === this.state.sticker);
-    const stickers = Journal.planStickers.map((item) => ({
-      ...item,
-      active: item.id === sticker.id,
-      pick: () => this.setState({ sticker: item.id, planStatus: "" })
+    const { month, planning, view } = this.state;
+    const views = [{ id: "cal", label: "月历" }, { id: "food", label: "食物" }].map((v) => ({
+      label: v.label, selected: String(view === v.id), pick: () => this.setState({ view: v.id })
     }));
+    const sticker = Journal.planStickers.find(({ id }) => id === this.state.sticker);
+    const stickers = Journal.planStickers.map((item) => ({ ...item, active: String(item.id === sticker.id), pick: () => this.setState({ sticker: item.id, planStatus: "" }) }));
     const next = Journal.addMonths(month, 1);
     const days = [];
-    for (let date = month; date < next; date = Journal.addDays(date, 1)) {
-      days.push(Journal.day(date));
-    }
-    const cells = Array.from({ length: (Journal.weekday(month) + 6) % 7 }, () => ({}));
-    const groups = new Map();
+    for (let date = month; date < next; date = Journal.addDays(date, 1)) days.push(Journal.day(date));
+    const cells = Array.from({ length: (Journal.weekday(month) + 6) % 7 }, () => ({ date: "", empty: "true" }));
+    const stateCount = {};
+    let refinedDays = 0;
     for (const [i, entry] of days.entries()) {
-      const n = entry.meals.length;
-      for (const meal of entry.meals) {
-        const servings = FoodStickers.normalize(meal.foods);
-        const [carb, pro, fat] = Journal.mealMacros(meal);
-        const items = servings.length ? servings : [{ name: meal.name, nutrients: {carb, pro, fat} }];
-        for (const item of items) {
-          const name = item.name.replace(/(?:[（(]?(?:\d+(?:\.\d+)?|[一二两三四五六七八九十]+)\s*(?:克|碗|个|只|盒|份|杯|盘|瓶|片|块|颗|根)[）)]?)$/u, "").replace(/^[一二两三四五六七八九十]+(?:碗|个|只|盒|份|杯|盘|瓶|片|块|颗|根)/u, "").trim() || item.name;
-          const group = groups.get(name) ?? { name, count: 0, c: groups.size, nutrients: new Set(), types: new Set() };
-          group.count++;
-          group.date = entry.date;
-          const photo = Journal.photoFor(meal);
-          if (photo) group.photo = photo;
-          group.editHref = Journal.link("Day", entry.date, {from: "album"});
-          const energy = ["carb", "pro", "fat"].map((key, j) => Number(item.nutrients?.[key] ?? 0) * [4, 4, 9][j]);
-          const maximum = Math.max(...energy);
-          if (maximum > 0) energy.forEach((amount, j) => { if (maximum === amount) group.nutrients.add(["碳水", "蛋白质", "脂肪"][j]); });
-          const ingredients = name.match(/土豆|马铃薯|青椒|彩椒|玉米|红薯|紫薯|鸡腿|鸡肉|鸡蛋|蒸蛋|牛肉|猪肉|鱼|虾|豆腐|豆浆|牛奶|奶酪|米饭|稀饭|面条|面包|卷心菜|白菜|番茄|西红柿|黄瓜|胡萝卜|番薯|西兰花|生菜|菠菜|芹菜|茄子|芸豆|苹果|香蕉|橙子|猕猴桃|橘子|莓|水果|沙拉/gu) ?? [];
-          for (const ingredient of ingredients) group.types.add(({马铃薯:"土豆", 彩椒:"青椒", 紫薯:"红薯", 蒸蛋:"鸡蛋", 西红柿:"番茄", 鸡腿:"鸡肉"})[ingredient] ?? ingredient);
-          if (!ingredients.length) group.types.add(name);
-          if (/青椒|彩椒|卷心菜|白菜|番茄|西红柿|黄瓜|胡萝卜|西兰花|生菜|菠菜|芹菜|茄子|苹果|香蕉|橙子|猕猴桃|橘子|莓|水果/u.test(name)) group.nutrients.add("维生素");
-          groups.set(name, group);
-        }
-      }
-      const tiles = entry.meals.slice(-3).map((meal, j) => {
-        const photo = Journal.photoFor(meal);
-        return {
-          style: 'position: absolute; left: ' + (5 + [0, 3, -2][j]) + 'px; top: ' + (8 - j * 4)
-            + 'px; width: 24px; height: 24px; box-sizing: border-box; border-radius: 8px; border: 2px solid #FFFFFF; background: '
-            + (photo ? 'center / cover url("' + photo + '")' : tints[(i + j * 2) % tints.length])
-            + '; transform: rotate(' + [-6, 5, -2][(i + j) % 3] + 'deg); box-shadow: 0 2px 5px rgba(90, 70, 160, 0.14)'
-        };
-      });
       const { date } = entry;
+      const state = Journal.stateOn(date);
+      if (state) stateCount[state] = (stateCount[state] ?? 0) + 1;
+      const groups = FoodStickers.groups(entry.meals, date, "album");
+      const withSticker = groups.flatMap((group) => group.foods.filter((food) => food.hasSticker));
+      const shown = withSticker.slice(-2).map((food, j, list) => ({ ...food,
+        style: "--j:" + (list.length - 1 - j) + ";--tilt:" + (list.length - 1 - j ? 10 : 0) + "deg" }));
+      const photo = !shown.length && entry.meals.length ? Journal.photoFor(entry.meals.at(-1)) : "";
+      const refined = groups.some((group) => group.foods.some((food) => food.refinedCarb)) || entry.meals.some((meal) => !meal.foods?.length && NutritionVisual.isRefinedCarb({ name: meal.name }));
+      if (refined) refinedDays++;
       const plans = Journal.plansOn(date);
       const label = Journal.shortDate(date);
       const planNames = plans.map(({ label }) => label).join("、");
+      const stateLabel = state ? Journal.states.find((item) => item.id === state).label : "";
       cells.push({
-        date, day: i + 1, tiles, plans,
-        selected: date === this.date,
-        marked: plans.some(({ id }) => id === sticker.id),
+        date, day: i + 1, stickers: shown, photo, plans,
+        state: state ?? "none", empty: String(!entry.meals.length && !state), today: String(date === Journal.today),
+        period: Journal.periodEnabled() && !!Journal.periodOn(date), refined,
+        selected: String(planning && date === this.date),
+        marked: String(plans.some(({ id }) => id === sticker.id)),
         toggle: () => this.toggleSticker(date, sticker),
-        href: planning ? "" : Journal.link("Day", date, { from: "album" }),
-        aria: label + "，" + (n ? n + " 餐" : "没记录") + (planNames ? "，计划：" + planNames : ""),
-        planAria: label + "，" + sticker.label,
-        numStyle: 'font-size: 11px; font-weight: 800; color: ' + (n ? '#2A2633' : '#807A8D'),
-        dotStyle: 'width: 5px; height: 5px; border-radius: 3px; background: ' + (n ? '#A996F2' : 'transparent')
+        href: planning || date > Journal.today ? "" : Journal.link("Day", date, { from: "album" }),
+        aria: label + "，" + (entry.meals.length ? entry.meals.length + " 餐" : "没记录") + (stateLabel ? "，" + stateLabel : "") + (planNames ? "，计划：" + planNames : ""),
+        planAria: label + "，" + sticker.label
       });
     }
-    const {foodFilter, foodCategory} = this.state;
-    const foodFilterModes = [["all", "全部"], ["nutrition", "按营养素"], ["type", "按食物种类"]].map(([id, label]) => ({
-      label, active: foodFilter === id, pick: () => this.setState({foodFilter: id, foodCategory: "all"})
-    }));
-    const categories = foodFilter === "nutrition" ? ["碳水", "蛋白质", "维生素", "脂肪"]
-      : foodFilter === "type" ? [...new Set([...groups.values()].flatMap(group => [...group.types]))].sort((a,b) => a.localeCompare(b, "zh-CN"))
-      : [];
-    const filterOptions = categories.length ? ["all", ...categories].map(key => ({
-      label: key === "all" ? "全部食物" : key, icon: { 碳水: "carb", 蛋白质: "pro", 维生素: "fiber", 脂肪: "fat" }[key] ?? "",
-      active: foodCategory === key, pick: () => this.setState({foodCategory: key})
-    })) : [];
-    const list = [...groups.values()].filter(group => foodCategory === "all" || (foodFilter === "nutrition" ? group.nutrients : group.types).has(foodCategory))
-      .sort((a, b) => b.count - a.count || b.date.localeCompare(a.date));
-    var foods = list.map(function (f) {
-      var k = Math.min(f.count, 4);
-      var layers = [];
-      for (var j = 0; j < k; j++) {
-        var top = j === k - 1;
-        layers.push({
-          label: top && !f.photo ? f.name : '',
-          style: 'position: absolute; left: ' + (22 + [0, 6, -5, 3][j]) + 'px; top: ' + (14 - j * 4) + 'px; width: 92px; height: 72px; box-sizing: border-box; border-radius: 22px; border: 4px solid #FFFFFF; background: ' + (top && f.photo ? 'center / cover url("' + f.photo + '")' : tints[(f.c + j) % tints.length]) + '; transform: rotate(' + [-8, 6, -3, 2][j] + 'deg); box-shadow: 0 5px 12px rgba(90, 70, 160, 0.13); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #5A4E44'
-        });
-      }
-      return {
-        name: f.name, count: f.count, layers,
-        href: f.editHref,
-        meta: "最近记录于" + Journal.shortDate(f.date)
-      };
-    });
+    const colors = { light: "#4FAE84", spirit: "#E9A92B", ok: "#C9C2B8", sleepy: "#8C7BE0", puffy: "#5E9AD6" };
+    const recordedStates = Object.values(stateCount).reduce((a, b) => a + b, 0);
+    const pastDays = days.filter((day) => day.date <= Journal.today).length;
+    const stateBar = recordedStates ? {
+      parts: [...Journal.states.filter((item) => stateCount[item.id]).map((item) => ({ style: "flex:" + stateCount[item.id] + ";background:" + colors[item.id] })),
+        ...(pastDays - recordedStates > 0 ? [{ style: "flex:" + (pastDays - recordedStates) + ";background:#EEEAE4" }] : [])],
+      legend: [...Journal.states.filter((item) => stateCount[item.id]).map((item) => ({ label: item.label + " " + stateCount[item.id], style: "background:" + colors[item.id] })),
+        ...(Journal.periodEnabled() && days.some((day) => Journal.periodOn(day.date)) ? [{ label: "经期", style: "background:#E26D8A" }] : [])]
+    } : null;
+    const lastMonth = Journal.addMonths(month, -1);
+    let lightBefore = 0;
+    for (let date = lastMonth; date < month; date = Journal.addDays(date, 1)) if (Journal.stateOn(date) === "light") lightBefore++;
+    const light = stateCount.light ?? 0;
+    const lightNote = light ? { before: "轻盈的日子 ", count: String(light), after: " 天" + (light > lightBefore && lightBefore ? "，比上月多 " + (light - lightBefore) + " 天" : light < lightBefore ? "，比上月少 " + (lightBefore - light) + " 天" : "") } : null;
 
+    // Month cards.
+    const monthFoods = Insights.foods(month, Journal.addDays(next, -1) < Journal.today ? Journal.addDays(next, -1) : Journal.today)
+      .sort((a, b) => b.count - a.count);
+    const top = monthFoods.filter((f) => f.count >= 2).slice(0, 3);
+    const topFoods = top.length ? { items: top.map((f) => f.sticker ?? { name: f.name }),
+      text: top.slice(0, 2).map((f) => f.name.replace(/[\s\d个碗份杯盘]+$/u, "").slice(0, 4) + " " + f.count + " 次").join("  ") } : null;
+    const felt = monthFoods.flatMap((f) => f.times).filter((t) => t.feelings.length);
+    const comfyCount = felt.filter((t) => t.feelings.some((id) => Journal.mealFeelings.find((x) => x.id === id)?.tone === "good")).length;
+    let comfy = null;
+    if (felt.length >= 3) {
+      const weeks = [0, 1, 2, 3, 4, 5].map((w) => {
+        const from = Journal.addDays(month, w * 7 - (Journal.weekday(month) + 6) % 7), to = Journal.addDays(from, 6);
+        const list = felt.filter((t) => t.date >= from && t.date <= to);
+        return list.length ? list.filter((t) => t.feelings.some((id) => Journal.mealFeelings.find((x) => x.id === id)?.tone === "good")).length / list.length : null;
+      }).filter((v) => v !== null);
+      comfy = { percent: String(Math.round(comfyCount / felt.length * 100)),
+        bars: weeks.map((v, i) => ({ style: "height:" + Math.max(12, Math.round(v * 100)) + "%", last: String(i === weeks.length - 1) })) };
+    }
+
+    // Food view.
+    const { filter } = this.state;
+    const allFoods = Insights.foods().sort((a, b) => b.count - a.count || b.last.localeCompare(a.last));
+    const sugarFocus = Journal.readDietFocus().id === "sugar";
+    const filters = [
+      { id: "all", label: "全部" }, { id: "good", label: "吃完舒服", tone: "good" }, { id: "low", label: "吃完犯困", tone: "low" },
+      ...(sugarFocus || allFoods.some((f) => f.refined) ? [{ id: "refined", label: "精制碳水", tone: "grain", icon: "grain" }] : []),
+      { id: "plant", label: "蔬果", tone: "good" }
+    ].map((f) => ({ ...f, tone: f.tone ?? "", icon: f.icon ?? "", active: String(filter === f.id), pick: () => this.setState({ filter: f.id }) }));
+    const keep = (f) => filter === "good" ? f.good > 0 && f.good >= f.low : filter === "low" ? f.low > 0 && f.low > f.good
+      : filter === "refined" ? f.refined : filter === "plant" ? f.plant : true;
+    const heroFood = allFoods.filter((f) => f.count >= 3 && f.good / f.count >= 0.6).sort((a, b) => b.good - a.good)[0];
+    const heroWord = heroFood ? (() => {
+      const best = [...heroFood.tally.entries()].filter(([id]) => Journal.mealFeelings.find((x) => x.id === id)?.tone === "good").sort((a, b) => b[1] - a[1])[0];
+      return best ? Insights.feelingLabel(best[0]) : "舒服";
+    })() : "";
+    const heroClear = heroFood ? heroFood.times.filter((t) => t.afternoon === "clear").length : 0;
+    const hero = heroFood && filter === "all" ? { name: heroFood.name, count: heroFood.count, good: heroFood.good, word: heroWord,
+      after: heroClear >= 2 ? "，下午也不困。" : "。", href: Journal.link("Food", Journal.today, { name: heroFood.name }),
+      againHref: Journal.link("Record", Journal.today, { returnTo: "Album", name: heroFood.times.at(-1).meal.name || heroFood.name, ...(heroFood.usualKind ? { kind: heroFood.usualKind } : {}) }),
+      photo: heroFood.sticker?.photo ?? "", cutout: heroFood.sticker?.cutout ?? "" } : null;
+    const list = allFoods.filter(keep).filter((f) => !hero || f.name !== hero.name);
+    const toneOf = (id) => id === "afternoonSleepy" ? "low" : Journal.mealFeelings.find((x) => x.id === id)?.tone === "good" ? "good" : "warn";
+    const foods = list.map((f) => {
+      const tags = [...f.tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2)
+        .map(([id, n]) => ({ tone: toneOf(id), text: Insights.feelingLabel(id).replace("有点", "").replace("下午", "") + " " + n }));
+      if (f.period >= 2 && tags.length < 2) tags.push({ tone: "period", text: "经期 " + f.period });
+      return { name: f.name, count: f.count, last: Journal.shortDate(f.last),
+        photo: f.sticker?.photo ?? "", cutout: f.sticker?.cutout ?? "",
+        photoOnly: !f.sticker && f.times.at(-1).food.photo ? f.times.at(-1).food.photo : "",
+        nameOnly: !f.sticker && !f.times.at(-1).food.photo,
+        marks: sugarFocus && f.refined ? [{ key: "grain" }] : [],
+        tags: tags.length ? tags : null, href: Journal.link("Food", Journal.today, { name: f.name }) };
+    });
+    const totalMeals = days.reduce((sum, day) => sum + day.meals.length, 0);
     const monthNumber = Number(month.slice(5, 7));
-    const count = days.reduce((sum, day) => sum + day.meals.length, 0);
     return {
-      navDate: this.date,
-      views, cells, foods, planning, stickers, foodFilterModes, filterOptions,
-      foodEmpty: !foods.length,
-      filterNote: foodFilter === "nutrition" ? "按已记录的主要供能营养素分类；维生素按名称中可辨识的蔬果归类。" : "",
+      navDate: this.date, views, cells, planning, stickers, stateBar, lightNote,
       showCalendarPlans: planning || cells.some((cell) => cell.plans?.length),
-      calendarHint: planning ? "点日期贴上，再点一次取消" : "点日期查看饭记",
-      planStatus: this.state.planStatus,
-      switchPlanning: () => this.switchPlanning(),
-      isCal: this.state.view === "cal", isFood: this.state.view === "food",
+      planStatus: this.state.planStatus, switchPlanning: () => this.switchPlanning(),
+      planHref: Journal.link("Album", this.date, planning ? {} : { plan: "1" }), planLabel: planning ? "完成贴计划" : "贴计划",
+      isCal: view === "cal", isFood: view === "food",
       monthLabel: month.slice(0, 4) + " 年 " + monthNumber + " 月",
-      monthCount: monthNumber + " 月记了 " + count + " 餐",
+      headCount: view === "food" ? "记过 " + allFoods.length + " 种食物" : monthNumber + " 月记了 " + totalMeals + " 餐",
       loggedDays: days.filter((day) => day.meals.length).length,
-      emptyMonth: count === 0,
-      backHref: Journal.link("Main", this.date),
-      previousMonth: () => this.moveMonth(-1),
-      nextMonth: () => this.moveMonth(1)
+      monthCards: topFoods || comfy ? true : null, topFoods, comfy,
+      filters, hero, foods, foodEmpty: foods.length || hero ? "" : allFoods.length ? "这一类还没有记录。" : "记过的饭菜会出现在这里。",
+      previousMonth: () => this.moveMonth(-1), nextMonth: () => this.moveMonth(1)
     };
   }
 }
