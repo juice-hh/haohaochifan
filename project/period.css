@@ -98,3 +98,13 @@
 .period-history span { color: var(--hh-muted); }
 .period-history--plain { margin: 0; }
 .period-card .period-toggle .app-switch[aria-checked="true"] { background: var(--rb-rose); }
+/* Design match pass 3 */
+.period-screen { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+.period-feelings .rb-chip { min-height: 36px; padding: 6px 11px; font-size: 12.5px; }
+.period-feelings { gap: 6px; }
+.rv-days { display: flex; gap: 6px; }
+.rv-day { flex: 0 0 calc((100% - 24px) / 5); }
+.mirror-title em[data-good="true"] { background: var(--rb-green-soft); color: var(--rb-green-deep); }
+.period-flow button { min-height: 40px; }
+.rv-days { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.rv-day { flex: none; width: auto; }

@@ -59,9 +59,10 @@
       const active = this.getAttribute("page");
       const value = this.getAttribute("date");
       const date = Journal.isDate(value) ? value : Journal.selected();
-      const onlyRecord = active === "Day";
-      const tabs = onlyRecord ? "" : '<nav aria-label="主导航">' + items.map((item) =>
-        '<a href="' + Journal.link(item.page, date) + '"' + (active === item.page ? ' aria-current="page"' : '') + '>' + icon(item.icon) + '<span>' + item.label + '</span></a>'
+      // The day page is a page of the week, so 本周 stays highlighted there.
+      const current = active === "Day" ? (this.getAttribute("via") === "album" ? "Album" : "Main") : active;
+      const tabs = '<nav aria-label="主导航">' + items.map((item) =>
+        '<a href="' + Journal.link(item.page, date) + '"' + (current === item.page ? ' aria-current="page"' : '') + '>' + icon(item.icon) + '<span>' + item.label + '</span></a>'
       ).join("") + '</nav>';
       this.innerHTML = '<div class="journal-dock">' + tabs + '<button type="button" class="journal-camera" aria-label="记录" aria-haspopup="dialog" aria-expanded="false">' + icon(camera) + '</button></div>';
       this.querySelector("button").onclick = () => this.open();

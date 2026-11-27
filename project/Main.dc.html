@@ -7,18 +7,18 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-16">
+<link rel="stylesheet" href="./mobile.css?v=20261127-23">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261127-3"></script>
+<script src="./journal.js?v=20261127-5"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
-<script src="./navigation.js?v=20261125-3"></script>
+<script src="./navigation.js?v=20261127-1"></script>
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./app-icons.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
-<script src="./insights.js?v=20261127-3"></script>
-<script src="./record-sheets.js?v=20261127-3"></script>
+<script src="./insights.js?v=20261127-5"></script>
+<script src="./record-sheets.js?v=20261127-5"></script>
 </head>
 <body>
 <x-dc>
@@ -139,7 +139,7 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
           <strong>0<small> kcal</small></strong>
           <span>{{sel.emptyNote}}</span>
         </div>
-        <sc-if value="{{energyGoalMissing}}">
+        <sc-if value="{{emptyGoalMissing}}">
           <a class="energy-goal-set" href="{{goalHref}}"><hh-icon name="plus" size="16"></hh-icon>设每日目标</a>
         </sc-if>
       </div>
@@ -300,36 +300,10 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     </section>
   </sc-if>
 
-  <sc-if value="{{moveWeek}}">
-    <section class="move-week" aria-labelledby="move-week-heading">
-      <header class="section-head"><h2 id="move-week-heading">这周动了动</h2><small>每周 2 次力量</small></header>
-      <div class="move-week-grid">
-        <div class="move-card" data-type="aerobic">
-          <span class="move-card-k"><hh-icon name="walk" size="14"></hh-icon>有氧</span>
-          <strong>{{moveWeek.aerobic}}<small>分钟</small></strong>
-          <span class="move-bars" aria-hidden="true"><sc-for list="{{moveWeek.bars}}" as="b"><i style="{{b}}"></i></sc-for></span>
-        </div>
-        <div class="move-card" data-type="strength">
-          <span class="move-card-k"><hh-icon name="dumbbell" size="14"></hh-icon>力量</span>
-          <strong>{{moveWeek.strength}}<small>/ 2 次</small></strong>
-          <span class="move-checks" aria-hidden="true"><sc-for list="{{moveWeek.checks}}" as="c"><i data-on="{{c}}"><hh-icon name="check" size="16"></hh-icon></i></sc-for></span>
-          <em data-done="{{moveWeek.strengthDone}}">{{moveWeek.strengthNote}}</em>
-        </div>
-      </div>
-      <p class="move-walks"><hh-icon name="walk" size="16"></hh-icon><strong>饭后走走 {{moveWeek.walkCount}} 次</strong><span aria-hidden="true"><sc-for list="{{moveWeek.walks}}" as="w"><i data-on="{{w}}"></i></sc-for></span></p>
-      <button type="button" class="move-add" onClick="{{addExercise}}"><hh-icon name="plus" size="14"></hh-icon>记一次运动</button>
-    </section>
-  </sc-if>
-
-  <sc-if value="{{sugarWeek}}">
-    <section class="sugar-week" aria-labelledby="sugar-week-heading">
-      <header class="section-head"><h2 id="sugar-week-heading">控糖<span class="focus-tag">控糖</span></h2></header>
-      <sc-for list="{{sugarWeek.rows}}" as="r">
-        <div class="sugar-row">
-          <span class="sugar-row-k"><hh-icon name="{{r.icon}}" size="14"></hh-icon>{{r.label}}</span>
-          <span class="sugar-days" aria-hidden="true"><sc-for list="{{r.days}}" as="d"><i data-on="{{d.on}}"><sc-if value="{{d.mark}}"><hh-icon name="{{r.icon}}" size="12"></hh-icon></sc-if></i></sc-for></span>
-          <span class="sugar-row-v">{{r.value}}<sc-if value="{{r.change}}"><small data-good="{{r.good}}">{{r.change}}</small></sc-if></span>
-        </div>
+  <sc-if value="{{weekCircles}}">
+    <section class="week-circles" aria-label="这周小结">
+      <sc-for list="{{weekCircles}}" as="c">
+        <div class="week-circle" data-kind="{{c.kind}}"><strong>{{c.value}}<small>{{c.unit}}</small></strong><span>{{c.label}}</span><em>{{c.note}}</em></div>
       </sc-for>
     </section>
   </sc-if>
@@ -404,6 +378,18 @@ class Component extends DCLogic {
     this.select(date);
   }
 
+  // Scatter map from the design: left column biggest, a small one tucked beside it, then a second row.
+  boardSpot(index, count, energy) {
+    const spots = [
+      { x: 4, y: 4, s: 92 }, { x: 37, y: 16, s: 64 }, { x: 64, y: 6, s: 96 },
+      { x: 8, y: 52, s: 96 }, { x: 44, y: 58, s: 60 }, { x: 70, y: 56, s: 70 }
+    ];
+    const spot = spots[index % spots.length];
+    const row = Math.floor(index / spots.length);
+    const size = Math.round(spot.s * (energy >= 400 ? 1.05 : energy !== null && energy < 100 ? 0.82 : 1));
+    return `--bx:${spot.x}%;--by:${spot.y + row * 92}%;--board-art-size:${size}px;`;
+  }
+
   boardSection(records, title = "", kind = "") {
     const stickers = records.flatMap((record) => record.foods).map((food, index) => {
       const active = food.key === this.state.foodKey;
@@ -418,7 +404,7 @@ class Component extends DCLogic {
         dim: this.state.foodKey && !active ? "true" : "false",
         kcalText: NutritionVisual.known(food.energy) ? visual.kcal : "",
         label: [food.label, ...marks.map((mark) => mark.label)].join("，"),
-        style: `--board-tilt:${rotation}deg`,
+        style: `--board-tilt:${rotation}deg;` + (records.length && this.state.boardView === "all" ? this.boardSpot(index, records.flatMap((r) => r.foods).length, food.energy) : ""),
         pick: () => this.setState({ foodKey: active ? null : food.key })
       };
     });
@@ -593,7 +579,7 @@ class Component extends DCLogic {
     const stateRow = canRecord ? {
       current: stateId ?? "none", icon: stateId ?? "light",
       title: stateInfo ? stateInfo.label : current.today ? "今天感觉怎么样" : "这天感觉怎么样",
-      note: stateInfo ? (current.today ? "今天的感觉" : "这天的感觉") : "点一下就好",
+      note: stateInfo ? (current.today ? "今天的感觉，点一下可改" : "这天的感觉，点一下可改") : "点一下就好",
       options: Journal.states.map((item) => ({ ...item, on: item.id === stateId ? "true" : "false",
         pick: () => { try { Journal.saveState(selected, item.id === stateId ? null : item.id); } catch {} this.refresh(); } }))
     } : null;
@@ -618,8 +604,8 @@ class Component extends DCLogic {
       return { tone, has: labels.length > 0, meal, text: (shortKind[Journal.kindKeyOf(meal)] ?? kind) + " " + labels.join(" "), open: () => this.openSheet("feelings", meal) };
     });
     const unfelt = feelingTags.filter((tag) => !tag.has);
-    const boardFeelings = feelingTags.filter((tag) => tag.has);
-    if (unfelt.length && canRecord) boardFeelings.push({ tone: "add", text: "+ 这顿吃得怎么样", open: () => this.openSheet("feelings", unfelt.at(-1).meal) });
+    const boardFeelings = feelingTags.filter((tag) => tag.has).slice(-2);
+    if (!boardFeelings.length && unfelt.length && canRecord) boardFeelings.push({ tone: "add", text: "+ 这顿吃得怎么样", open: () => this.openSheet("feelings", unfelt.at(-1).meal) });
     const usedMarks = records.flatMap((record) => record.foods).flatMap((food) => NutritionVisual.focusMarks(food));
     const markLegend = [...new Map(usedMarks.map((mark) => [mark.key, mark])).values()];
 
@@ -630,29 +616,19 @@ class Component extends DCLogic {
       tone: item.tone, text: item.text, parts: item.icons.map(partIcon),
       dates: item.dates.length <= 4 ? item.dates.map((date) => Journal.dayName(date)) : null
     })) : null;
-    const movement = Insights.movement(week);
-    const maxBar = Math.max(30, ...movement.bars);
-    const moveWeek = movement.any ? {
-      aerobic: movement.aerobic, strength: movement.strength,
-      bars: movement.bars.map((value) => value ? "height:" + Math.max(12, Math.round(value / maxBar * 100)) + "%" : ""),
-      checks: [movement.strength >= 1 ? "true" : "false", movement.strength >= 2 ? "true" : "false"],
-      strengthDone: movement.strength >= 2 ? "true" : "false",
-      strengthNote: movement.strength >= 2 ? "这周做够了" : movement.strength === 1 ? "再来 1 次就够了" : "试试深蹲 10 分钟",
-      walks: movement.walks.map(String), walkCount: movement.walks.filter(Boolean).length
-    } : null;
-    const sugarFocus = Journal.readDietFocus().id === "sugar";
-    const sugarData = sugarFocus ? Insights.sugarWeek(week) : null;
-    const pct = (now, before) => before ? Math.round((now - before) / before * 100) : null;
-    const sugarChange = sugarData && sugarData.sugarAvg !== null && sugarData.sugarAvgBefore ? pct(sugarData.sugarAvg, sugarData.sugarAvgBefore) : null;
-    const refinedChange = sugarData ? sugarData.refinedTotal - sugarData.refinedBefore : 0;
-    const sugarWeek = sugarData && (sugarData.sugarAvg !== null || sugarData.refinedTotal) ? { rows: [
-      { icon: "sugar", label: "添加糖", days: sugarData.sugarDays.map((on) => ({ on: String(on), mark: on })),
-        value: sugarData.sugarAvg === null ? "未记录" : Math.round(sugarData.sugarAvg) + " g/天",
-        change: sugarChange === null || sugarChange === 0 ? "" : (sugarChange < 0 ? "少 " : "多 ") + Math.abs(sugarChange) + "%", good: String(sugarChange < 0) },
-      { icon: "grain", label: "精制碳水", days: sugarData.refinedDays.map((on) => ({ on: String(on), mark: on })), value: sugarData.refinedTotal + " 份",
-        change: sugarData.refinedBefore && refinedChange ? (refinedChange < 0 ? "少 " : "多 ") + Math.abs(refinedChange) + " 份" : "", good: String(refinedChange < 0) }
-    ] } : null;
-
+    const prevWeekStart = Journal.addDays(week, -7);
+    const prevSugar = Insights.sugarWeek(prevWeekStart);
+    const thisSugar = Insights.sugarWeek(week);
+    const sugarPct = thisSugar.sugarAvg !== null && prevSugar.sugarAvg ? Math.round((thisSugar.sugarAvg - prevSugar.sugarAvg) / prevSugar.sugarAvg * 100) : null;
+    const lastWeight = raw.map((day) => day.entry.weight).filter((w) => w !== null).at(-1) ?? null;
+    const startWeight = Journal.previousWeight(week)?.weight ?? null;
+    const weightDelta = lastWeight !== null && startWeight !== null ? lastWeight - startWeight : null;
+    const moveDays = raw.filter((day) => Journal.movementSummary(day.date).total > 0).length;
+    const moveMinutes = raw.reduce((sum, day) => sum + Journal.movementSummary(day.date).total, 0);
+    const circles = [];
+    if (moveDays) circles.push({ kind: "move", value: String(moveDays), unit: "天", label: "动了动", note: moveMinutes + " 分钟" });
+    if (sugarPct !== null && sugarPct !== 0) circles.push({ kind: "sugar", value: (sugarPct > 0 ? "+" : "−") + Math.abs(sugarPct), unit: "%", label: "添加糖", note: sugarPct < 0 ? "比上周少" : "比上周多" });
+    if (weightDelta !== null && weightDelta !== 0) circles.push({ kind: "weight", value: (weightDelta > 0 ? "+" : "−") + Journal.formatWeight(Math.abs(weightDelta)), unit: "", label: "kg", note: weightDelta < 0 ? "慢慢轻了" : "稍微重了" });
     const goodDays = raw.filter((day) => ["light", "spirit"].includes(Journal.stateOn(day.date))).length;
     const lastWeekGood = Array.from({ length: 7 }, (_, i) => Journal.addDays(week, i - 7)).filter((date) => ["light", "spirit"].includes(Journal.stateOn(date))).length;
     const weekLead = goodDays ? { before: "这周有 ", strong: goodDays + " 天轻盈或精神", after: goodDays > lastWeekGood && lastWeekGood ? "，比上周多 " + (goodDays - lastWeekGood) + " 天" : "" } : null;
@@ -683,7 +659,8 @@ class Component extends DCLogic {
     return {
       navDate: selected, stateRow, dayChips, boardFeelings: boardFeelings.length ? boardFeelings : null,
       markLegend: markLegend.length ? markLegend : null,
-      findings, findingsHint: findings && findings.length > 1 ? "左右滑" : "", moveWeek, sugarWeek, weekLead,
+      weekCircles: circles.length ? circles : null,
+      findings, findingsHint: findings && findings.length > 1 ? "左右滑" : "", weekLead,
       periodBand, reviewCard, addExercise: () => this.openSheet("exercise"),
       periodHref: Journal.link("Period", Journal.today, { returnTo: "Main" }),
       boardSections, boardView, selectedFood, dish,
@@ -706,7 +683,7 @@ class Component extends DCLogic {
         kcal: kcal === null ? "—" : kcal.toLocaleString("en-US")
       },
       focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
-      energyGoal, energyGoalMissing: !kcalTarget && selected <= Journal.today,
+      energyGoal, energyGoalMissing: false, emptyGoalMissing: !kcalTarget && selected <= Journal.today,
       goalHref: Journal.link("Goal", selected) + "#kcal-target",
       days, focusTrend,
       savedMessage: this.state.savedMessage,

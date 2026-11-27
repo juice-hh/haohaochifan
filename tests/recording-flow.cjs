@@ -83,7 +83,8 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    const dayLink=p.getByRole('link',{name:'11月12日 周四的记录',exact:true});
    assert.match(await p.locator('.week-day-header').innerText(),/^当天记录\s+11月12日 周四$/);
    await dayLink.click();
-   await total().filter({hasText:'12.5 g'}).waitFor();
+   // The day page shows the focus's main nutrient (added sugar) as cubes, like the design.
+   await p.locator('.day-focus-nutrient[data-key="addedSugar"]').filter({hasText:'3.5 g'}).waitFor();
    await mealEditor(p,'识别测试餐').click();
    await expand(p,'.record-nutrition');
    assert.equal(await p.locator('input[name=addedSugar]').inputValue(),'3.5');

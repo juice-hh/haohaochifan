@@ -7,18 +7,18 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-16">
-<link rel="stylesheet" href="./day.css?v=20261127-5">
+<link rel="stylesheet" href="./mobile.css?v=20261127-23">
+<link rel="stylesheet" href="./day.css?v=20261127-9">
 <title>好好吃饭 一天一页</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261127-3"></script>
+<script src="./journal.js?v=20261127-5"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
-<script src="./navigation.js?v=20261125-3"></script>
+<script src="./navigation.js?v=20261127-1"></script>
 <script src="./app-icons.js?v=20261127-1"></script>
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
-<script src="./record-sheets.js?v=20261127-3"></script>
+<script src="./record-sheets.js?v=20261127-5"></script>
 </head>
 <body>
 <x-dc>
@@ -71,12 +71,10 @@
     </div>
     <sc-if value="{{hasNutrition}}">
       <div class="day-macro-line">
-        <sc-if value="{{hasMacros}}"><sc-for list="{{macros}}" as="macro"><span data-macro="{{macro.icon}}"><i aria-hidden="true"></i><span class="visually-hidden">{{macro.label}}</span>{{macro.amount}}</span></sc-for></sc-if>
-        <sc-if value="{{hasFocusNutrients}}">
+        <sc-if value="{{hasMacros}}"><sc-for list="{{macros}}" as="macro"><span data-macro="{{macro.icon}}"><i aria-hidden="true"></i><span class="visually-hidden">{{macro.label}}</span>{{macro.short}}</span></sc-for></sc-if>
+        <sc-if value="{{focusChip}}">
           <span class="day-focus-nutrients" aria-label="饮食关注指标小计">
-            <sc-for list="{{focusNutrients}}" as="item">
-              <span class="day-focus-nutrient" data-key="{{item.key}}"><hh-icon name="{{item.key}}" size="14"></hh-icon><span>{{item.label}}</span><strong>{{item.amount}}</strong><sc-if value="{{item.coverage}}"><small>{{item.coverage}}</small></sc-if></span>
-            </sc-for>
+            <span class="day-focus-nutrient" data-key="{{focusChip.key}}"><span class="focus-cubes" aria-hidden="true"><sc-for list="{{focusChip.cubes}}" as="c"><i data-on="{{c}}"></i></sc-for></span><span>{{focusChip.label}}</span><strong>{{focusChip.amount}}</strong></span>
           </span>
         </sc-if>
       </div>
@@ -123,16 +121,14 @@
                       <div class="tl-meal-records"><sc-for list="{{ev.meal.editLinks}}" as="e"><span class="tl-meal-record"><a href="{{e.href}}" aria-label="编辑这餐" title="编辑{{e.label}}">{{e.label}}<hh-icon name="edit" size="14"></hh-icon></a><button type="button" onClick="{{e.remove}}" aria-label="{{e.deleteLabel}}" title="删除"><hh-icon name="trash" size="14"></hh-icon></button></span></sc-for></div>
                     </sc-if>
                     <sc-if value="{{ev.meal.single}}">
-                      <div class="tl-meal-tools">
-                        <a href="{{ev.meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="16"></hh-icon></a>
-                        <button type="button" onClick="{{ev.meal.remove}}" aria-label="{{ev.meal.deleteLabel}}" title="删除"><hh-icon name="trash" size="16"></hh-icon></button>
-                      </div>
+                      <div class="tl-meal-tools"><a href="{{ev.meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="14"></hh-icon></a></div>
                     </sc-if>
                   </article>
                 </section>
               </sc-if>
               <sc-if value="{{ev.link}}"><a class="tl-line tl-link" href="{{ev.link.href}}">{{ev.link.text}} <strong>{{ev.link.strong}}</strong><sc-if value="{{ev.link.note}}"><em data-tone="rose">{{ev.link.note}}</em></sc-if><hh-icon name="right" size="14"></hh-icon></a></sc-if>
-              <sc-if value="{{ev.line}}"><p class="tl-line">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><sc-if value="{{ev.line.tag}}"><span class="tl-tag" data-type="{{ev.line.tagType}}">{{ev.line.tag}}</span></sc-if><sc-if value="{{ev.line.note}}"><em data-tone="{{ev.line.noteTone}}">{{ev.line.note}}</em></sc-if><sc-if value="{{ev.line.remove}}"><button type="button" class="tl-remove" onClick="{{ev.line.remove}}" aria-label="{{ev.line.removeLabel}}"><hh-icon name="close" size="14"></hh-icon></button></sc-if></p></sc-if>
+              <sc-if value="{{ev.line.open}}"><button type="button" class="tl-line tl-line-button" onClick="{{ev.line.open}}">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><em>{{ev.line.note}}</em></button></sc-if>
+              <sc-if value="{{ev.plainLine}}"><p class="tl-line">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><sc-if value="{{ev.line.tag}}"><span class="tl-tag" data-type="{{ev.line.tagType}}">{{ev.line.tag}}</span></sc-if><sc-if value="{{ev.line.note}}"><em data-tone="{{ev.line.noteTone}}">{{ev.line.note}}</em></sc-if><sc-if value="{{ev.line.remove}}"><button type="button" class="tl-remove" onClick="{{ev.line.remove}}" aria-label="{{ev.line.removeLabel}}"><hh-icon name="close" size="14"></hh-icon></button></sc-if></p></sc-if>
               <sc-if value="{{ev.walk}}">
                 <div class="tl-walk"><span><strong>吃完走 15 分钟？</strong><small>下午会更清爽</small></span><button type="button" class="tl-walk-skip" onClick="{{ev.walk.skip}}">跳过</button><button type="button" class="tl-walk-go" onClick="{{ev.walk.go}}">走了</button></div>
               </sc-if>
@@ -198,13 +194,13 @@ class Component extends DCLogic {
       const run = Journal.periodFor(date);
       const day = run ? run.days.indexOf(date) + 1 : 1;
       const feelings = period.feelings.map((id) => Journal.periodFeelings.find((item) => item.id === id)?.label).filter(Boolean);
-      events.push({ at: 1, type: "period", icon: "period", tone: "rose",
+      events.push({ at: 440, type: "period", icon: "period", tone: "rose",
         link: { href: Journal.link("Period", date, { returnTo: "Main" }), text: "经期第", strong: day + " 天", note: [Journal.periodFlows.find((f) => f.id === period.flow)?.label === "少" ? "量少" : Journal.periodFlows.find((f) => f.id === period.flow)?.label === "多" ? "量多" : "", ...feelings].filter(Boolean).join(" "), noteTone: "rose" } });
     }
     if (entry.weight !== null) {
       const previous = Journal.previousWeight(date)?.weight ?? null;
       const delta = previous === null ? null : entry.weight - previous;
-      events.push({ at: 2, type: "weight", icon: "weight", tone: "blue",
+      events.push({ at: 460, type: "weight", icon: "weight", tone: "blue",
         line: { text: "称了体重", strong: Journal.formatWeight(entry.weight) + " kg",
           note: delta === null || delta === 0 ? "" : (delta < 0 ? "比上次轻 " : "比上次重 ") + Journal.formatWeight(Math.abs(delta)), noteTone: delta < 0 ? "good" : "plain" } });
     }
@@ -230,7 +226,11 @@ class Component extends DCLogic {
       const last = items.at(-1);
       const unfelt = items.filter(({ meal }) => !Journal.feelingsFor(meal.id).length);
       const feelTarget = (unfelt.at(-1) ?? last).meal;
-      const feelTags = allIds.map(({ id, meal }) => ({ tone: tones[id]?.tone === "warn" ? "warn" : "good", text: tones[id]?.label, open: () => this.openSheet("feelings", meal) }));
+      const feelTags = [];
+      for (const tone of ["good", "warn"]) {
+        const picked = allIds.filter(({ id }) => (tones[id]?.tone === "warn" ? "warn" : "good") === tone);
+        if (picked.length) feelTags.push({ tone, text: picked.map(({ id }) => tones[id]?.label).join(" "), open: () => this.openSheet("feelings", picked[0].meal) });
+      }
       if (unfelt.length) feelTags.push({ tone: "add", text: "+ 感受", open: () => this.openSheet("feelings", feelTarget) });
       events.push({ at, type: "meal", icon: good ? "light" : warn ? "sleepy" : Object.hasOwn(Journal.kinds, kindKey) ? kindKey : "lunch", tone: good ? "green" : warn ? "violet" : "plain",
         meal: { ...first, kindLabel: first.kind, kindKey, id: last.meal.id,
@@ -241,7 +241,7 @@ class Component extends DCLogic {
           textOnly: !foods.length && !last.group.photo,
           foods: foods.slice(0, 4).map((food, i) => ({ ...food, marks: NutritionVisual.focusMarks(food),
             kcalText: NutritionVisual.known(food.energy) ? Math.round(food.energy) + " kcal" : "",
-            style: "--tilt:" + ([-4, 7, -3, 8][i]) + "deg;--size:" + (i === 0 ? 76 : foods.length > 2 ? 50 : 58) + "px;--lift:" + ([0, 14, 6, 18][i]) + "px" })),
+            style: "--tilt:" + ([-4, 7, -3, 8][i]) + "deg;--size:" + (i === 0 ? 72 : foods.length > 2 ? 48 : 56) + "px;--lift:" + ([0, 14, 6, 18][i]) + "px" })),
           editLinks: items.length > 1 ? items.map(({ group }) => ({ href: group.editHref, label: group.name, remove: group.remove, deleteLabel: "删除" + group.name })) : null,
           single: items.length === 1, feelTags } });
     }
@@ -274,36 +274,47 @@ class Component extends DCLogic {
     // Afternoon check: once a day from 15:00, or whenever it was already answered.
     const afternoon = Journal.afternoonOn(date);
     const hadLunch = events.some((ev) => ev.type === "meal" && ev.meal.kindKey === "lunch");
-    if (afternoon || (prompts.afternoon && date <= Journal.today && now >= 900 && hadLunch)) {
+    if (afternoon) {
+      // Answered: a quiet line with the answer; tapping it opens the choices again.
+      const label = Journal.afternoonOptions.find((item) => item.id === afternoon).label;
+      if (this.state.editAfternoon) {
+        events.push({ at: 900, type: "ask", icon: "sleepy", tone: "violet",
+          ask: { options: Journal.afternoonOptions.map((item) => ({ ...item, on: String(item.id === afternoon),
+            pick: () => { this.state.editAfternoon = false; this.act(() => Journal.saveAfternoon(date, item.id === afternoon ? null : item.id)); } })) } });
+      } else {
+        events.push({ at: 900, type: "afternoon", icon: afternoon === "clear" ? "light" : "sleepy", tone: afternoon === "clear" ? "green" : "violet",
+          line: { text: "下午", strong: label, note: "点一下可改", noteTone: "plain", open: () => this.setState({ editAfternoon: true }) } });
+      }
+    } else if (prompts.afternoon && date === Journal.today && now >= 900 && now <= 1140 && hadLunch) {
       events.push({ at: 900, type: "ask", icon: afternoon === "clear" ? "light" : afternoon ? "sleepy" : "sleepy", tone: afternoon === "clear" ? "green" : "violet",
         ask: { options: Journal.afternoonOptions.map((item) => ({ ...item, on: String(item.id === afternoon),
           pick: () => this.act(() => Journal.saveAfternoon(date, item.id === afternoon ? null : item.id)) })) } });
     }
     // Empty snack slot after lunch.
-    if (date <= Journal.today && hadLunch && !events.some((ev) => ev.type === "meal" && ev.meal.kindKey === "snack") && now >= 900) {
+    if (date === Journal.today && hadLunch && !events.some((ev) => ev.type === "meal" && ev.meal.kindKey === "snack") && now >= 900 && now <= 1080) {
       events.push({ at: 930, type: "add", icon: "plus", tone: "dash",
         add: { text: "没有加餐", action: "记一笔", open: () => document.querySelector("journal-nav")?.open("snack") } });
     }
     // Movement entry and the note close the day.
     if (date <= Journal.today) {
-      events.push({ at: 1300, type: "add", icon: "walk", tone: "dash",
-        add: { text: Journal.exercisesOn(date).length ? "还有别的运动？" : "今天动了吗", action: "记一次运动", open: () => this.openSheet("exercise") } });
+      if (!Journal.exercisesOn(date).length && !Journal.movementOn(date)) events.push({ at: 1300, type: "add", icon: "walk", tone: "dash",
+        add: { text: "今天动了吗", action: "记一次运动", open: () => this.openSheet("exercise") } });
       const note = Journal.noteOn(date);
-      events.push({ at: 1320, type: "note", icon: "pen", tone: "plain",
+      events.push({ at: Journal.noteTime(date) ?? 1320, type: "note", icon: "pen", tone: "plain",
         note: { text: note || "写给今天的一句话", open: () => this.openSheet("note"), empty: !note } });
     }
 
     events.sort((a, b) => a.at - b.at);
     let lastMeal = null;
     return events.map((ev) => {
-      const out = { ...ev, time: ev.at >= 60 && ev.type !== "note" && ev.type !== "add" ? Journal.clock(Math.round(ev.at)) : "",
-        meal: ev.meal ?? null, line: ev.line ?? null, link: ev.link ?? null, walk: ev.walk ?? null, ask: ev.ask ?? null, add: ev.add ?? null, note: ev.note ?? null, gap: "" };
+      const out = { ...ev, time: ev.type !== "add" ? Journal.clock(Math.round(ev.at)) : "",
+        meal: ev.meal ?? null, line: ev.line ?? null, plainLine: ev.line && !ev.line.open ? true : null, link: ev.link ?? null, walk: ev.walk ?? null, ask: ev.ask ?? null, add: ev.add ?? null, note: ev.note ?? null, gap: "" };
       if (ev.type === "meal") {
         if (lastMeal !== null && ev.at - lastMeal >= 180) out.gap = Math.round((ev.at - lastMeal) / 60) + " 小时后";
         lastMeal = ev.at;
       }
       if (ev.type === "ask") out.time = "15:00";
-      if (ev.type === "note" && !ev.note.empty) out.time = "";
+      if (ev.type === "note" && ev.note.empty) out.time = "";
       return out;
     });
   }
@@ -339,10 +350,17 @@ class Component extends DCLogic {
     if (otherMeals.length) mealSections.push(summarize("其他", otherMeals));
     const macros = ["碳水", "蛋白质", "脂肪"].map((label, index) => ({
       label, icon: ["carb", "pro", "fat"][index],
-      amount: entry.macroKnown[index] ? entry.grams[index] + " g" : "未填写"
+      amount: entry.macroKnown[index] ? entry.grams[index] + " g" : "未填写",
+      short: entry.macroKnown[index] ? String(entry.grams[index]) : "—"
     }));
     const hasMacros = entry.macroKnown.some(Boolean);
     const focusNutrients = Journal.dayFocusNutrients(entry.meals);
+    // One chip for the focus: added sugar as cubes out of a 25 g day, or fibre toward 25 g.
+    const activeFocus = Journal.readDietFocus().id;
+    const mainKey = activeFocus === "sugar" ? "addedSugar" : activeFocus === "antiInflammatory" ? "fiber" : null;
+    const main = focusNutrients.find((item) => item.key === mainKey && item.value !== null);
+    const focusChip = main ? { key: main.key, label: main.label, amount: main.value + " g",
+      cubes: Array.from({ length: 4 }, (_, i) => String(main.value > i * 6.25)) } : null;
     const hasEnergy = entry.meals.some((meal) => Number.isFinite(meal.kcal) || Journal.mealMacros(meal).every((amount) => amount !== null)) || entry.kcal > 0;
     const status = Journal.params.get("status");
     const notice = status === "weighed" ? "已记下当天体重"
@@ -353,7 +371,7 @@ class Component extends DCLogic {
     const stateRow = canRecord ? {
       current: stateId ?? "none", icon: stateId ?? "light",
       title: stateInfo ? stateInfo.label : date === Journal.today ? "今天感觉怎么样" : "这天感觉怎么样",
-      note: stateInfo ? (date === Journal.today ? "今天的感觉" : "这天的感觉") : "点一下就好",
+      note: stateInfo ? (date === Journal.today ? "今天的感觉，点一下可改" : "这天的感觉，点一下可改") : "点一下就好",
       options: Journal.states.map((item) => ({ ...item, on: String(item.id === stateId),
         pick: () => this.act(() => Journal.saveState(date, item.id === stateId ? null : item.id)) }))
     } : null;
@@ -390,7 +408,7 @@ class Component extends DCLogic {
       weight: entry.weight === null ? "" : Journal.formatWeight(entry.weight),
       hasMacros,
       macros,
-      focusNutrients, hasFocusNutrients: focusNutrients.length > 0,
+      focusNutrients, hasFocusNutrients: focusNutrients.length > 0, focusChip,
       hasNutrition: hasMacros || focusNutrients.length > 0,
       hasEnergy,
       missingEnergy: entry.meals.length > 0 && !hasEnergy,

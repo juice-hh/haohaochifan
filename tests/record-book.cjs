@@ -40,8 +40,7 @@ const addDays=(date,n)=>{const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getU
    await sheet.getByRole('button',{name:'15 分钟',exact:true}).click();
    await sheet.getByRole('button',{name:'记下来',exact:true}).click();
    await p.locator('.day-chip[data-kind="move"]').filter({hasText:'15'}).waitFor();
-   await p.locator('.move-week').getByText('1').first().waitFor();
-   assert.match(await p.locator('.move-card[data-type="strength"]').innerText(),/1\s*\/ 2 次/);
+   await p.locator('.week-circle[data-kind="move"]').filter({hasText:'15 分钟'}).waitFor();
    await p.locator('.feeling-bubble').first().click();
    await p.getByRole('dialog').getByRole('button',{name:'有点撑',exact:true}).click();
    await p.getByRole('dialog').getByRole('button',{name:'好了',exact:true}).click();
@@ -51,9 +50,11 @@ const addDays=(date,n)=>{const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getU
    // 一天一页: timeline order, afternoon check, quick exercise removal, note.
    await p.goto(base+'/Day.dc.html?date='+yesterday);
    await p.locator('.tl-row[data-type="meal"]').first().waitFor();
-   await p.locator('.tl-ask').getByRole('button',{name:'有点困',exact:true}).waitFor();
+   // An answered afternoon shows as a line; tapping it brings the choices back.
+   await p.locator('.tl-line-button').filter({hasText:'有点困'}).click();
    assert.equal(await p.locator('.tl-ask button[aria-pressed="true"]').innerText(),'有点困');
    await p.locator('.tl-ask').getByRole('button',{name:'清醒',exact:true}).click();
+   await p.locator('.tl-line-button').filter({hasText:'清醒'}).waitFor();
    assert.equal(await p.evaluate(d=>JSON.parse(localStorage.getItem('hhcf-afternoon-v1:'+d)),yesterday),'clear');
    await p.getByRole('button',{name:'写给今天的一句话'}).click();
    await p.getByRole('dialog').locator('textarea').fill('午饭吃米饭，下午有点困。');

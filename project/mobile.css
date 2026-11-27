@@ -2050,3 +2050,80 @@ html:has(.screen--tabs), html:has(.day-screen) { scroll-padding-bottom: calc(110
 .app-sheet.rb-sheet .rb-stepper { gap: 6px; }
 .app-sheet.rb-sheet .rb-stepper strong { min-width: 62px; }
 .app-sheet.rb-sheet .rb-duration-chips button { min-width: 36px; }
+
+/* ---------- Design match pass 3 ---------- */
+/* Board: compact two-row scatter inside a fixed-height board, like the design. */
+.week-board[data-view="all"] .week-board-section { position: relative; }
+.week-board[data-view="all"] .week-board-stickers { display: block; position: relative; height: 300px; padding: 0; }
+.week-board[data-view="all"] .week-board-stickers:has(.week-board-sticker:nth-child(7)) { height: 580px; }
+.week-board[data-view="all"] .week-board-sticker { position: absolute; left: var(--bx); top: var(--by); width: auto; max-width: 40%; margin: 0; padding: 0; grid-column: auto !important; }
+.week-board[data-view="all"] .week-board-sticker:nth-child(n) { margin-top: 0; }
+.week-board[data-view="all"] .week-board-sticker:only-child { left: 30%; top: 8%; }
+.week-board[data-view="all"] .week-board-art { width: var(--board-art-size); }
+.week-board[data-view="all"] .week-board-caption strong { font-size: 11.5px; white-space: nowrap; }
+.sticker-kcal-top { font-size: 11px; }
+/* Feelings: small tags tucked into the lower right of the board. */
+.week-board[data-view="all"] .board-feelings { position: absolute; right: 8px; bottom: 40px; padding: 0; z-index: 2; }
+
+.week-board[data-view="meals"] .board-feelings { position: static; }
+.mark-legend { display: none; }
+/* Calendar: shorter columns, stickers start right under the state icon. */
+.week-strip .week-calendar-day { min-height: 0; height: 172px; grid-template-rows: 28px 1fr 16px auto auto; padding: 8px 0 8px; }
+.week-stack { align-self: start; height: 92px; margin-top: 2px; }
+.week-stack-item { bottom: auto; top: calc(var(--i) * 20px); }
+.week-stack .week-thumb[data-has-photo="true"] { top: 4px; bottom: auto; }
+/* State row: plain white option dots, no ring, design copy. */
+.state-row-options button[aria-pressed="true"] hh-icon { box-shadow: none; background: #fff; transform: scale(1.12); }
+.state-row-options button[aria-pressed="false"] hh-icon { opacity: .9; }
+/* Sugar chips stay on one line. */
+.nutrition-summary[data-open="false"] .day-focus-nutrient { white-space: nowrap; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient strong { white-space: nowrap; }
+/* Settings as a small grey dot like the design. */
+.week-header .settings-link svg { width: 22px; height: 22px; }
+.week-circles { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 18px; padding: 0 4px; }
+.week-circle { display: grid; place-content: center; justify-items: center; flex: none; width: 108px; height: 108px; border-radius: 50%; background: #fff; box-shadow: var(--hh-shadow); text-align: center; }
+.week-circle:nth-child(2) { width: 122px; height: 122px; background: var(--rb-yellow-soft); }
+.week-circle:nth-child(3) { width: 98px; height: 98px; }
+.week-circle strong { font: 800 22px var(--hh-num); }
+.week-circle strong small { margin-left: 1px; font-size: 11px; color: var(--hh-muted); }
+.week-circle span { margin-top: 2px; font-size: 11px; font-weight: 700; color: var(--hh-muted); }
+.week-circle em { margin-top: 2px; font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--rb-orange); }
+.week-circle[data-kind="sugar"] span, .week-circle[data-kind="sugar"] em { color: var(--rb-yellow-deep); }
+.week-circle[data-kind="weight"] em { color: var(--rb-green-deep); }
+.week-circle:only-child { width: 120px; height: 120px; }
+@media (max-width: 374px) { .week-circle { width: 92px; height: 92px; } .week-circle:nth-child(2) { width: 104px; height: 104px; } .week-circle:nth-child(3) { width: 86px; height: 86px; } }
+/* Pass 3b */
+.nutrition-summary[data-open="false"] .day-focus-nutrient { display: inline-flex; flex-direction: row; align-items: center; flex-wrap: nowrap; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient > * { white-space: nowrap; }
+.nutrition-summary[data-open="false"] .day-focus-nutrients { flex-wrap: nowrap; gap: 6px; }
+.state-row-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.state-row-text { flex: 1; min-width: 0; overflow: hidden; }
+.state-row-options { flex: none; }
+.state-row-options button { width: 30px; }
+.state-row-options button hh-icon { width: 24px; height: 24px; }
+.week-board[data-view="all"] .week-board-stickers { height: 280px; }
+.week-board[data-view="all"] .week-board-art { width: calc(var(--board-art-size) * .82); }
+.week-calendar { padding-bottom: 0; }
+.week-strip .week-calendar-day { height: 176px; }
+.week-strip .week-calendar-day[aria-current="date"]::after { bottom: -17px; }
+.week-calendar:has(.week-period-band) .week-period-band { margin-top: 24px; }
+.week-calendar:not(:has(.week-period-band)) { padding-bottom: 20px; }
+/* Pass 3c: columns size to their rows; circles coloured by what they show. */
+.week-strip .week-calendar-day { height: auto; grid-template-rows: 28px 96px 16px auto auto; row-gap: 3px; padding: 8px 0 10px; }
+.week-stack { height: 96px; }
+.week-strip .week-calendar-day[aria-current="date"]::after { bottom: -18px; }
+.week-circle:nth-child(2) { width: 108px; height: 108px; background: #fff; }
+.week-circle:nth-child(3) { width: 108px; height: 108px; }
+.week-circle[data-kind="sugar"] { width: 122px; height: 122px; background: var(--rb-yellow-soft); }
+.week-circle[data-kind="weight"] { width: 100px; height: 100px; }
+.week-circles { justify-content: center; gap: 12px; }
+.state-row-options button { width: 28px; }
+.state-row-options button hh-icon { width: 22px; height: 22px; }
+.state-row-text small { font-size: 11px; }
+.rb-other-input { min-height: 40px; width: 120px; padding: 0 12px; border: 0; border-radius: 999px; background: #F6F4F0; font: inherit; font-size: 16px; }
+.app-sheet.rb-sheet { max-height: calc(100dvh - 120px); }
+.app-sheet-overlay:has(.rb-sheet) { padding-top: 0; }
+@media (max-width: 374px) {
+  .nutrition-summary[data-open="false"] { flex-wrap: wrap; row-gap: 6px; }
+  .nutrition-summary[data-open="false"] .day-focus-nutrients { margin-left: 0; }
+}

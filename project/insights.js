@@ -89,6 +89,8 @@
           text: "经期这 " + periodDays.length + " 天，你每天多吃了一次加餐。这是身体在要能量，不用怪自己。", dates: periodDays });
       }
     }
+    // A period finding leads, as in the design.
+    findings.sort((a, b) => (b.id === "periodSnacks") - (a.id === "periodSnacks"));
     return findings;
   }
 
@@ -131,9 +133,10 @@
     const has = (id) => days.filter((day) => day.record?.feelings.includes(id) || (id === "sleepy" && day.state === "sleepy"));
     const items = [];
     const sleepyDays = has("sleepy");
+    const firstTwo = sleepyDays.length >= 2 && sleepyDays[0].index === 1 && sleepyDays[1].index === 2;
     if (sleepyDays.length) {
       const late = before.slice(-14).filter((date) => Journal.readMeals(date).some((meal) => Journal.mealMinutes(meal) >= 22 * 60 + 30));
-      items.push({ id: "sleepy", icon: "sleepy", title: sleepyDays.length >= 2 ? "头几天特别困" : "有一天特别困", badge: sleepyDays.length + " 天",
+      items.push({ id: "sleepy", icon: "sleepy", title: firstTwo ? "头两天特别困" : sleepyDays.length >= 2 ? "有几天特别困" : "有一天特别困", badge: sleepyDays.length + " 天",
         text: late.length >= 3 ? "前两周有 " + late.length + " 个晚上很晚还在吃东西，睡得晚了些。" : "经期很困时，可以回头看看前几周睡得够不够。",
         dates: late.slice(0, 2).map(Journal.shortDate).concat(late.length > 2 ? ["还有 " + (late.length - 2) + " 天"] : []) });
     }
@@ -141,7 +144,10 @@
     if (backDays.length) {
       const strength = before.reduce((sum, date) => sum + Journal.movementSummary(date).strengthCount, 0);
       const sessions = before.reduce((sum, date) => sum + Journal.movementSummary(date).sessions.length, 0);
-      items.push({ id: "backache", icon: "back", title: "腰酸", badge: backDays.length + " 天",
+      const prevRun = Journal.periods().filter((run) => run.ended && run.start < period.start).at(-1);
+      const backPrev = prevRun ? prevRun.days.filter((date) => Journal.periodOn(date)?.feelings.includes("backache")).length : null;
+      items.push({ id: "backache", icon: "back", title: "腰酸",
+        badge: backPrev === null ? backDays.length + " 天" : backDays.length < backPrev ? "比上次轻" : backDays.length > backPrev ? "比上次多" : "和上次一样", good: backPrev !== null && backDays.length < backPrev,
         text: strength ? "这个月你运动了 " + sessions + " 次，其中 " + strength + " 次是力量。练腰背会让经期的腰酸轻一些。"
           : "久坐会让经期腰酸更明显。平时练练腰背，下次会轻一些。" });
     }
@@ -153,7 +159,7 @@
         snacks: snacks.slice(0, 3) });
     }
     if (has("cramps").length) {
-      items.push({ id: "cramps", icon: "period", title: "痛经", badge: has("cramps").length + " 天",
+      items.push({ id: "cramps", icon: "period", title: "肚子疼", badge: has("cramps").length + " 天",
         text: "痛经不用硬扛，按医生建议可以早点吃止痛药。" });
     }
     const previous = Journal.periods().filter((run) => run.ended && run.start < period.start).at(-1) ?? null;

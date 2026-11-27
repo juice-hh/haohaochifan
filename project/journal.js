@@ -451,10 +451,11 @@ const Journal = (() => {
     { label: "深蹲", type: "strength", minutes: 10 }
   ];
   const periodFlows = [{ id: "light", label: "少", dots: 1 }, { id: "medium", label: "中", dots: 2 }, { id: "heavy", label: "多", dots: 3 }];
+  // The order and wording follow the design. "肚子疼" keeps the stored id "cramps".
   const periodFeelings = [
-    { id: "cramps", label: "痛经" }, { id: "backache", label: "腰酸" }, { id: "craveSweet", label: "想吃甜的" },
+    { id: "backache", label: "腰酸" }, { id: "cramps", label: "肚子疼" }, { id: "craveSweet", label: "想吃甜的" },
     { id: "veryHungry", label: "特别饿" }, { id: "noAppetite", label: "没胃口" }, { id: "bloated", label: "浮肿" },
-    { id: "low", label: "情绪低" }, { id: "sleepy", label: "很困" }
+    { id: "low", label: "情绪低" }, { id: "sleepy", label: "很困", extra: true }
   ];
   const habitOptions = [
     { id: "earlyLastBite", label: "23 点前吃完最后一口", hint: "让经期前的觉睡得更好", icon: "bed" },
@@ -546,10 +547,18 @@ const Journal = (() => {
     };
   }
 
-  const noteOn = (date) => { const value = readJSON(localStorage, noteKey(date)); return typeof value === "string" ? value : ""; };
+  // Older notes were plain strings; newer ones also keep the minute they were written.
+  function readNote(date) {
+    const value = readJSON(localStorage, noteKey(date));
+    if (typeof value === "string") return { text: value, at: null };
+    return value && typeof value.text === "string" ? { text: value.text, at: Number.isInteger(value.at) ? value.at : null } : { text: "", at: null };
+  }
+  const noteOn = (date) => readNote(date).text;
+  const noteTime = (date) => readNote(date).at;
   function saveNote(date, text) {
     const value = String(text ?? "").slice(0, 500);
-    if (value.trim()) localStorage.setItem(noteKey(date), JSON.stringify(value));
+    const at = date === today ? nowMinutes() : readNote(date).at;
+    if (value.trim()) localStorage.setItem(noteKey(date), JSON.stringify({ text: value, at }));
     else localStorage.removeItem(noteKey(date));
   }
 
@@ -614,7 +623,7 @@ const Journal = (() => {
     states, afternoonOptions, mealFeelings, exerciseTypes, quickExercises, periodFlows, periodFeelings, habitOptions,
     stateOn, saveState, afternoonOn, saveAfternoon, feelingsFor, saveFeelings,
     clock, nowMinutes, mealMinutes, kindKeyOf, readMeals,
-    exercisesOn, addExercise, removeExercise, movementSummary, noteOn, saveNote, readPrompts, savePrompts,
+    exercisesOn, addExercise, removeExercise, movementSummary, noteOn, noteTime, saveNote, readPrompts, savePrompts,
     periodEnabled, setPeriodEnabled, periodOn, savePeriodDay, removePeriodDay, periods, periodFor, readHabits, toggleHabit,
     params, today, kinds, asDate, addDays, weekday, weekStart, monthStart, addMonths,
     shortDate, dayName, isDate, selected, link, day, estimate,

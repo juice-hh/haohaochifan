@@ -7,20 +7,21 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-16">
-<link rel="stylesheet" href="./period.css?v=20261127-3">
+<link rel="stylesheet" href="./mobile.css?v=20261127-23">
+<link rel="stylesheet" href="./period.css?v=20261127-5">
 <title>好好吃饭 经期记录</title>
 <script src="./support.js?v=20261125"></script>
-<script src="./journal.js?v=20261127-3"></script>
+<script src="./journal.js?v=20261127-5"></script>
 <script src="./interactions.js?v=20261125"></script>
+<script src="./navigation.js?v=20261127-1"></script>
 <script src="./app-icons.js?v=20261127-1"></script>
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
-<script src="./insights.js?v=20261127-3"></script>
+<script src="./insights.js?v=20261127-5"></script>
 </head>
 <body style="margin:0">
 <x-dc>
-<main class="screen screen--flow period-screen">
+<main class="screen screen--tabs period-screen">
   <header class="app-toolbar period-toolbar">
     <a class="app-icon-button" href="{{backHref}}" aria-label="返回"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></a>
     <h1 class="period-title">{{title}}</h1>
@@ -60,7 +61,7 @@
           <div class="mirror-row">
             <span class="mirror-icon" data-id="{{it.id}}"><hh-icon name="{{it.icon}}" size="22"></hh-icon></span>
             <div>
-              <p class="mirror-title">{{it.title}}<em data-id="{{it.id}}">{{it.badge}}</em></p>
+              <p class="mirror-title">{{it.title}}<em data-id="{{it.id}}" data-good="{{it.goodBadge}}">{{it.badge}}</em></p>
               <p class="mirror-text">{{it.text}}</p>
               <sc-if value="{{it.dates}}"><p class="mirror-dates"><sc-for list="{{it.dates}}" as="d"><span>{{d}}</span></sc-for></p></sc-if>
               <sc-if value="{{it.snacks}}"><p class="mirror-snacks"><sc-for list="{{it.snacks}}" as="s"><sc-if value="{{s.cutout}}"><food-sticker photo="{{s.photo}}" cutout="{{s.cutout}}" name="{{s.name}}"></food-sticker></sc-if><sc-if value="{{s.plain}}"><span>{{s.name}}</span></sc-if></sc-for></p></sc-if>
@@ -134,9 +135,9 @@
         <sc-if value="{{snackNote}}"><p class="period-history period-history--plain"><span>经期里加餐</span><strong>{{snackNote}}</strong></p></sc-if>
       </section>
     </sc-if>
-    <p class="period-privacy period-privacy--page">经期记录只保存在这台手机上，不会上传。可以在设置里随时关掉。</p>
   </sc-if>
   <sc-if value="{{error}}"><p class="rb-error" role="alert">{{error}}</p></sc-if>
+  <journal-nav page="Main" date="{{navDate}}"></journal-nav>
 </main>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
@@ -201,7 +202,7 @@ class Component extends DCLogic {
           flowLabel: day.record ? "量" + Journal.periodFlows.find((f) => f.id === day.record.flow).label : "没记量",
           state: day.state ?? "", foods };
       }),
-      items: data.items.length ? data.items.map((item) => ({ ...item, dates: item.dates?.length ? item.dates : null,
+      items: data.items.length ? data.items.map((item) => ({ ...item, goodBadge: String(!!item.good), dates: item.dates?.length ? item.dates : null,
         snacks: item.snacks?.length ? item.snacks.map((meal) => {
           const food = FoodStickers.groups([meal], meal.date)[0].foods.find((f) => f.hasSticker);
           return food ? { photo: food.photo, cutout: food.cutout, name: food.name, plain: false } : { name: meal.name, plain: true, cutout: "" };
@@ -225,7 +226,7 @@ class Component extends DCLogic {
     const backHref = back === "Settings" ? Journal.link("Settings", date, { returnTo: "Main" }) : Journal.link("Main", date);
     const runs = Journal.periods();
     const reviewRun = this.state.reviewStart ? runs.find((run) => run.start === this.state.reviewStart && run.ended) : null;
-    const base = { backHref, error: this.state.error, enable: () => this.act(() => Journal.setPeriodEnabled(true)),
+    const base = { navDate: date, backHref, error: this.state.error, enable: () => this.act(() => Journal.setPeriodEnabled(true)),
       saveImage: () => this.saveImage() };
     if (!enabled && !reviewRun) return { ...base, title: "经期记录", off: true, review: null, record: null, history: null, habits: [] };
     if (reviewRun) {
@@ -249,7 +250,7 @@ class Component extends DCLogic {
         dayLabel: "今天",
         flows: Journal.periodFlows.map((f) => ({ ...f, dots: Array(f.dots).fill(1), on: String(flowOf === f.id),
           pick: () => this.act(() => Journal.savePeriodDay(today, { flow: f.id })) })),
-        feelings: Journal.periodFeelings.map((f) => ({ ...f, on: String(!!todayRecord?.feelings.includes(f.id)),
+        feelings: Journal.periodFeelings.filter((f) => !f.extra).map((f) => ({ ...f, on: String(!!todayRecord?.feelings.includes(f.id)),
           pick: () => this.act(() => {
             const list = todayRecord?.feelings ?? [];
             Journal.savePeriodDay(today, { feelings: list.includes(f.id) ? list.filter((id) => id !== f.id) : [...list, f.id] });

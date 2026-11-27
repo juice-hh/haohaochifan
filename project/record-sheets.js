@@ -22,7 +22,7 @@
 
   function exercise(date) {
     return JournalUI.openSheet({ title: "记一次运动", className: "rb-sheet rb-exercise", render(sheet, close) {
-      let type = "aerobic", minutes = 30, picked = new Set(), error = el("p", "rb-error");
+      let type = "aerobic", minutes = 15, picked = new Set(), error = el("p", "rb-error");
       const now = date === Journal.today ? Journal.clock(Journal.nowMinutes()) : Journal.shortDate(date);
       const when = el("span", "rb-when", (date === Journal.today ? "今天 " : "") + now);
       sheet.querySelector("h2").after(when);
@@ -46,15 +46,27 @@
 
       const types = el("div", "rb-types");
       const presets = el("div", "rb-presets");
+      const custom = [];
       const drawPresets = () => {
-        presets.replaceChildren(...Journal.exerciseTypes.find((item) => item.id === type).presets.map((label) => {
+        const labels = [...Journal.exerciseTypes.find((item) => item.id === type).presets, ...custom];
+        const chips = labels.map((label) => {
           const chip = button(label, "rb-chip", () => {
             picked.has(label) ? picked.delete(label) : picked.add(label);
             chip.setAttribute("aria-pressed", String(picked.has(label)));
           });
           chip.setAttribute("aria-pressed", String(picked.has(label)));
           return chip;
-        }));
+        });
+        // "+ 其他" turns into a short text field for anything not in the list.
+        const other = button("+ 其他", "rb-chip rb-chip--other", () => {
+          const input = el("input", "rb-other-input");
+          input.maxLength = 12; input.placeholder = "比如 爬楼梯"; input.setAttribute("aria-label", "其他运动");
+          const commit = () => { const value = input.value.trim(); if (value) { custom.push(value); picked.add(value); } drawPresets(); };
+          input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); commit(); } });
+          input.addEventListener("blur", commit);
+          other.replaceWith(input); input.focus();
+        });
+        presets.replaceChildren(...chips, other);
       };
       for (const item of Journal.exerciseTypes) {
         const tile = button("", "rb-type", () => {
@@ -93,7 +105,7 @@
       const hint = el("p", "rb-hint");
       hint.append(icon("bulb", 16), el("span", "", "不用专门找时间。动感单车把阻力调高、爬楼梯、靠墙深蹲，都算力量。"));
       const submit = button("记下来", "app-sheet-confirm", () => save({ type, minutes, label: [...picked].join(" ") }));
-      sheet.append(duration, hint, error, submit, button("取消", "app-sheet-cancel", () => close(false)));
+      sheet.append(duration, hint, error, submit);
       return submit;
     } });
   }
