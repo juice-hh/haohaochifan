@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-26">
-<link rel="stylesheet" href="./period.css?v=20261127-5">
+<link rel="stylesheet" href="./mobile.css?v=20261127-27">
+<link rel="stylesheet" href="./period.css?v=20261127-6">
 <title>好好吃饭 经期记录</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-5"></script>
@@ -268,10 +268,10 @@ class Component extends DCLogic {
       const since = last ? Math.round((Journal.asDate(today) - Journal.asDate(last.start)) / 86400000) : null;
       const next = last && cycle ? cycle - since : null;
       record = {
-        active: false, canStart: true, big: since === null ? "—" : String(since), bigLabel: since === null ? "还没有记录" : "天前开始",
+        active: false, canStart: true, big: since === null ? "0" : String(since), bigLabel: since === null ? "次" : "天前",
         ring: "--p:" + (cycle && since !== null ? Math.min(100, Math.round(since / cycle * 100)) : 0) + "%",
-        title: last ? "不在经期" : "还没有记录",
-        note: last ? "上次 " + Journal.shortDate(last.start) + "，" + last.length + " 天" + (next !== null && next > 0 ? "，预计 " + next + " 天后" : "") : "来了那天点下面的按钮",
+        title: last ? "不在经期" : "开始记第一次",
+        note: last ? "上次 " + Journal.shortDate(last.start) + "，" + last.length + " 天" + (next !== null && next > 0 ? "，预计 " + next + " 天后" : "") : "来了那天点「今天来了」",
         startLabel: "今天来了",
         start: () => this.act(() => Journal.savePeriodDay(today, { flow: "medium", feelings: [], end: false }))
       };

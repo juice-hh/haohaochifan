@@ -108,3 +108,7 @@
 .period-flow button { min-height: 40px; }
 .rv-days { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .rv-day { flex: none; width: auto; }
+/* Phone fixes: flex column so cards keep their gaps; a calm empty state. */
+.period-screen { display: flex; flex-direction: column; gap: 14px; }
+.period-ring strong { font-size: 20px; }
+.period-ring small { max-width: 52px; font-size: 9.5px; line-height: 1.2; white-space: normal; }

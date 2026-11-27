@@ -133,3 +133,33 @@
 .album-hero-go { color: #fff !important; font-weight: 700; }
 .food-head { margin-top: 10px; }
 .album-filters { margin-top: 2px; }
+
+/* ---------- Phone fixes (2026-11-27) ---------- */
+/* These screens set gaps but were not flex columns, so cards touched each other. */
+.album-screen, .food-screen { display: flex; flex-direction: column; gap: 14px; }
+.album-head { align-items: center; }
+.album-head .page-title { font-size: 26px; }
+.album-tabs { box-sizing: border-box; width: 100%; }
+.album-tabs button { min-height: 38px; font-size: 14px; }
+/* Calendar: compact rows, empty days are just a number, stickers stay inside the cell. */
+.album-day { min-height: 0; aspect-ratio: 1 / 1.08; overflow: hidden; }
+.album-day[data-empty="true"] { aspect-ratio: auto; height: 34px; }
+.album-cal { row-gap: 4px; }
+.album-day-face b { bottom: 3px; }
+.album-day[data-empty="true"] .album-day-face b { top: 50%; bottom: auto; transform: translateY(-50%); }
+.album-day-sticker { top: 3px; width: calc(30px - var(--j) * 6px); transform: translateX(calc(-50% + var(--j) * 9px)) rotate(var(--tilt)); }
+.album-day-face > .album-day-sticker:first-child:nth-last-child(2) { transform: translateX(-50%); }
+/* Food cards: same art height so names line up across the two columns. */
+.album-foods { align-items: start; }
+.album-food { grid-template-rows: 92px auto auto auto; }
+.album-food-art { height: 92px; overflow: hidden; }
+.album-food-art food-sticker { width: 80px; max-height: 88px; }
+.album-food-art img { width: 72px; height: 72px; }
+.album-food-tags:empty { display: none; }
+.album-month-cards { gap: 10px; }
+.album-card { min-height: 0; }
+.album-foods { align-items: stretch; }
+.album-food { grid-template-rows: 92px auto auto 1fr; }
+.album-food-tags { align-self: end; }
+.album-month-cards:has(> .album-card:only-child) .album-card { display: flex; align-items: center; gap: 12px; }
+.album-month-cards:has(> .album-card:only-child) .album-card-stickers { margin-top: 0; order: 2; margin-left: auto; }

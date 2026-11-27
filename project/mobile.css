@@ -2166,3 +2166,4 @@ html:has(.screen--tabs), html:has(.day-screen) { scroll-padding-bottom: calc(110
 .state-row-options button hh-icon svg { width: 13px; height: 13px; }
 .state-row-text small { overflow: visible; text-overflow: clip; }
 .screen--week > .focus-trend { display: none; }
+.screen .app-switch { min-height: 0; height: 32px; width: 52px; }

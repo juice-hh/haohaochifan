@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-26">
-<link rel="stylesheet" href="./album.css?v=20261127-3">
+<link rel="stylesheet" href="./mobile.css?v=20261127-27">
+<link rel="stylesheet" href="./album.css?v=20261127-5">
 <title>好好吃饭 饭相册</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-5"></script>
@@ -210,8 +210,8 @@ class Component extends DCLogic {
     const recordedStates = Object.values(stateCount).reduce((a, b) => a + b, 0);
     const pastDays = days.filter((day) => day.date <= Journal.today).length;
     const stateBar = recordedStates ? {
-      parts: [...Journal.states.filter((item) => stateCount[item.id]).map((item) => ({ style: "flex:" + stateCount[item.id] + ";background:" + colors[item.id] })),
-        ...(pastDays - recordedStates > 0 ? [{ style: "flex:" + (pastDays - recordedStates) + ";background:#EEEAE4" }] : [])],
+      // Only the days with a recorded state make up the bar, so a new month is not mostly grey.
+      parts: Journal.states.filter((item) => stateCount[item.id]).map((item) => ({ style: "flex:" + stateCount[item.id] + ";background:" + colors[item.id] })),
       legend: [...Journal.states.filter((item) => stateCount[item.id]).map((item) => ({ label: item.label + " " + stateCount[item.id], style: "background:" + colors[item.id] })),
         ...(Journal.periodEnabled() && days.some((day) => Journal.periodOn(day.date)) ? [{ label: "经期", style: "background:#E26D8A" }] : [])]
     } : null;
@@ -230,7 +230,7 @@ class Component extends DCLogic {
     const felt = monthFoods.flatMap((f) => f.times).filter((t) => t.feelings.length);
     const comfyCount = felt.filter((t) => t.feelings.some((id) => Journal.mealFeelings.find((x) => x.id === id)?.tone === "good")).length;
     let comfy = null;
-    if (felt.length >= 3) {
+    if (felt.length >= 3 && new Set(felt.map((t) => Journal.weekStart(t.date))).size >= 2) {
       const weeks = [0, 1, 2, 3, 4, 5].map((w) => {
         const from = Journal.addDays(month, w * 7 - (Journal.weekday(month) + 6) % 7), to = Journal.addDays(from, 6);
         const list = felt.filter((t) => t.date >= from && t.date <= to);
