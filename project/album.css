@@ -163,3 +163,6 @@
 .album-food-tags { align-self: end; }
 .album-month-cards:has(> .album-card:only-child) .album-card { display: flex; align-items: center; gap: 12px; }
 .album-month-cards:has(> .album-card:only-child) .album-card-stickers { margin-top: 0; order: 2; margin-left: auto; }
+/* The day's picture and number are decoration; taps go to the link or plan button underneath. */
+.album-day-face, .album-day-face * { pointer-events: none; }
+.album-day .calendar-cell-target { z-index: 4; }
