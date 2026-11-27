@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F2EF">
-<link rel="stylesheet" href="./mobile.css?v=20261127-23">
+<link rel="stylesheet" href="./mobile.css?v=20261127-24">
 <title>好好吃饭 设置</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-5"></script>
@@ -17,6 +17,18 @@
     <a class="app-icon-button" href="{{backHref}}" aria-label="返回">‹</a>
     <h1 class="page-title">设置</h1>
   </header>
+  <section class="goal-card">
+    <h2>记录册</h2>
+    <sc-for list="{{toggles}}" as="t">
+      <div class="settings-toggle">
+        <span class="settings-toggle-icon" aria-hidden="true"><hh-icon name="{{t.icon}}" size="22"></hh-icon></span>
+        <span class="settings-toggle-text"><strong id="{{t.id}}">{{t.label}}</strong><small>{{t.detail}}</small></span>
+        <button type="button" class="app-switch" role="switch" aria-checked="{{t.on}}" aria-labelledby="{{t.id}}" onClick="{{t.toggle}}"></button>
+      </div>
+    </sc-for>
+    <sc-if value="{{periodOn}}"><a class="settings-link-row" href="{{periodHref}}"><span>经期记录和复盘</span><hh-icon name="right" size="16"></hh-icon></a></sc-if>
+    <p class="goal-note">经期记录只保存在这台手机上，不会上传，识别饭菜时也不会带上。</p>
+  </section>
   <section class="goal-card">
     <h2>照片识别</h2>
     <div class="app-segmented" role="group" aria-label="记录方式">
@@ -35,18 +47,6 @@
         </button>
       </sc-for>
     </div>
-  </section>
-  <section class="goal-card">
-    <h2>记录册</h2>
-    <sc-for list="{{toggles}}" as="t">
-      <div class="settings-toggle">
-        <span class="settings-toggle-icon" aria-hidden="true"><hh-icon name="{{t.icon}}" size="22"></hh-icon></span>
-        <span class="settings-toggle-text"><strong id="{{t.id}}">{{t.label}}</strong><small>{{t.detail}}</small></span>
-        <button type="button" class="app-switch" role="switch" aria-checked="{{t.on}}" aria-labelledby="{{t.id}}" onClick="{{t.toggle}}"></button>
-      </div>
-    </sc-for>
-    <sc-if value="{{periodOn}}"><a class="settings-link-row" href="{{periodHref}}"><span>经期记录和复盘</span><hh-icon name="right" size="16"></hh-icon></a></sc-if>
-    <p class="goal-note">经期记录只保存在这台手机上，不会上传，识别饭菜时也不会带上。</p>
   </section>
   <p class="goal-note" role="status">{{status}}</p>
 </main>

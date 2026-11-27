@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-23">
+<link rel="stylesheet" href="./mobile.css?v=20261127-24">
 <title>好好吃饭 周视图</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-5"></script>
 <script src="./meal-slots.js?v=20261125"></script>
 <script src="./interactions.js?v=20261125"></script>
-<script src="./navigation.js?v=20261127-1"></script>
+<script src="./navigation.js?v=20261127-2"></script>
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./app-icons.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
@@ -84,6 +84,17 @@ a{color:#2A2633;text-decoration:none}a:hover{color:#000000}
     </div>
     <sc-if value="{{periodBand}}"><p class="week-period-band" style="{{periodBand.style}}"><hh-icon name="period" size="12"></hh-icon>{{periodBand.label}}</p></sc-if>
   </section>
+
+  <sc-if value="{{periodInvite}}">
+    <div class="period-invite">
+      <a class="period-invite-main" href="{{periodInvite.href}}">
+        <span class="period-invite-icon"><hh-icon name="period" size="22"></hh-icon></span>
+        <span><strong>也记一下经期吗</strong><small>经期常常更想吃东西，记下来能看出规律。只存在这台手机上。</small></span>
+        <span class="period-invite-go">去开启</span>
+      </a>
+      <button type="button" class="period-invite-close" onClick="{{periodInvite.dismiss}}" aria-label="不用了"><hh-icon name="close" size="14"></hh-icon></button>
+    </div>
+  </sc-if>
 
   <sc-if value="{{reviewCard}}">
     <a class="review-entry" href="{{reviewCard.href}}">
@@ -662,6 +673,11 @@ class Component extends DCLogic {
       weekCircles: circles.length ? circles : null,
       findings, findingsHint: findings && findings.length > 1 ? "左右滑" : "", weekLead,
       periodBand, reviewCard, addExercise: () => this.openSheet("exercise"),
+      // Until period tracking is turned on or the invite is dismissed, offer it once on 本周.
+      periodInvite: !Journal.periodEnabled() && localStorage.getItem("hhcf-period-invite") !== "dismissed" && current.today ? {
+        href: Journal.link("Period", Journal.today, { returnTo: "Main" }),
+        dismiss: () => { try { localStorage.setItem("hhcf-period-invite", "dismissed"); } catch {} this.refresh(); }
+      } : null,
       periodHref: Journal.link("Period", Journal.today, { returnTo: "Main" }),
       boardSections, boardView, selectedFood, dish,
       allView: boardView === "all", mealsView: boardView === "meals",

@@ -81,7 +81,8 @@
         ["camera", kind ? "记" + Journal.kinds[kind] : "记一餐", Journal.link("Record", recordDate, { ...back, ...(kind ? { kind } : {}) })],
         ["scale", "记体重", Journal.link("Weigh", recordDate, back)],
         ["plan", "贴计划", Journal.link("Album", date, { plan: "1" })],
-        ["move", "记运动", Journal.link("Goal", recordDate) + "#movement"]
+        ["move", "记运动", Journal.link("Goal", recordDate) + "#movement"],
+        ["period", Journal.periodEnabled() ? "记经期" : "开启经期记录", Journal.link("Period", recordDate, { returnTo: active === "Day" ? "Main" : active })]
       ];
       button.setAttribute("aria-expanded", "true");
       JournalUI.openSheet({
@@ -104,6 +105,7 @@
             mark.setAttribute("aria-hidden", "true");
             if (type === "camera") mark.innerHTML = icon(camera);
             else if (type === "move") mark.innerHTML = icon(dumbbell);
+            else if (type === "period") mark.innerHTML = window.AppIcons ? AppIcons.svg("period", 26) : "";
             else {
               const image = document.createElement("img");
               image.src = "./icons/week-" + (type === "scale" ? "weigh-scale" : "plan-clipboard") + ".png";

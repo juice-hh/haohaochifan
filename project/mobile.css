@@ -2127,3 +2127,12 @@ html:has(.screen--tabs), html:has(.day-screen) { scroll-padding-bottom: calc(110
   .nutrition-summary[data-open="false"] { flex-wrap: wrap; row-gap: 6px; }
   .nutrition-summary[data-open="false"] .day-focus-nutrients { margin-left: 0; }
 }
+/* Invite to turn on period tracking, shown on 本周 until used or dismissed. */
+.period-invite { position: relative; margin-top: 12px; }
+.period-invite-main { display: flex; align-items: center; gap: 12px; padding: 14px 44px 14px 14px; border-radius: 26px; background: linear-gradient(110deg, #FCE6EC, #FEF4F7); color: var(--rb-rose-deep) !important; }
+.period-invite-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: #fff; }
+.period-invite strong { display: block; font-size: 14.5px; }
+.period-invite small { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.45; color: #7A4E5B; }
+.period-invite-go { flex: none; padding: 7px 12px; border-radius: 999px; background: var(--rb-rose); color: #fff; font-size: 12.5px; font-weight: 700; }
+.period-invite-close { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: #C79AA7; }
+.journal-menu-mark svg { display: block; }
