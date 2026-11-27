@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-6">
-<link rel="stylesheet" href="./period.css?v=20261127-1">
+<link rel="stylesheet" href="./mobile.css?v=20261127-16">
+<link rel="stylesheet" href="./period.css?v=20261127-3">
 <title>好好吃饭 经期记录</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-3"></script>
@@ -16,14 +16,15 @@
 <script src="./app-icons.js?v=20261127-1"></script>
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
-<script src="./insights.js?v=20261127-1"></script>
+<script src="./insights.js?v=20261127-3"></script>
 </head>
 <body style="margin:0">
 <x-dc>
 <main class="screen screen--flow period-screen">
-  <header class="app-toolbar">
-    <a class="app-icon-button" href="{{backHref}}" aria-label="返回">‹</a>
-    <h1 class="page-title">{{title}}</h1>
+  <header class="app-toolbar period-toolbar">
+    <a class="app-icon-button" href="{{backHref}}" aria-label="返回"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></a>
+    <h1 class="period-title">{{title}}</h1>
+    <sc-if value="{{review}}"><button type="button" class="period-share" onClick="{{saveImage}}">存成图片</button></sc-if>
   </header>
 
   <sc-if value="{{off}}">
@@ -38,7 +39,7 @@
     <section class="rv-hero">
       <hh-icon class="rv-drop" name="period" size="96"></hh-icon>
       <small>{{review.range}}</small>
-      <h2>{{review.headline}}</h2>
+      <h2>{{review.headline}}<sc-if value="{{review.headline2}}"><br>{{review.headline2}}</sc-if></h2>
       <p>{{review.sub}}</p>
       <div class="rv-days">
         <sc-for list="{{review.days}}" as="d">
@@ -62,7 +63,7 @@
               <p class="mirror-title">{{it.title}}<em data-id="{{it.id}}">{{it.badge}}</em></p>
               <p class="mirror-text">{{it.text}}</p>
               <sc-if value="{{it.dates}}"><p class="mirror-dates"><sc-for list="{{it.dates}}" as="d"><span>{{d}}</span></sc-for></p></sc-if>
-              <sc-if value="{{it.snacks}}"><p class="mirror-snacks"><sc-for list="{{it.snacks}}" as="s"><span>{{s}}</span></sc-for></p></sc-if>
+              <sc-if value="{{it.snacks}}"><p class="mirror-snacks"><sc-for list="{{it.snacks}}" as="s"><sc-if value="{{s.cutout}}"><food-sticker photo="{{s.photo}}" cutout="{{s.cutout}}" name="{{s.name}}"></food-sticker></sc-if><sc-if value="{{s.plain}}"><span>{{s.name}}</span></sc-if></sc-for></p></sc-if>
             </div>
           </div>
         </sc-for>
@@ -93,6 +94,11 @@
 
   <sc-if value="{{record}}">
     <section class="period-card">
+      <div class="period-toggle"><span class="period-toggle-icon"><hh-icon name="period" size="22"></hh-icon></span><span><strong>记录经期</strong><small>选择开启，可以随时关掉</small></span>
+        <button type="button" class="app-switch" role="switch" aria-checked="true" aria-label="记录经期" onClick="{{disable}}"></button></div>
+      <p class="period-privacy">经期记录只保存在这台手机上，不会上传。识别饭菜时也不会带上。</p>
+    </section>
+    <section class="period-card">
       <div class="period-status">
         <span class="period-ring" style="{{record.ring}}"><strong>{{record.big}}<small>{{record.bigLabel}}</small></strong></span>
         <span><strong class="period-status-title">{{record.title}}</strong><small>{{record.note}}</small></span>
@@ -116,16 +122,16 @@
     <section class="period-tip">
       <h2>经期想多吃，很正常</h2>
       <p>经期前后身体消耗变大，会更想吃甜的、吃主食。想吃就吃一点，换成更温和的选择，会舒服很多。</p>
-      <div class="period-snacks"><span><hh-icon name="snack" size="30"></hh-icon>酸奶</span><span><hh-icon name="lunch" size="30"></hh-icon>水果</span><span><hh-icon name="carb" size="30"></hh-icon>饭团</span><span><hh-icon name="breakfast" size="30"></hh-icon>热饮</span></div>
+      <div class="period-snacks"><span><img src="./icons/food/yogurt.png" alt="">酸奶</span><span><img src="./icons/food/orange.png" alt="">水果</span><span><img src="./icons/food/onigiri.png" alt="">饭团</span><span><img src="./icons/food/latte.png" alt="">热饮</span></div>
     </section>
 
     <sc-if value="{{history}}">
       <section class="period-card">
         <h2 class="period-card-title">这几次经期</h2>
         <sc-for list="{{history}}" as="h">
-          <a class="period-history" href="{{h.href}}"><span>{{h.label}}</span><strong>{{h.length}} 天</strong><hh-icon name="right" size="14"></hh-icon></a>
+          <a class="period-history" href="{{h.href}}"><span>{{h.label}}</span><strong>{{h.length}} 天</strong></a>
         </sc-for>
-        <sc-if value="{{cycle}}"><p class="period-cycle">平均周期 {{cycle}} 天</p></sc-if>
+        <sc-if value="{{snackNote}}"><p class="period-history period-history--plain"><span>经期里加餐</span><strong>{{snackNote}}</strong></p></sc-if>
       </section>
     </sc-if>
     <p class="period-privacy period-privacy--page">经期记录只保存在这台手机上，不会上传。可以在设置里随时关掉。</p>
@@ -146,6 +152,41 @@ class Component extends DCLogic {
     catch (failure) { this.setState({ error: failure.message || "暂时没能保存，请重试。" }); }
   }
 
+  // Saves the review as a picture with the phone's own share or save sheet.
+  async saveImage() {
+    const hero = document.querySelector(".rv-hero");
+    if (!hero) return;
+    const width = 720, scale = width / hero.offsetWidth;
+    const canvas = document.createElement("canvas");
+    const items = [...document.querySelectorAll(".mirror-row")].map((row) => [row.querySelector(".mirror-title")?.firstChild?.textContent ?? "", row.querySelector(".mirror-text")?.textContent ?? ""]);
+    canvas.width = width; canvas.height = 420 + items.length * 120;
+    const ctx = canvas.getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, "#FCE6EC"); gradient.addColorStop(1, "#FFFFFF");
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, width, canvas.height);
+    const font = '"PingFang SC", system-ui, sans-serif';
+    ctx.fillStyle = "#B23F5E"; ctx.font = "700 26px " + font; ctx.fillText(hero.querySelector("small").textContent, 48, 80);
+    ctx.fillStyle = "#2A2622"; ctx.font = "800 46px " + font;
+    hero.querySelector("h2").innerText.split("\n").forEach((line, i) => ctx.fillText(line, 48, 150 + i * 62));
+    ctx.font = "700 30px " + font;
+    items.forEach(([title, text], i) => {
+      const y = 330 + i * 120;
+      ctx.fillStyle = "#2A2622"; ctx.fillText(title, 48, y);
+      ctx.fillStyle = "#6E6862"; ctx.font = "400 24px " + font;
+      ctx.fillText(text.length > 26 ? text.slice(0, 26) + "…" : text, 48, y + 42);
+      ctx.font = "700 30px " + font;
+    });
+    ctx.fillStyle = "#A39C94"; ctx.font = "600 22px " + font; ctx.fillText("好好吃饭 记录册", 48, canvas.height - 40);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    const file = new File([blob], "这次经期.png", { type: "image/png" });
+    try {
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: "这次经期" }); return; }
+    } catch (error) { if (error?.name === "AbortError") return; }
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob); link.download = file.name; link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+  }
+
   reviewVals(run) {
     const data = Insights.review(run);
     const flowDots = { light: 1, medium: 2, heavy: 3 };
@@ -153,7 +194,7 @@ class Component extends DCLogic {
     const previous = data.previous;
     return {
       range: Journal.shortDate(run.start) + " 到 " + Journal.shortDate(run.end) + " 共 " + run.length + " 天",
-      headline: data.headline, sub: data.sub,
+      headline: data.headline, headline2: data.headline2, sub: data.sub,
       days: data.days.map((day) => {
         const foods = day.meals.flatMap((meal) => FoodStickers.groups([meal], day.date)[0].foods.filter((food) => food.hasSticker)).slice(0, 2);
         return { n: day.index, dots: Array(day.record ? flowDots[day.record.flow] : 0).fill(1),
@@ -161,10 +202,16 @@ class Component extends DCLogic {
           state: day.state ?? "", foods };
       }),
       items: data.items.length ? data.items.map((item) => ({ ...item, dates: item.dates?.length ? item.dates : null,
-        snacks: item.snacks?.length ? item.snacks.map((meal) => meal.name) : null })) : null,
+        snacks: item.snacks?.length ? item.snacks.map((meal) => {
+          const food = FoodStickers.groups([meal], meal.date)[0].foods.find((f) => f.hasSticker);
+          return food ? { photo: food.photo, cutout: food.cutout, name: food.name, plain: false } : { name: meal.name, plain: true, cutout: "" };
+        }) : null })) : null,
       previousLabel: previous ? Journal.shortDate(previous.start) + "那次" : "",
       compare: data.compare.length ? data.compare.map((c) => ({ ...c, good: String(c.now <= c.before),
-        note: c.now === c.before ? "差不多" : c.label === "天数" ? (c.now < c.before ? "短了 " + (c.before - c.now) + " 天" : "长了 " + (c.now - c.before) + " 天")
+        note: c.now === c.before ? "差不多"
+          : c.percent ? (c.now < c.before ? "少了 " : "多了 ") + Math.round(Math.abs(c.now - c.before) / Math.max(1, c.before) * 100) + "%"
+          : c.label === "天数" ? (c.now < c.before ? "短了 " + (c.before - c.now) + " 天" : "长了 " + (c.now - c.before) + " 天")
+          : c.label === "加餐" && c.now < c.before ? "更稳了"
           : c.now < c.before ? "少了 " + (c.before - c.now) + " " + c.unit : "多了 " + (c.now - c.before) + " " + c.unit })) : null,
       habitList: Journal.habitOptions.map((item) => ({ ...item, on: String(habits.includes(item.id)), action: habits.includes(item.id) ? "已加入" : "加入计划",
         toggle: () => this.act(() => Journal.toggleHabit(item.id)) }))
@@ -178,7 +225,8 @@ class Component extends DCLogic {
     const backHref = back === "Settings" ? Journal.link("Settings", date, { returnTo: "Main" }) : Journal.link("Main", date);
     const runs = Journal.periods();
     const reviewRun = this.state.reviewStart ? runs.find((run) => run.start === this.state.reviewStart && run.ended) : null;
-    const base = { backHref, error: this.state.error, enable: () => this.act(() => Journal.setPeriodEnabled(true)) };
+    const base = { backHref, error: this.state.error, enable: () => this.act(() => Journal.setPeriodEnabled(true)),
+      saveImage: () => this.saveImage() };
     if (!enabled && !reviewRun) return { ...base, title: "经期记录", off: true, review: null, record: null, history: null, habits: [] };
     if (reviewRun) {
       const review = this.reviewVals(reviewRun);
@@ -197,7 +245,7 @@ class Component extends DCLogic {
       const day = current.days.indexOf(today) + 1 || current.length;
       record = {
         active: true, canStart: false, big: String(day), bigLabel: "第几天", ring: "--p:" + Math.min(100, Math.round(day / 7 * 100)) + "%",
-        title: "经期中", note: Journal.shortDate(current.start) + "开始" + (cycle ? " 平均周期 " + cycle + " 天" : ""),
+        title: "经期中", note: Journal.shortDate(current.start) + "开始" + (cycle ? "  平均周期 " + cycle + " 天" : ""),
         dayLabel: "今天",
         flows: Journal.periodFlows.map((f) => ({ ...f, dots: Array(f.dots).fill(1), on: String(flowOf === f.id),
           pick: () => this.act(() => Journal.savePeriodDay(today, { flow: f.id })) })),
@@ -227,9 +275,17 @@ class Component extends DCLogic {
         start: () => this.act(() => Journal.savePeriodDay(today, { flow: "medium", feelings: [], end: false }))
       };
     }
-    const pastRuns = ended.slice(-4).reverse().map((run) => ({ label: Journal.shortDate(run.start), length: run.length,
+    const pastRuns = ended.slice(-4).reverse().map((run, i) => ({ label: (["上次 ", "再上次 "][i] ?? "") + Journal.shortDate(run.start), length: run.length,
       href: Journal.link("Period", run.start, { review: "1", returnTo: back || "Main" }) }));
-    return { ...base, title: "经期记录", off: false, review: null, record, history: pastRuns.length ? pastRuns : null, cycle, habits: [] };
+    // Extra snacks per period day compared with other recorded days.
+    const snackCount = (date) => Journal.readMeals(date).filter((meal) => Journal.kindKeyOf(meal) === "snack").length;
+    const periodDays = ended.flatMap((run) => run.days);
+    const otherDays = Array.from({ length: 90 }, (_, i) => Journal.addDays(today, -i)).filter((date) => !periodDays.includes(date) && Journal.readMeals(date).length);
+    const avg = (list) => list.length ? list.reduce((sum, date) => sum + snackCount(date), 0) / list.length : 0;
+    const extra = periodDays.length && otherDays.length ? avg(periodDays) - avg(otherDays) : 0;
+    const snackNote = extra >= 0.5 ? "平均每天多 " + Math.round(extra) + " 次" : periodDays.length && otherDays.length ? "和平时差不多" : "";
+    return { ...base, title: "经期记录", off: false, review: null, record, history: pastRuns.length ? pastRuns : null, cycle, snackNote, habits: [],
+      disable: () => this.act(() => Journal.setPeriodEnabled(false)) };
   }
 }
 </script>

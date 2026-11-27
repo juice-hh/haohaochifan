@@ -21,8 +21,11 @@
   const typeIcon = { aerobic: "walk", strength: "dumbbell", stretch: "stretch" };
 
   function exercise(date) {
-    return JournalUI.openSheet({ title: "记一次运动", className: "rb-sheet", render(sheet, close) {
+    return JournalUI.openSheet({ title: "记一次运动", className: "rb-sheet rb-exercise", render(sheet, close) {
       let type = "aerobic", minutes = 30, picked = new Set(), error = el("p", "rb-error");
+      const now = date === Journal.today ? Journal.clock(Journal.nowMinutes()) : Journal.shortDate(date);
+      const when = el("span", "rb-when", (date === Journal.today ? "今天 " : "") + now);
+      sheet.querySelector("h2").after(when);
       error.setAttribute("role", "alert");
       const save = (entry) => {
         try { Journal.addExercise(date, entry); close(true); }
@@ -79,7 +82,7 @@
       const less = button("−", "", () => step(-5)); less.setAttribute("aria-label", "少 5 分钟");
       const more = button("+", "", () => step(5)); more.setAttribute("aria-label", "多 5 分钟");
       stepper.append(less, value, more);
-      for (const amount of [10, 15, 30, 45]) {
+      for (const amount of [10, 15, 30]) {
         const chip = button(String(amount), "", () => { minutes = amount; draw(); });
         chip.dataset.minutes = String(amount);
         chip.setAttribute("aria-label", amount + " 分钟");

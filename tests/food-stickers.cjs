@@ -40,7 +40,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await stickers.nth(5).waitFor();
   assert.equal(await board.getByRole('button',{name:'全量',exact:true}).getAttribute('aria-pressed'),'true');
   assert.equal(await stickers.count(),6);
-  assert.equal(await stickers.first().locator('.sticker-kcal').innerText(),'123 kcal');
+  assert.equal(await stickers.first().locator('.sticker-kcal-top').innerText(),'123 kcal');
   assert.equal(await nutrition.locator('h3').innerText(),'全天营养');
   const primaryArt=await stickers.first().locator('.week-board-art').boundingBox();
   const secondaryArt=await stickers.nth(1).locator('.week-board-art').boundingBox();
@@ -71,8 +71,9 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.getByRole('button',{name:/11月12日 周四/}).click();
   assert.equal(await nutrition.locator('h3').innerText(),'全天营养');
   await p.locator('.week-day-record food-sticker canvas').nth(5).waitFor();
-  await p.locator('.week-original-photo').first().waitFor();
-  assert.equal(await p.locator('.week-original-photo').count(),1);
+  // The calendar column piles that day's stickers instead of showing the photo.
+  await p.locator('.week-calendar-day[aria-pressed="true"] .week-stack food-sticker canvas').first().waitFor();
+  assert.equal(await p.locator('.week-calendar-day[aria-pressed="true"] .week-stack-item').count(),4);
   assert.equal(await stickers.first().locator('canvas').evaluate(canvas=>{
    const ctx=canvas.getContext('2d');
    const corner=ctx.getImageData(0,0,1,1).data[3];
@@ -105,8 +106,8 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   assert.equal(await p.locator('.day-meal-card').count(),1);
   await p.goto(base+'/Main.dc.html?date=2026-11-12');
   assert.equal(await stickers.count(),6);
-  assert.equal(await stickers.first().locator('.sticker-kcal').count(),0);
-  assert.equal(await stickers.last().locator('.sticker-kcal').innerText(),'88 kcal');
+  assert.equal(await stickers.first().locator('.sticker-kcal-top').count(),0);
+  assert.equal(await stickers.last().locator('.sticker-kcal-top').innerText(),'88 kcal');
   await p.goto(base+'/Day.dc.html?date=2026-11-12');
   await p.getByRole('link',{name:'编辑这餐',exact:true}).click();
   await p.getByRole('button',{name:'更换照片',exact:true}).click();
@@ -122,6 +123,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   await p.goto(base+'/Main.dc.html?date=2026-11-12');
   await stickers.nth(5).waitFor();
   assert.equal(await stickers.locator('canvas').count(),0);
+  // With no stickers left, the column falls back to the original photo.
   await p.locator('.week-original-photo').waitFor();
   assert.equal(await p.locator('.week-original-photo').count(),1);
   assert.equal(await p.locator('.week-calendar-day[aria-pressed="true"]').count(),1);

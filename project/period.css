@@ -80,3 +80,21 @@
 .period-care { display: flex; gap: 10px; margin: 0; padding: 13px 15px; border-radius: 24px; background: #fff; font-size: 12.5px; line-height: 1.6; color: var(--hh-muted); }
 .period-care hh-icon { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 10px; background: var(--rb-rose-soft); }
 .period-care strong { color: var(--hh-ink); }
+/* Match the design */
+.period-toolbar { display: flex; align-items: center; gap: 8px; }
+.period-title { margin: 0; font-size: 24px; font-weight: 800; }
+.period-share { margin-left: auto; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--rb-rose-soft); color: var(--rb-rose-deep); font: inherit; font-size: 12.5px; font-weight: 700; }
+.rv-hero h2 { font-size: 23px; }
+.rv-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(52px, 1fr)); max-width: 100%; }
+.rv-days:has(.rv-day:nth-child(-n+2):last-child) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.rv-day { flex: none; }
+.rv-day-food food-sticker { width: 26px; margin: 0 -3px; }
+.mirror-snacks food-sticker { display: block; width: 40px; }
+.mirror-snacks { gap: 4px; }
+.period-compare strong small { font-size: 11px; }
+.period-snacks img { display: block; width: 52px; height: 52px; object-fit: contain; filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 3px 4px rgba(72,52,30,.2)); }
+.period-snacks span { font-size: 11.5px; }
+.period-history { text-decoration: none; }
+.period-history span { color: var(--hh-muted); }
+.period-history--plain { margin: 0; }
+.period-card .period-toggle .app-switch[aria-checked="true"] { background: var(--rb-rose); }

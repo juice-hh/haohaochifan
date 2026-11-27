@@ -172,3 +172,48 @@ body { margin: 0; }
 .tl-row[data-type="note"] .tl-note:empty::before { content: "写给今天的一句话"; }
 .tl-link { color: var(--day-muted) !important; }
 .tl-link hh-icon { margin-left: auto; color: #C1BBB3; }
+/* Header like the design: date in the bar, round arrows on the right. */
+.day-head { display: flex; align-items: center; gap: 6px; }
+.day-head-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin: 0; }
+.day-head-title .day-date { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
+.day-head-title .day-date-caption { font-size: 12px; font-weight: 700; color: var(--day-muted); white-space: nowrap; }
+.day-head .day-date-controls { display: flex; gap: 6px; margin-left: auto; }
+.day-head .day-date-controls a { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--day-muted); font-size: 0; }
+@media (max-width: 359px) { .day-head-title .day-date { font-size: 22px; } .day-head .day-date-controls a { width: 36px; height: 36px; } }
+/* Summary card like the design. */
+.day-summary .day-chips { margin-bottom: 4px; }
+.day-summary-kcal strong { font-size: 44px; }
+.day-macro-line { font-size: 15px; }
+.day-macro-line > span { font-weight: 800; }
+.day-timeline .section-head small { font-size: 12px; color: #A39C94; }
+/* Meal cards like the design: scattered stickers, kcal above, feelings on the right. */
+.day-timeline .day-meal-card { position: relative; padding: 10px 10px 4px; }
+.tl-plate-row { display: flex; align-items: flex-start; gap: 6px; min-height: 108px; }
+.tl-plate { display: flex; align-items: flex-start; gap: 4px 8px; flex: 1; min-width: 0; padding: 4px 2px 0; color: inherit !important; }
+.tl-food { display: grid; justify-items: center; gap: 0; margin-top: var(--lift); max-width: 92px; text-align: center; }
+.tl-food small { order: 0; font: 800 10.5px ui-rounded, "SF Pro Rounded", "PingFang SC", sans-serif; color: #6A6380; }
+.tl-food .tl-food-art { order: 1; }
+.tl-food strong { order: 2; margin-top: 2px; font-size: 11px; font-weight: 600; }
+.tl-photo { display: grid; justify-items: start; gap: 4px; color: inherit !important; }
+.tl-photo img { width: 76px; height: 76px; margin: 4px 0 0; }
+.tl-photo strong { font-size: 11.5px; font-weight: 600; }
+.tl-feelings { display: flex; flex-direction: column; align-items: flex-end; gap: 0; flex: none; max-width: 46%; padding-top: 12px; }
+.tl-feelings .feeling-bubble::before { border-radius: 16px 16px 16px 5px; }
+.tl-feelings .feeling-bubble:nth-child(2)::before { border-radius: 16px 5px 16px 16px; }
+.tl-meal-tools { display: flex; justify-content: flex-end; margin: -6px -4px 0 0; }
+.tl-meal-tools a, .tl-meal-tools button { width: 40px; height: 40px; color: #B9B3AB; }
+.tl-meal-tools button { color: #D6A3A8; }
+.tl-meal-head h2 { font-size: 15px; }
+.tl-meal-name, .tl-meal-actions { display: none; }
+/* Macros on one line; sugar shown as cubes when it fits. */
+.day-macro-line { flex-wrap: nowrap; overflow: hidden; }
+.day-macro-line .day-focus-nutrients { flex-wrap: nowrap; }
+@media (max-width: 389px) { .day-macro-line { flex-wrap: wrap; } }
+.tl-meal-records { display: flex; flex-wrap: wrap; gap: 0 8px; padding: 2px 2px 0; }
+.tl-meal-records span { display: inline-flex; align-items: center; }
+.tl-meal-records a { display: inline-flex; align-items: center; gap: 3px; min-height: 40px; padding: 0 4px; color: var(--day-muted) !important; font-size: 11.5px; }
+.tl-meal-records button { display: grid; place-items: center; width: 32px; height: 40px; border: 0; background: transparent; color: #D6A3A8; }
+.tl-text-meal { display: grid; gap: 2px; flex: 1; min-width: 0; padding: 8px 4px; color: inherit !important; }
+.tl-text-meal strong { font-size: 14px; overflow-wrap: anywhere; }
+.tl-text-meal small { font-size: 11.5px; color: #A39C94; }
+.tl-plate-row:has(.tl-text-meal) { min-height: 0; }

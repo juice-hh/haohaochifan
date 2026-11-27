@@ -24,6 +24,22 @@
       ? meal.foods.filter((food) => NutritionVisual.isRefinedCarb(food)).length
       : NutritionVisual.isRefinedCarb({ name: meal.name }) ? 1 : 0), 0);
 
+  // The sticker of a real dish on those days, so a finding shows what was actually eaten.
+  function dishOn(dates, predicate) {
+    for (const date of dates) {
+      for (const meal of Journal.readMeals(date)) {
+        if (!predicate(meal)) continue;
+        const group = FoodStickers.groups([meal], date)[0];
+        const food = group.foods.find((item) => item.hasSticker && (predicate.food ? predicate.food(item) : true));
+        if (food) return { kind: "sticker", photo: food.photo, cutout: food.cutout, name: food.name };
+      }
+    }
+    return null;
+  }
+  const lunchMeal = (meal) => Journal.kindKeyOf(meal) === "lunch";
+  const refinedLunchMeal = Object.assign((meal) => lunchMeal(meal), { food: (food) => food.refinedCarb });
+  const snackMeal = (meal) => Journal.kindKeyOf(meal) === "snack";
+
   function week(weekStart) {
     const dates = Array.from({ length: 7 }, (_, i) => Journal.addDays(weekStart, i)).filter((date) => date <= Journal.today);
     const findings = [];
@@ -31,13 +47,13 @@
     // Refined-carb lunch and a sleepy afternoon.
     const refinedSleepy = dates.filter((date) => refinedLunch(date) && sleepyAfternoon(date) && !walkedAfterLunch(date));
     if (refinedSleepy.length >= 2) {
-      findings.push({ id: "refinedSleepy", tone: "low", icons: ["grain", "plus", "sleepy"],
+      findings.push({ id: "refinedSleepy", tone: "low", icons: [dishOn(refinedSleepy, refinedLunchMeal) ?? "grain", "plus", "sleepy"],
         text: "午饭以面或米饭为主的 " + refinedSleepy.length + " 天，下午都说有点困。", dates: refinedSleepy });
     }
     // The same kind of lunch with an after-meal walk.
     const walked = dates.filter((date) => refinedLunch(date) && walkedAfterLunch(date) && clearAfternoon(date));
     if (walked.length >= 1 && refinedSleepy.length >= 1) {
-      findings.push({ id: "walkHelps", tone: "good", icons: ["grain", "plus", "walk", "light"],
+      findings.push({ id: "walkHelps", tone: "good", icons: [dishOn(walked, refinedLunchMeal) ?? "grain", "plus", "walk", "light"],
         text: "同样吃面或米饭，饭后走了一走的那" + (walked.length > 1 ? " " + walked.length + " 天" : "天") + "，下午没犯困。", dates: walked });
     }
     // Good days: what they share.
@@ -49,7 +65,7 @@
       if (lightLunch.length === good.length) parts.push("午饭都吃得清淡");
       if (moved.length === good.length) parts.push("也都动了动");
       if (parts.length) {
-        findings.push({ id: "goodDays", tone: "good", icons: ["lunch", "plus", "walk", "light"],
+        findings.push({ id: "goodDays", tone: "good", icons: [dishOn(good, lunchMeal) ?? "lunch", "plus", ...(moved.length === good.length ? ["walk"] : []), Journal.stateOn(good[0]) === "spirit" ? "spirit" : "light"],
           text: "你觉得轻盈或精神的 " + good.length + " 天，" + parts.join("，") + "。", dates: good });
       }
     }
@@ -69,7 +85,7 @@
       const others = dates.filter((date) => !periodDays.includes(date) && Journal.readMeals(date).length);
       const more = snacks(periodDays) - (others.length ? snacks(others) : 0);
       if (more >= 0.5) {
-        findings.push({ id: "periodSnacks", tone: "period", icons: ["period", "right", "snack"],
+        findings.push({ id: "periodSnacks", tone: "period", icons: ["period", "right", dishOn(periodDays, snackMeal) ?? "snack"],
           text: "经期这 " + periodDays.length + " 天，你每天多吃了一次加餐。这是身体在要能量，不用怪自己。", dates: periodDays });
       }
     }
@@ -144,15 +160,28 @@
     const count = (run, predicate) => run ? run.days.filter(predicate).length : null;
     const snacksIn = (run) => run ? run.days.reduce((sum, date) => sum + Journal.readMeals(date).filter((meal) => Journal.kindKeyOf(meal) === "snack").length, 0) : null;
     const sleepyIn = (run) => count(run, (date) => Journal.periodOn(date)?.feelings.includes("sleepy") || Journal.stateOn(date) === "sleepy");
+    const sugarIn = (run) => {
+      if (!run) return null;
+      const values = run.days.map((date) => Journal.dayFocusNutrients(Journal.readMeals(date)).find((item) => item.key === "addedSugar")?.value ?? null).filter((value) => value !== null);
+      return values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
+    };
+    const sugarNow = sugarIn(period), sugarBefore = sugarIn(previous);
     const compare = previous ? [
       { label: "犯困", before: sleepyIn(previous), now: sleepyIn(period), unit: "天" },
       { label: "加餐", before: snacksIn(previous), now: snacksIn(period), unit: "次" },
-      { label: "天数", before: previous.length, now: period.length, unit: "天" }
+      sugarNow !== null && sugarBefore !== null
+        ? { label: "添加糖", before: sugarBefore, now: sugarNow, unit: "g/天", percent: true }
+        : { label: "天数", before: previous.length, now: period.length, unit: "天" }
     ] : [];
+    const backBefore = previous ? count(previous, (date) => Journal.periodOn(date)?.feelings.includes("backache")) : null;
+    const better = [];
+    if (previous && backDays.length < backBefore) better.push("腰酸少了");
+    if (previous && sleepyIn(period) < sleepyIn(previous)) better.push("也没那么困");
+    else if (previous && sleepyIn(period) === 0 && sleepyIn(previous) === 0) better.push("精神也不错");
     const easier = previous && sleepyIn(period) <= sleepyIn(previous) && backDays.length <= count(previous, (date) => Journal.periodOn(date)?.feelings.includes("backache"));
     const headline = previous ? (easier ? "这次比上次轻松一些" : "这次辛苦了一些") : "这是记下的第一次经期";
     const sub = items.length ? "身体在这几天提醒你的事，都整理在下面了" : "这几天的记录都在下面，记得越多，下次能看出的越多";
-    return { days, items, compare, previous, headline, sub };
+    return { days, items, compare, previous, headline, headline2: better.join("，"), sub };
   }
 
   window.Insights = { week, movement, sugarWeek, review, refinedLunch };

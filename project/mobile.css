@@ -1934,3 +1934,119 @@ html:has(.screen--tabs), html:has(.day-screen) { scroll-padding-bottom: calc(110
   .sugar-row-k { font-size: 12px; }
   .move-week, .sugar-week { padding: 14px; }
 }
+
+/* ---------- Match the record-book design (2026-11-27 pass 2) ---------- */
+/* Calendar columns: state icon on top, stacked stickers, marks, weekday and date. */
+.week-strip .week-calendar-day { min-height: 206px; padding: 10px 0 10px; }
+.week-stack { position: relative; display: block; width: 46px; height: 96px; margin-bottom: 2px; }
+.week-stack-item { position: absolute; left: 50%; bottom: calc(var(--i) * 28px); width: 42px; transform: translateX(calc(-50% + var(--dx))) rotate(var(--tilt)); z-index: calc(3 - var(--i)); }
+.week-stack-item food-sticker { display: block; width: 42px; }
+.week-strip .week-calendar-day[data-future="true"] .week-thumb { display: none; }
+.week-strip .week-calendar-day .week-thumb { margin-bottom: auto; margin-top: 30px; }
+.week-strip .week-calendar-day[aria-current="date"]::after { content: "今天"; position: absolute; bottom: -18px; font-size: 10.5px; font-weight: 700; color: var(--rb-green-deep); }
+.week-strip .week-calendar-day { position: relative; overflow: visible; }
+.week-strip .week-calendar-day[aria-pressed="true"] { background-image: none; box-shadow: inset 0 0 0 2.5px var(--rb-green); }
+.week-strip .week-calendar-day[aria-pressed="true"][data-state="sleepy"] { box-shadow: inset 0 0 0 2.5px var(--rb-violet); }
+.week-strip .week-calendar-day[aria-pressed="true"][data-state="spirit"] { box-shadow: inset 0 0 0 2.5px var(--rb-yellow); }
+.week-strip .week-calendar-day[aria-pressed="true"][data-state="none"] { background: #fff; box-shadow: inset 0 0 0 2.5px var(--hh-purple); }
+.week-strip .week-calendar-day[aria-pressed="true"][data-state="light"] { background: linear-gradient(#DDF1E6, #EEF8F2); }
+.week-strip .week-calendar-day[aria-pressed="true"][data-state="spirit"] { background: linear-gradient(#FFEFC9, #FFF7E3); }
+.week-strip .week-calendar-day[aria-pressed="true"][data-state="sleepy"] { background: linear-gradient(#E8E3FB, #F3F0FD); }
+.week-strip .week-calendar-day[aria-pressed="true"] .week-weekday { color: var(--hh-ink); }
+.week-strip .week-calendar-day[aria-current="date"]:not([aria-pressed="true"]) { box-shadow: none; }
+.week-calendar:has(.week-period-band) .week-period-band { margin-top: 26px; }
+.week-calendar:not(:has(.week-period-band)) { padding-bottom: 18px; }
+
+/* Today card: kcal and the two chips share one row, the goal link is quiet. */
+.week-energy-row { display: flex !important; align-items: flex-end; gap: 10px; }
+.week-energy-row .week-nutrient.week-energy { flex: 1; min-width: 0; }
+.week-energy-row .day-chips--energy { margin: 0 0 2px; flex: none; }
+.week-energy-row .energy-goal[data-state="unset"] { margin-top: 2px; }
+.week-energy-row .energy-goal-set { min-height: 32px; padding: 0 2px; background: transparent; color: var(--hh-muted); font-size: 12px; font-weight: 700; }
+.week-energy-row .energy-goal-set hh-icon { width: 14px; height: 14px; }
+.week-nutrient.week-energy strong { font-size: 44px; }
+.day-chips--energy .day-chip { flex-direction: row; padding: 7px 10px 7px 7px; border-radius: 16px; }
+.day-chips--energy .day-chip strong { font-size: 14px; }
+@media (max-width: 374px) { .week-nutrient.week-energy strong { font-size: 36px; } .day-chips--energy .day-chip { padding: 6px 8px 6px 6px; } .day-chips--energy { gap: 6px; } }
+
+/* Collapsed macros: coloured dots like the design. */
+.nutrition-summary[data-open="false"] .week-macro dt hh-icon { display: none; }
+.nutrition-summary[data-open="false"] .week-macro dt::before { content: ""; display: block; width: 8px; height: 8px; border-radius: 50%; background: #E7B84A; }
+.nutrition-summary[data-open="false"] .week-macro:nth-child(2) dt::before { background: #A796EE; }
+.nutrition-summary[data-open="false"] .week-macro:nth-child(3) dt::before { background: #8ED0AE; }
+.nutrition-summary[data-open="false"] .week-macro strong { font-size: 15px; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient hh-icon { display: none; }
+.nutrition-summary[data-open="false"] .day-focus-nutrient { padding: 4px 9px; }
+.nutrition-summary[data-open="false"] .day-focus-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin-right: 3px; font-weight: 700; }
+.week-strip .week-calendar-day { justify-content: flex-start; }
+.week-strip .week-calendar-day .week-state-icon { margin-bottom: 0; flex: none; }
+.week-strip .week-calendar-day .week-stack, .week-strip .week-calendar-day .week-thumb { margin-top: auto; }
+.week-strip .week-calendar-day .week-thumb { opacity: .7; }
+.week-strip .week-calendar-day .week-day-marks { margin-top: 4px; }
+.week-strip .week-calendar-day .week-weight-change:empty { display: none; }
+/* Dense sticker piles, as in the reference. */
+.week-strip .week-calendar-day { min-height: 214px; padding: 8px 0 10px; }
+.week-stack { width: 100%; height: 118px; margin-top: auto; }
+.week-stack-item { width: 48px; bottom: calc(var(--i) * 22px); }
+.week-stack-item food-sticker { width: 48px; }
+.week-strip .week-calendar-day[data-future="true"] .week-thumb, .week-strip .week-calendar-day .week-thumb[data-has-photo="false"] { visibility: hidden; }
+.week-strip .week-calendar-day .week-day-marks { min-height: 16px; }
+.week-strip .week-weekday, .week-strip .week-date { flex: none; }
+@media (max-width: 374px) { .week-stack-item, .week-stack-item food-sticker { width: 40px; } .week-stack-item { bottom: calc(var(--i) * 19px); } }
+/* Centre the pile on the column and keep every column bottom-aligned. */
+.week-strip .week-calendar-day { display: grid; grid-template-rows: 28px 1fr 16px auto auto; justify-items: center; align-items: end; row-gap: 4px; }
+.week-strip .week-calendar-day > .week-state-icon { align-self: start; }
+.week-stack { position: relative; width: 52px; height: 104px; margin: 0; align-self: end; }
+.week-stack-item { left: 50%; bottom: calc(var(--i) * 21px); width: 46px; transform: translateX(calc(-50% + var(--dx))) rotate(var(--tilt)); }
+.week-stack-item food-sticker { width: 46px; }
+.week-strip .week-calendar-day .week-thumb { display: none; }
+.week-strip .week-calendar-day .week-thumb[data-has-photo="true"] { display: block; visibility: visible; margin: 0; align-self: end; opacity: 1; }
+.week-strip .week-calendar-day .week-weight-change { display: none; }
+.week-strip .week-calendar-day .week-day-marks { margin: 0; }
+.week-strip .week-calendar-day .plan-markers { display: none; }
+@media (max-width: 374px) { .week-stack { width: 44px; } .week-stack-item, .week-stack-item food-sticker { width: 40px; } .week-stack-item { bottom: calc(var(--i) * 18px); } }
+.week-stack .week-thumb[data-has-photo="true"] { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: block; width: 40px; height: 40px; }
+/* Board: calories above each sticker in quiet purple, feelings as small tags on the right. */
+.sticker-kcal-top { font-family: var(--hh-num); font-size: 11.5px; font-weight: 800; color: #3E3757; margin-bottom: 1px; }
+.week-board[data-view="meals"] .sticker-kcal-top { font-size: 11px; }
+.week-board { position: relative; }
+.board-feelings { display: flex; flex-direction: column; align-items: flex-end; gap: 0; padding: 0 6px 2px; }
+.board-feelings .feeling-bubble::before { border-radius: 16px 5px 16px 16px; }
+.focus-tag { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: var(--rb-yellow-soft); color: var(--rb-yellow-deep); font-size: 11px; font-weight: 700; vertical-align: 2px; }
+.move-add { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 44px; margin-top: 10px; border: 0; border-radius: 16px; background: #FAF9F6; color: var(--hh-purple-deep); font: inherit; font-size: 13px; font-weight: 700; }
+.sugar-days i[data-on="false"] { background: transparent; }
+.finding-part[data-kind="sticker"] { display: block; width: 62px; }
+.finding-part[data-kind="sticker"] food-sticker { display: block; width: 62px; }
+.finding-part[data-kind="icon"]:last-child { width: 58px; height: 58px; }
+.finding { padding: 16px 16px 14px; }
+/* Record-book sheets: full-width white sheet with a handle, left-aligned like the design. */
+.app-sheet.rb-sheet { width: 100%; max-width: 480px; margin: auto auto 0; padding: 30px 18px calc(18px + env(safe-area-inset-bottom)); border-radius: 34px 34px 0 0; background: #fff; text-align: left; position: relative; }
+.app-sheet.rb-sheet::before { content: ""; position: absolute; top: 10px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: #E3DED7; }
+.app-sheet.rb-sheet h2 { margin: 0; text-align: left; font-size: 20px; }
+.app-sheet.rb-sheet > p:not(.rb-label):not(.rb-hint):not(.rb-error) { margin: 4px 0 0; text-align: left; font-size: 13px; }
+.rb-exercise h2 { display: inline-block; }
+.rb-when { float: right; margin-top: 2px; padding: 5px 10px; border-radius: 999px; background: #F6F4F0; color: var(--hh-muted); font-size: 12.5px; font-weight: 700; }
+.app-sheet.rb-sheet .rb-label { clear: both; margin: 16px 0 0; text-align: left; font-size: 12.5px; color: var(--hh-muted); }
+.app-sheet.rb-sheet button { width: auto; min-height: 0; margin: 0; border-radius: 0; font-weight: 700; }
+.app-sheet.rb-sheet button + button { margin-top: 0; }
+.app-sheet.rb-sheet .rb-quick-item { width: 100%; min-height: 72px; padding: 10px; border-radius: 18px; background: #FAF9F6; }
+.app-sheet.rb-sheet .rb-type { width: 100%; padding: 12px 6px; border-radius: 20px; background: #F6F4F0; }
+.app-sheet.rb-sheet .rb-type[aria-pressed="true"] { background: var(--rb-violet-soft); }
+.app-sheet.rb-sheet .rb-chip { min-height: 40px; padding: 8px 13px; border-radius: 999px; background: #F6F4F0; color: var(--hh-muted); font-size: 13px; }
+.app-sheet.rb-sheet .rb-chip[aria-pressed="true"] { background: var(--rb-violet-soft); color: var(--rb-violet-deep); }
+.app-sheet.rb-sheet .rb-stepper { background: #F6F4F0; }
+.app-sheet.rb-sheet .rb-stepper button { width: 40px; height: 40px; border-radius: 50%; background: #fff; font-size: 18px; }
+.app-sheet.rb-sheet .rb-duration-chips button { min-width: 40px; height: 40px; border-radius: 12px; background: #FAF9F6; font-size: 13px; }
+.app-sheet.rb-sheet .rb-duration-chips button[aria-pressed="true"] { background: var(--hh-ink); color: #fff; }
+.app-sheet.rb-sheet .rb-hint { text-align: left; margin: 14px 0 0; font-size: 12px; color: #7A5A1E; }
+.app-sheet.rb-sheet .app-sheet-confirm { width: 100%; min-height: 52px; margin-top: 16px; border-radius: 26px; background: var(--hh-purple); color: #fff; font-size: 16px; }
+.app-sheet.rb-sheet .app-sheet-cancel { width: 100%; min-height: 44px; margin-top: 4px; border-radius: 22px; background: transparent; color: var(--hh-muted); font-size: 14px; }
+.app-sheet.rb-sheet .rb-note { background: #F6F4F0; }
+.app-sheet.rb-sheet .rb-feelings .rb-chip[data-tone] { background: #F6F4F0; }
+.app-sheet.rb-sheet .rb-feelings .rb-chip[data-tone="good"][aria-pressed="true"] { background: var(--rb-green-soft); color: var(--rb-green-deep); }
+.app-sheet.rb-sheet .rb-feelings .rb-chip[data-tone="warn"][aria-pressed="true"] { background: var(--rb-orange-soft); color: var(--rb-orange-deep); }
+.app-sheet-overlay:has(.rb-sheet) { align-items: end; }
+.app-sheet.rb-sheet .rb-duration { flex-wrap: nowrap; }
+.app-sheet.rb-sheet .rb-stepper { gap: 6px; }
+.app-sheet.rb-sheet .rb-stepper strong { min-width: 62px; }
+.app-sheet.rb-sheet .rb-duration-chips button { min-width: 36px; }

@@ -31,7 +31,8 @@ async function useAI(p){
  await p.getByRole('button',{name:'切换本次',exact:true}).click();
  await p.getByRole('dialog').getByRole('button',{name:/AI 辅助/}).click();
 }
-const mealEditor=(p,name)=>p.locator('.day-meal-card').filter({hasText:name}).getByRole('link',{name:'编辑这餐',exact:true});
+// A meal card can hold several records of the same meal; each record keeps its own edit link.
+const mealEditor=(p,name)=>p.locator('.day-meal-card').filter({hasText:name}).locator('.tl-meal-record').filter({hasText:name}).or(p.locator('.day-meal-card').filter({hasText:name}).locator('.tl-meal-tools')).getByRole('link',{name:'编辑这餐',exact:true});
 async function startManual(p){await p.getByRole('button',{name:'手动填写',exact:true}).click();}
 async function expand(p,selector){if(!await p.locator(selector).evaluate(e=>e.open))await p.locator(selector+' > summary').click();}
 async function check(engine,name,fn){let f;try{f=await fn();results.push({engine,name,status:'PASS'});console.log('PASS',engine,name)}catch(e){results.push({engine,name,status:'FAIL',error:e.message});console.log('FAIL',engine,name,e.message)}finally{if(f?.context)await f.context.close();}}
@@ -139,8 +140,7 @@ async function check(engine,name,fn){let f;try{f=await fn();results.push({engine
    await p.locator('input[name=pro]').fill('20');
    await p.locator('.record-save').click();await p.waitForURL('**/Main.dc.html?**');
    await p.getByRole('link',{name:'11月12日 周四的记录',exact:true}).click();
-   const lunch=p.locator('.day-meal-section').filter({has:p.getByRole('heading',{name:'午餐',exact:true})});
-   await lunch.locator('.day-meal-card').filter({hasText:'精简流程测试'}).getByRole('link',{name:'编辑这餐',exact:true}).click();
+   await mealEditor(p,'精简流程测试').click();
    await p.waitForFunction(()=>document.querySelector('#meal-name')?.value==='精简流程测试');
    assert.equal((await p.getByRole('button',{name:'餐别',exact:true}).innerText()).trim(),'午餐');
    assert.equal(await p.locator('input[name=pro]').inputValue(),'20');

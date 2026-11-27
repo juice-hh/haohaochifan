@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-6">
-<link rel="stylesheet" href="./day.css?v=20261127-1">
-<title>好好吃饭 单日详情</title>
+<link rel="stylesheet" href="./mobile.css?v=20261127-16">
+<link rel="stylesheet" href="./day.css?v=20261127-5">
+<title>好好吃饭 一天一页</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-3"></script>
 <script src="./meal-slots.js?v=20261125"></script>
@@ -18,28 +18,21 @@
 <script src="./app-icons.js?v=20261127-1"></script>
 <script src="./nutrition-visual.js?v=20261127-1"></script>
 <script src="./food-stickers.js?v=20261127-1"></script>
-<script src="./record-sheets.js?v=20261127-1"></script>
+<script src="./record-sheets.js?v=20261127-3"></script>
 </head>
 <body>
 <x-dc>
 <main class="screen screen--flow day-screen">
-  <header class="app-toolbar day-toolbar">
+  <header class="app-toolbar day-toolbar day-head">
     <a class="app-icon-button" href="{{backHref}}" aria-label="返回{{backLabel}}">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>
     </a>
-    <h1 class="page-title">当天饭记</h1>
-  </header>
-
-  <div class="day-date-row">
-    <div>
-      <p class="day-date">{{dateLabel}}</p>
-      <p class="page-header-note day-date-caption">{{dayName}} <sc-if value="{{isToday}}"><span>今天</span></sc-if></p>
-    </div>
+    <h1 class="day-head-title"><span class="day-date">{{dateLabel}}</span><span class="day-date-caption">{{dayName}}<sc-if value="{{isToday}}"> 今天</sc-if></span></h1>
     <nav class="day-date-controls" aria-label="切换日期">
-      <a href="{{previousDay}}" aria-label="前一天">‹</a>
-      <a href="{{nextDay}}" aria-label="后一天">›</a>
+      <a href="{{previousDay}}" aria-label="前一天"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.5 6-6 6 6 6"></path></svg></a>
+      <a href="{{nextDay}}" aria-label="后一天"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a>
     </nav>
-  </div>
+  </header>
 
   <sc-if value="{{undo}}">
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 18px; padding: 8px 12px; background: #ECE8FB; color: #5B48B8">
@@ -108,24 +101,33 @@
                 <section class="day-meal-section">
                   <article class="day-meal-card">
                     <header class="tl-meal-head"><h2>{{ev.meal.kindLabel}}</h2><span>{{ev.meal.kcalText}}</span></header>
-                    <sc-if value="{{ev.meal.hasStickers}}">
-                      <div class="tl-plate">
-                        <sc-for list="{{ev.meal.foods}}" as="f">
-                          <span class="tl-food" style="{{f.style}}"><span class="tl-food-art"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><sc-for list="{{f.marks}}" as="mk"><span class="sticker-focus-mark" data-mark="{{mk.key}}"><hh-icon name="{{mk.key}}" size="13"></hh-icon></span></sc-for></span><strong>{{f.name}}</strong><sc-if value="{{f.kcalText}}"><small>{{f.kcalText}}</small></sc-if></span>
-                        </sc-for>
+                    <div class="tl-plate-row">
+                      <sc-if value="{{ev.meal.hasStickers}}">
+                        <a class="tl-plate" href="{{ev.meal.editHref}}" aria-label="编辑这餐 {{ev.meal.name}}">
+                          <sc-for list="{{ev.meal.foods}}" as="f">
+                            <span class="tl-food" style="{{f.style}}"><sc-if value="{{f.kcalText}}"><small>{{f.kcalText}}</small></sc-if><span class="tl-food-art"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><sc-for list="{{f.marks}}" as="mk"><span class="sticker-focus-mark" data-mark="{{mk.key}}"><hh-icon name="{{mk.key}}" size="13"></hh-icon></span></sc-for></span><strong>{{f.name}}</strong></span>
+                          </sc-for>
+                        </a>
+                      </sc-if>
+                      <sc-if value="{{ev.meal.textOnly}}">
+                        <a class="tl-text-meal" href="{{ev.meal.editHref}}" aria-label="编辑这餐 {{ev.meal.name}}"><strong>{{ev.meal.name}}</strong><small>还没有贴纸，可以补一张照片</small></a>
+                      </sc-if>
+                      <sc-if value="{{ev.meal.photoOnly}}">
+                        <a class="tl-photo" href="{{ev.meal.editHref}}" aria-label="编辑这餐 {{ev.meal.name}}"><img src="{{ev.meal.photo}}" alt="这餐的原照片" draggable="false"><strong>{{ev.meal.name}}</strong></a>
+                      </sc-if>
+                      <div class="tl-feelings">
+                        <sc-for list="{{ev.meal.feelTags}}" as="t"><button type="button" class="feeling-bubble" data-tone="{{t.tone}}" onClick="{{t.open}}">{{t.text}}</button></sc-for>
+                      </div>
+                    </div>
+                    <sc-if value="{{ev.meal.editLinks}}">
+                      <div class="tl-meal-records"><sc-for list="{{ev.meal.editLinks}}" as="e"><span class="tl-meal-record"><a href="{{e.href}}" aria-label="编辑这餐" title="编辑{{e.label}}">{{e.label}}<hh-icon name="edit" size="14"></hh-icon></a><button type="button" onClick="{{e.remove}}" aria-label="{{e.deleteLabel}}" title="删除"><hh-icon name="trash" size="14"></hh-icon></button></span></sc-for></div>
+                    </sc-if>
+                    <sc-if value="{{ev.meal.single}}">
+                      <div class="tl-meal-tools">
+                        <a href="{{ev.meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="16"></hh-icon></a>
+                        <button type="button" onClick="{{ev.meal.remove}}" aria-label="{{ev.meal.deleteLabel}}" title="删除"><hh-icon name="trash" size="16"></hh-icon></button>
                       </div>
                     </sc-if>
-                    <sc-if value="{{ev.meal.photoOnly}}">
-                      <a class="tl-photo" href="{{ev.meal.editHref}}" aria-label="查看{{ev.meal.name}}"><img src="{{ev.meal.photo}}" alt="这餐的原照片" draggable="false"></a>
-                    </sc-if>
-                    <p class="tl-meal-name">{{ev.meal.name}}<sc-if value="{{ev.meal.dishDetails}}"><small>{{ev.meal.dishDetails}}</small></sc-if></p>
-                    <div class="tl-meal-actions">
-                      <button type="button" class="feeling-bubble" data-tone="{{ev.meal.feelTone}}" onClick="{{ev.meal.feel}}">{{ev.meal.feelText}}</button>
-                      <span class="tl-meal-tools">
-                        <a href="{{ev.meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="18"></hh-icon></a>
-                        <button type="button" onClick="{{ev.meal.remove}}" aria-label="{{ev.meal.deleteLabel}}" title="删除"><hh-icon name="trash" size="18"></hh-icon></button>
-                      </span>
-                    </div>
                   </article>
                 </section>
               </sc-if>
@@ -208,26 +210,41 @@ class Component extends DCLogic {
     }
 
     // Meals, each placed at the time it was recorded.
+    // One card per meal period, like a page in the book. Several records of the same meal share it.
+    const byKind = new Map();
     groupViews.forEach((group, index) => {
       const meal = entry.meals[index];
-      const at = Journal.mealMinutes(meal);
-      const ids = Journal.feelingsFor(meal.id);
-      const warn = ids.some((id) => tones[id]?.tone === "warn");
-      const good = ids.length && !warn;
-      const foods = group.foods.filter((food) => food.hasSticker);
-      const kindKey = Journal.kindKeyOf(meal);
-      const refined = group.foods.some((food) => food.refinedCarb);
-      events.push({ at, type: "meal", icon: good ? "light" : warn ? "sleepy" : kindKey || "lunch", tone: good ? "green" : warn ? "violet" : "plain",
-        meal: { ...group, kindLabel: group.kind, kindKey, refined,
-          kcalText: Number.isFinite(meal.kcal) ? Math.round(meal.kcal) + " kcal" : "",
-          hasStickers: foods.length > 0, photoOnly: !foods.length && !!group.photo,
+      const kindKey = Journal.kindKeyOf(meal) || "other:" + index;
+      if (!byKind.has(kindKey)) byKind.set(kindKey, []);
+      byKind.get(kindKey).push({ group, meal });
+    });
+    for (const [kindKey, items] of byKind) {
+      const at = Math.min(...items.map(({ meal }) => Journal.mealMinutes(meal)));
+      const allIds = items.flatMap(({ meal }) => Journal.feelingsFor(meal.id).map((id) => ({ id, meal })));
+      const warn = allIds.some(({ id }) => tones[id]?.tone === "warn");
+      const good = allIds.length && !warn;
+      const foods = items.flatMap(({ group }) => group.foods.filter((food) => food.hasSticker));
+      const kcalKnown = items.some(({ meal }) => Number.isFinite(meal.kcal));
+      const kcal = items.reduce((sum, { meal }) => sum + (Number.isFinite(meal.kcal) ? meal.kcal : 0), 0);
+      const first = items[0].group;
+      const last = items.at(-1);
+      const unfelt = items.filter(({ meal }) => !Journal.feelingsFor(meal.id).length);
+      const feelTarget = (unfelt.at(-1) ?? last).meal;
+      const feelTags = allIds.map(({ id, meal }) => ({ tone: tones[id]?.tone === "warn" ? "warn" : "good", text: tones[id]?.label, open: () => this.openSheet("feelings", meal) }));
+      if (unfelt.length) feelTags.push({ tone: "add", text: "+ 感受", open: () => this.openSheet("feelings", feelTarget) });
+      events.push({ at, type: "meal", icon: good ? "light" : warn ? "sleepy" : Object.hasOwn(Journal.kinds, kindKey) ? kindKey : "lunch", tone: good ? "green" : warn ? "violet" : "plain",
+        meal: { ...first, kindLabel: first.kind, kindKey, id: last.meal.id,
+          name: items.map(({ group }) => group.name).join("、"),
+          editHref: last.group.editHref, deleteLabel: "删除" + last.group.name, remove: last.group.remove,
+          kcalText: kcalKnown ? Math.round(kcal) + " kcal" : "",
+          hasStickers: foods.length > 0, photoOnly: !foods.length && !!last.group.photo, photo: last.group.photo,
+          textOnly: !foods.length && !last.group.photo,
           foods: foods.slice(0, 4).map((food, i) => ({ ...food, marks: NutritionVisual.focusMarks(food),
             kcalText: NutritionVisual.known(food.energy) ? Math.round(food.energy) + " kcal" : "",
-            style: "--tilt:" + ([-4, 6, -3, 8][i]) + "deg;--size:" + (i === 0 ? 84 : foods.length > 2 ? 58 : 66) + "px" })),
-          feelTone: ids.length ? (warn ? "warn" : "good") : "add",
-          feelText: ids.length ? ids.map((id) => tones[id]?.label).join(" ") : "+ 感受",
-          feel: () => this.openSheet("feelings", meal) } });
-    });
+            style: "--tilt:" + ([-4, 7, -3, 8][i]) + "deg;--size:" + (i === 0 ? 76 : foods.length > 2 ? 50 : 58) + "px;--lift:" + ([0, 14, 6, 18][i]) + "px" })),
+          editLinks: items.length > 1 ? items.map(({ group }) => ({ href: group.editHref, label: group.name, remove: group.remove, deleteLabel: "删除" + group.name })) : null,
+          single: items.length === 1, feelTags } });
+    }
 
     // Exercise sessions and the older daily minutes.
     for (const item of Journal.exercisesOn(date)) {
