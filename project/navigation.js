@@ -82,7 +82,7 @@
         ["scale", "记体重", Journal.link("Weigh", recordDate, back)],
         ["plan", "贴计划", Journal.link("Album", date, { plan: "1" })],
         ["move", "记运动", Journal.link("Goal", recordDate) + "#movement"],
-        ["period", Journal.periodEnabled() ? "记经期" : "开启经期记录", Journal.link("Period", recordDate, { returnTo: active === "Day" ? "Main" : active })]
+        ["period", "记经期", Journal.link("Period", recordDate, { returnTo: active === "Day" ? "Main" : active })]
       ];
       button.setAttribute("aria-expanded", "true");
       JournalUI.openSheet({
