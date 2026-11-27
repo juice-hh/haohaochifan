@@ -2136,3 +2136,33 @@ html:has(.screen--tabs), html:has(.day-screen) { scroll-padding-bottom: calc(110
 .period-invite-go { flex: none; padding: 7px 12px; border-radius: 999px; background: var(--rb-rose); color: #fff; font-size: 12.5px; font-weight: 700; }
 .period-invite-close { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: #C79AA7; }
 .journal-menu-mark svg { display: block; }
+
+/* ---------- Design match pass 4: buttons and header ---------- */
+/* Header: title + range, settings as a grey dot; week arrows hidden visually (swipe the calendar instead). */
+.week-header .week-range-controls--quiet button { position: absolute; width: 1px !important; height: 1px !important; min-height: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); }
+.week-header .week-range-controls--quiet button:focus-visible { position: static; width: 32px !important; height: 32px !important; clip: auto; }
+.week-header .week-range-controls--quiet { margin-left: 10px; gap: 0; }
+.week-header .week-range-controls--quiet span { font: 700 14px var(--hh-num); color: var(--hh-muted); }
+.week-header .settings-link .settings-gear { display: none; }
+.week-header .settings-dot { display: block; width: 22px; height: 22px; border-radius: 50%; background: #CFC9C1; }
+.week-header .settings-link:is(:active, :focus-visible) .settings-dot { background: var(--hh-purple); }
+/* Nutrition row: no chevron, the row itself opens details. */
+.nutrition-summary[data-open="false"] { padding-right: 12px; cursor: pointer; }
+.nutrition-summary[data-open="false"] .nutrition-toggle { inset: 0; width: 100%; height: 100%; transform: none; border-radius: 18px; opacity: 0; }
+.nutrition-summary[data-open="false"] .nutrition-toggle:focus-visible { opacity: 1; outline: 2px solid var(--hh-purple); background: transparent; }
+.nutrition-summary[data-open="false"] .nutrition-toggle hh-icon { display: none; }
+.nutrition-summary[data-open="false"] .day-focus-nutrients { margin-left: auto; }
+/* Board view switch: a filled dark dot and an outline dot. */
+.week-board-switch { gap: 6px; margin: 0; }
+.week-board-switch .board-dot { width: 40px; height: 40px; min-height: 0 !important; }
+.week-board-switch .board-dot svg { display: none; }
+.week-board-switch .board-dot::before { content: ""; display: block; width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #DDD8D0; background: #fff; }
+.week-board-switch .board-dot[aria-pressed="true"]::before { background: var(--hh-dark); box-shadow: none; }
+.week-board-switch .board-dot[aria-pressed="false"]::before { background: #fff; }
+/* Pass 4b: small option dots so the state note fits; the weekly sugar bar is not in the design. */
+.state-row-options { gap: 0; }
+.state-row-options button { width: 24px; height: 44px; }
+.state-row-options button hh-icon { width: 20px; height: 20px; }
+.state-row-options button hh-icon svg { width: 13px; height: 13px; }
+.state-row-text small { overflow: visible; text-overflow: clip; }
+.screen--week > .focus-trend { display: none; }

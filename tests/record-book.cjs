@@ -63,7 +63,8 @@ const addDays=(date,n)=>{const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getU
    await p.goto(base+'/Day.dc.html?date='+today);
    const times=await p.locator('.tl-row[data-type="meal"] .tl-time').allTextContents();
    assert.deepEqual(times,['8:10','12:30']);
-   await p.locator('.tl-row[data-type="move"]').getByRole('button',{name:/删除这次/}).click();
+   await p.locator('.tl-row[data-type="move"]').getByRole('button',{name:/点一下可删除/}).click();
+   await p.getByRole('dialog').getByRole('button',{name:'删除',exact:true}).click();
    assert.equal(await p.locator('.tl-row[data-type="move"]').count(),0);
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'day page fits '+width);
 

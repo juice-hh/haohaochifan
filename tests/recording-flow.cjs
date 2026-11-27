@@ -31,8 +31,8 @@ async function useAI(p){
  await p.getByRole('button',{name:'切换本次',exact:true}).click();
  await p.getByRole('dialog').getByRole('button',{name:/AI 辅助/}).click();
 }
-// A meal card can hold several records of the same meal; each record keeps its own edit link.
-const mealEditor=(p,name)=>p.locator('.day-meal-card').filter({hasText:name}).locator('.tl-meal-record').filter({hasText:name}).or(p.locator('.day-meal-card').filter({hasText:name}).locator('.tl-meal-tools')).getByRole('link',{name:'编辑这餐',exact:true});
+// People open a meal by tapping its stickers, photo or name in the day timeline.
+const mealEditor=(p,name)=>p.locator('.day-meal-card').filter({hasText:name}).locator('a.tl-food, a.tl-photo, a.tl-text-meal').filter({hasText:name}).first();
 async function startManual(p){await p.getByRole('button',{name:'手动填写',exact:true}).click();}
 async function expand(p,selector){if(!await p.locator(selector).evaluate(e=>e.open))await p.locator(selector+' > summary').click();}
 async function check(engine,name,fn){let f;try{f=await fn();results.push({engine,name,status:'PASS'});console.log('PASS',engine,name)}catch(e){results.push({engine,name,status:'FAIL',error:e.message});console.log('FAIL',engine,name,e.message)}finally{if(f?.context)await f.context.close();}}

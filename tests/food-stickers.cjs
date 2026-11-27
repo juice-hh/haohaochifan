@@ -84,7 +84,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   // The day timeline shows a meal's stickers; the original photo only appears when there are none.
   await p.locator('.day-meal-card food-sticker canvas').first().waitFor();
   assert.equal(await p.locator('.day-meal-card').count(),1);
-  await p.getByRole('link',{name:'编辑这餐',exact:true}).click();
+  await p.locator('.day-meal-card').locator('a.tl-food, a.tl-photo, a.tl-text-meal').first().click();
   await p.locator('.record-food-nutrition summary').first().click();
   assert.equal(await p.locator('[name=food-kcal-0]').inputValue(),'123');
   await p.getByRole('button',{name:'单独抠出食物 测试食物1',exact:true}).click();
@@ -109,7 +109,7 @@ const meal={foodVisible:true,name:'贴纸测试餐',portion:300,kcal:450,carb:40
   assert.equal(await stickers.first().locator('.sticker-kcal-top').count(),0);
   assert.equal(await stickers.last().locator('.sticker-kcal-top').innerText(),'88 kcal');
   await p.goto(base+'/Day.dc.html?date=2026-11-12');
-  await p.getByRole('link',{name:'编辑这餐',exact:true}).click();
+  await p.locator('.day-meal-card').locator('a.tl-food, a.tl-photo, a.tl-text-meal').first().click();
   await p.getByRole('button',{name:'更换照片',exact:true}).click();
   await p.getByRole('button',{name:'切换本次',exact:true}).click();
   await p.getByRole('dialog').getByRole('button',{name:'手动记录',exact:true}).click();

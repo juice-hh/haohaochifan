@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="好好吃饭">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/app-180.png?v=20261123">
-<link rel="stylesheet" href="./mobile.css?v=20261127-24">
-<link rel="stylesheet" href="./day.css?v=20261127-9">
+<link rel="stylesheet" href="./mobile.css?v=20261127-26">
+<link rel="stylesheet" href="./day.css?v=20261127-10">
 <title>好好吃饭 一天一页</title>
 <script src="./support.js?v=20261125"></script>
 <script src="./journal.js?v=20261127-5"></script>
@@ -98,14 +98,14 @@
               <sc-if value="{{ev.meal}}">
                 <section class="day-meal-section">
                   <article class="day-meal-card">
-                    <header class="tl-meal-head"><h2>{{ev.meal.kindLabel}}</h2><span>{{ev.meal.kcalText}}</span></header>
+                    <a class="tl-meal-head" href="{{ev.meal.editHref}}" aria-hidden="true" tabindex="-1"><h2>{{ev.meal.kindLabel}}</h2><span>{{ev.meal.kcalText}}</span></a>
                     <div class="tl-plate-row">
                       <sc-if value="{{ev.meal.hasStickers}}">
-                        <a class="tl-plate" href="{{ev.meal.editHref}}" aria-label="编辑这餐 {{ev.meal.name}}">
+                        <div class="tl-plate">
                           <sc-for list="{{ev.meal.foods}}" as="f">
-                            <span class="tl-food" style="{{f.style}}"><sc-if value="{{f.kcalText}}"><small>{{f.kcalText}}</small></sc-if><span class="tl-food-art"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><sc-for list="{{f.marks}}" as="mk"><span class="sticker-focus-mark" data-mark="{{mk.key}}"><hh-icon name="{{mk.key}}" size="13"></hh-icon></span></sc-for></span><strong>{{f.name}}</strong></span>
+                            <a class="tl-food" href="{{f.editHref}}" style="{{f.style}}" aria-label="编辑这餐 {{f.recordName}}，{{f.name}}"><sc-if value="{{f.kcalText}}"><small>{{f.kcalText}}</small></sc-if><span class="tl-food-art"><food-sticker photo="{{f.photo}}" cutout="{{f.cutout}}" name="{{f.name}}"></food-sticker><sc-for list="{{f.marks}}" as="mk"><span class="sticker-focus-mark" data-mark="{{mk.key}}"><hh-icon name="{{mk.key}}" size="13"></hh-icon></span></sc-for></span><strong>{{f.name}}</strong><span class="visually-hidden">{{f.recordName}}</span></a>
                           </sc-for>
-                        </a>
+                        </div>
                       </sc-if>
                       <sc-if value="{{ev.meal.textOnly}}">
                         <a class="tl-text-meal" href="{{ev.meal.editHref}}" aria-label="编辑这餐 {{ev.meal.name}}"><strong>{{ev.meal.name}}</strong><small>还没有贴纸，可以补一张照片</small></a>
@@ -118,17 +118,18 @@
                       </div>
                     </div>
                     <sc-if value="{{ev.meal.editLinks}}">
-                      <div class="tl-meal-records"><sc-for list="{{ev.meal.editLinks}}" as="e"><span class="tl-meal-record"><a href="{{e.href}}" aria-label="编辑这餐" title="编辑{{e.label}}">{{e.label}}<hh-icon name="edit" size="14"></hh-icon></a><button type="button" onClick="{{e.remove}}" aria-label="{{e.deleteLabel}}" title="删除"><hh-icon name="trash" size="14"></hh-icon></button></span></sc-for></div>
+                      <div class="tl-meal-records visually-hidden"><sc-for list="{{ev.meal.editLinks}}" as="e"><span class="tl-meal-record">{{e.label}}<a href="{{e.href}}" aria-label="编辑这餐">编辑这餐</a></span></sc-for></div>
                     </sc-if>
                     <sc-if value="{{ev.meal.single}}">
-                      <div class="tl-meal-tools"><a href="{{ev.meal.editHref}}" aria-label="编辑这餐" title="编辑这餐"><hh-icon name="edit" size="14"></hh-icon></a></div>
+                      <a class="tl-meal-tools visually-hidden" href="{{ev.meal.editHref}}" aria-label="编辑这餐">编辑这餐</a>
                     </sc-if>
                   </article>
                 </section>
               </sc-if>
               <sc-if value="{{ev.link}}"><a class="tl-line tl-link" href="{{ev.link.href}}">{{ev.link.text}} <strong>{{ev.link.strong}}</strong><sc-if value="{{ev.link.note}}"><em data-tone="rose">{{ev.link.note}}</em></sc-if><hh-icon name="right" size="14"></hh-icon></a></sc-if>
+              <sc-if value="{{ev.line.remove}}"><button type="button" class="tl-line tl-line-button" onClick="{{ev.line.remove}}" aria-label="{{ev.line.removeLabel}}">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><span class="tl-tag" data-type="{{ev.line.tagType}}">{{ev.line.tag}}</span></button></sc-if>
               <sc-if value="{{ev.line.open}}"><button type="button" class="tl-line tl-line-button" onClick="{{ev.line.open}}">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><em>{{ev.line.note}}</em></button></sc-if>
-              <sc-if value="{{ev.plainLine}}"><p class="tl-line">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><sc-if value="{{ev.line.tag}}"><span class="tl-tag" data-type="{{ev.line.tagType}}">{{ev.line.tag}}</span></sc-if><sc-if value="{{ev.line.note}}"><em data-tone="{{ev.line.noteTone}}">{{ev.line.note}}</em></sc-if><sc-if value="{{ev.line.remove}}"><button type="button" class="tl-remove" onClick="{{ev.line.remove}}" aria-label="{{ev.line.removeLabel}}"><hh-icon name="close" size="14"></hh-icon></button></sc-if></p></sc-if>
+              <sc-if value="{{ev.plainLine}}"><p class="tl-line">{{ev.line.text}} <strong>{{ev.line.strong}}</strong><sc-if value="{{ev.line.tag}}"><span class="tl-tag" data-type="{{ev.line.tagType}}">{{ev.line.tag}}</span></sc-if><sc-if value="{{ev.line.note}}"><em data-tone="{{ev.line.noteTone}}">{{ev.line.note}}</em></sc-if></p></sc-if>
               <sc-if value="{{ev.walk}}">
                 <div class="tl-walk"><span><strong>吃完走 15 分钟？</strong><small>下午会更清爽</small></span><button type="button" class="tl-walk-skip" onClick="{{ev.walk.skip}}">跳过</button><button type="button" class="tl-walk-go" onClick="{{ev.walk.go}}">走了</button></div>
               </sc-if>
@@ -219,7 +220,7 @@ class Component extends DCLogic {
       const allIds = items.flatMap(({ meal }) => Journal.feelingsFor(meal.id).map((id) => ({ id, meal })));
       const warn = allIds.some(({ id }) => tones[id]?.tone === "warn");
       const good = allIds.length && !warn;
-      const foods = items.flatMap(({ group }) => group.foods.filter((food) => food.hasSticker));
+      const foods = items.flatMap(({ group }) => group.foods.filter((food) => food.hasSticker).map((food) => ({ ...food, editHref: group.editHref, recordName: group.name })));
       const kcalKnown = items.some(({ meal }) => Number.isFinite(meal.kcal));
       const kcal = items.reduce((sum, { meal }) => sum + (Number.isFinite(meal.kcal) ? meal.kcal : 0), 0);
       const first = items[0].group;
@@ -251,7 +252,11 @@ class Component extends DCLogic {
       const type = Journal.exerciseTypes.find((t) => t.id === item.type);
       events.push({ at: item.at ?? 1140, type: "move", icon: item.type === "strength" ? "dumbbell" : item.type === "stretch" ? "stretch" : "walk", tone: item.type === "strength" ? "violet" : "orange",
         line: { text: item.label || type.label, strong: item.minutes + " 分钟", tag: type.label, tagType: item.type,
-          remove: () => this.act(() => Journal.removeExercise(date, item.id)), removeLabel: "删除这次" + (item.label || type.label) } });
+          remove: async () => {
+            if (await JournalUI.confirmAction({ title: "删除这次" + (item.label || type.label) + "？", description: item.minutes + " 分钟" + type.label, confirmLabel: "删除", cancelLabel: "保留", destructive: true })) {
+              this.act(() => Journal.removeExercise(date, item.id));
+            }
+          }, removeLabel: (item.label || type.label) + " " + item.minutes + " 分钟，点一下可删除" } });
     }
     const legacy = Journal.movementOn(date);
     if (legacy) events.push({ at: 1150, type: "move", icon: "walk", tone: "orange", line: { text: "运动", strong: legacy + " 分钟" } });
@@ -308,7 +313,7 @@ class Component extends DCLogic {
     let lastMeal = null;
     return events.map((ev) => {
       const out = { ...ev, time: ev.type !== "add" ? Journal.clock(Math.round(ev.at)) : "",
-        meal: ev.meal ?? null, line: ev.line ?? null, plainLine: ev.line && !ev.line.open ? true : null, link: ev.link ?? null, walk: ev.walk ?? null, ask: ev.ask ?? null, add: ev.add ?? null, note: ev.note ?? null, gap: "" };
+        meal: ev.meal ?? null, line: ev.line ?? null, plainLine: ev.line && !ev.line.open && !ev.line.remove ? true : null, link: ev.link ?? null, walk: ev.walk ?? null, ask: ev.ask ?? null, add: ev.add ?? null, note: ev.note ?? null, gap: "" };
       if (ev.type === "meal") {
         if (lastMeal !== null && ev.at - lastMeal >= 180) out.gap = Math.round((ev.at - lastMeal) / 60) + " 小时后";
         lastMeal = ev.at;
